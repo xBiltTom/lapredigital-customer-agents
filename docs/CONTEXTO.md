@@ -15,7 +15,8 @@ El [informe entregado](reference/documento_InteligenciaNegocios.pdf), identifica
 3. Stack acordado: TypeScript, Node 24, Eve/Nitro, React/Vite, SQL Server 2022 Docker, mssql, Zod y Vitest. Una única aplicación de agentes académicos con herramientas; multiagentes de otras fases después.
 4. Primero probar el login local de ChatGPT de Eve; no hay una integración verificada ni un modelo fijado todavía. No existe permiso implícito para convertir créditos dudosos en consumo pagado.
 5. La aceptación de términos y condiciones al registro incluye las comunicaciones previstas del servicio. Es el evento de autorización inicial; no añadir otra aceptación manual por mensaje/canal. Conservar evidencia/versionado y respetar una solicitud posterior de no seguimiento proactivo. Aún no existe texto de términos ni flujo de alta implementado.
-6. Cada tarea del roadmap corresponde a un commit, incluyendo la actualización de continuidad. El usuario pidió organizar el workspace e inicializar el remoto `git@github.com:xBiltTom/lapredigital-customer-agents.git`.
+6. Node debe aislarse con Docker; el usuario pidió un proyecto empaquetable para un VPS posterior. No instalar Node global ni confundir Compose de desarrollo con despliegue listo para producción.
+7. Cada tarea del roadmap corresponde a un commit, incluyendo la actualización de continuidad. El usuario pidió organizar el workspace e inicializar el remoto `git@github.com:xBiltTom/lapredigital-customer-agents.git`.
 
 ## Entorno y estado de datos
 

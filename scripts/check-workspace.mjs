@@ -4,6 +4,11 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
+assert.equal(
+  Number(process.versions.node.split('.')[0]),
+  24,
+  'El proyecto requiere Node 24. Ejecuta ./scripts/dev npm run check.',
+);
 const required = [
   'README.md', 'package.json', '.nvmrc', '.env.example', '.gitignore',
   'database/README.md', 'database/01_crear_customers.sql',
@@ -12,6 +17,7 @@ const required = [
   'docs/reference/documento_InteligenciaNegocios.pdf',
   'docs/database/REVISION_CUSTOMERS.md', 'apps/README.md',
   'packages/README.md', 'infra/README.md',
+  'compose.yaml', 'infra/docker/Node.Dockerfile', 'scripts/dev', '.dockerignore',
 ];
 for (const name of required) await access(path.join(root, name));
 const pkg = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
@@ -41,9 +47,6 @@ for (const file of await markdownFiles(root)) {
     await access(full);
     checkedLinks += 1;
   }
-}
-if (Number(process.versions.node.split('.')[0]) !== 24) {
-  console.warn(`Aviso: Node ${process.versions.node}; usar Node 24 para desarrollar y validar la aplicacion.`);
 }
 console.log(`Workspace valido: ${required.length} rutas requeridas y ${checkedLinks} enlaces locales.`);
 console.log('Esta comprobacion no ejecuta SQL ni valida el funcionamiento del agente.');

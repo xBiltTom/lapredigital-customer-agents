@@ -8,7 +8,7 @@ Proyecto académico de Ingeniería de Sistemas de la Universidad Nacional de Tru
 2. Seguir [el roadmap de tareas y commits](docs/ROADMAP.md).
 3. Consultar [contexto y decisiones](docs/CONTEXTO.md) y [arquitectura](docs/ARQUITECTURA.md).
 
-**Siguiente tarea: T03, verificar Node 24.** Una tarea corresponde a un commit; el roadmap incluye dependencias y criterios para cerrarla.
+**Siguiente tarea: T04, crear el servidor mínimo de Eve.** Una tarea corresponde a un commit; el roadmap incluye dependencias y criterios para cerrarla.
 
 ## Estado actual
 
@@ -31,11 +31,12 @@ Stack acordado: TypeScript, Node.js 24, Eve/Nitro, React/Vite, SQL Server 2022 e
 ## Comprobación disponible
 
 ```bash
-node --version
-npm run check
+./scripts/dev node --version
+./scripts/dev npm --version
+./scripts/dev npm run check
 ```
 
-El proyecto declara Node 24 en `.nvmrc` y `package.json`. No tiene dependencias instaladas ni comandos `dev`, `build` o pruebas de aplicación todavía. `npm run check` solo revisa la estructura, los enlaces y las reglas básicas del repositorio; no ejecuta SQL ni llama a modelos.
+Node está aislado en Docker: imagen oficial fijada por digest, Node 24.22.3 y npm 11.19.1. `scripts/dev` ejecuta cada comando en un contenedor temporal con tu UID/GID; dependencias y caché quedan en volúmenes del proyecto. No es necesario instalar Node en el host. Ver [la guía de infraestructura](infra/README.md). Todavía no hay dependencias de aplicación ni comandos `dev` o `build` de las apps. `npm run check` solo revisa la estructura, los enlaces y las reglas básicas del repositorio; no ejecuta SQL ni llama a modelos.
 
 El archivo `.env.example` es una plantilla sin secretos. No contiene una conexión lista para usar: el puerto publicado y el usuario de aplicación requieren verificación y configuración posterior.
 

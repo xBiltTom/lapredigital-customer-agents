@@ -1,0 +1,16 @@
+#!/bin/sh
+set -eu
+
+# Ejecutar siempre desde la raiz, aunque se invoque desde otra carpeta.
+project_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+LOCAL_UID=$(id -u)
+LOCAL_GID=$(id -g)
+export LOCAL_UID LOCAL_GID
+
+if [ "$LOCAL_UID" -eq 0 ]; then
+  printf '%s\n' 'Ejecuta scripts/dev con tu usuario habitual, sin sudo.' >&2
+  exit 1
+fi
+
+exec docker compose --project-directory "$project_dir" \
+  -f "$project_dir/compose.yaml" run --build --rm --no-deps tools "$@"

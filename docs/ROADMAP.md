@@ -6,9 +6,9 @@ Actualizado: 12 de noviembre de 2026. Este archivo es el plan canónico de tarea
 
 1. Leer [AGENTS.md](../AGENTS.md), [contexto y acuerdos](CONTEXTO.md), [estado de continuidad](ESTADO.md) y [arquitectura](ARQUITECTURA.md).
 2. Revisar `git status`, `git log -5 --oneline` y `git remote -v`. No sobrescribir cambios del usuario.
-3. Continuar con **T03**, primer pendiente. La aplicación todavía no existe; los únicos comandos de aplicación disponibles hoy son las comprobaciones del workspace.
+3. Continuar con **T04**, primer pendiente. La aplicación todavía no existe; los únicos comandos de aplicación disponibles hoy son las comprobaciones del workspace.
 4. Leer los scripts de [database/](../database/README.md) y el [informe 7.1](reference/documento_InteligenciaNegocios.pdf) antes de convertir consultas en herramientas. La base está congelada por decisión del usuario.
-5. No asumir autenticación de ChatGPT, créditos API de MiniMax, puerto SQL, permisos SQL ni ejecución con Node 24: esas verificaciones tienen tareas explícitas.
+5. No asumir autenticación de ChatGPT, créditos API de MiniMax ni permisos SQL: esas verificaciones tienen tareas explícitas.
 
 ## Objetivo y decisiones aceptadas
 
@@ -47,7 +47,7 @@ Los IDs dan una secuencia sugerida, pero mandan las dependencias. T10 y otras ta
 | T00 | Hecha | Preservar la base y las consultas existentes | Ninguna |
 | T01 | Hecha | Organizar y configurar el workspace | T00 |
 | T02 | Hecha | Documentar roadmap y continuidad | T01 |
-| T03 | Pendiente | Preparar Node 24 y el gestor de paquetes | T02 |
+| T03 | Hecha | Preparar Node 24 y el gestor de paquetes | T02 |
 | T04 | Pendiente | Crear el backend mínimo de Eve | T03 |
 | T05 | Pendiente | Probar ChatGPT local con una herramienta inocua | T04 |
 | T06 | Pendiente | Validar la configuración de la aplicación | T04 |
@@ -109,12 +109,12 @@ Los IDs dan una secuencia sugerida, pero mandan las dependencias. T10 y otras ta
 
 ### T03 · Preparar Node 24 y el gestor de paquetes
 
-- [ ] Tarea completada.
+- [x] Tarea completada.
 - **Depende de:** T02.
-- **Commit:** `chore(T03): verificar toolchain node 24`.
-- **Entregable:** Activar o instalar Node 24 mediante el gestor disponible; usar su npm; registrar versiones verificadas. No cambiar el Node global del usuario sin necesidad.
-- **Cierre verificable:** node --version muestra 24.x en el entorno del proyecto; npm run check pasa.
-- **Contexto o límite:** El host observado tiene Node 26.13.1 y npm 12.2.2; aún no se probó Node 24.
+- **Commit:** `chore(T03): aislar toolchain node 24 en docker`.
+- **Entregable:** Imagen oficial Node fijada por digest, Compose con usuario sin privilegios y UID/GID del host, volúmenes de dependencias/caché, wrapper scripts/dev, .dockerignore e instrucciones de uso. El usuario pidió Docker para aislar Node y preparar portabilidad a VPS.
+- **Cierre verificable:** Node 24.22.3 y npm 11.19.1 en contenedor; usuario sin privilegios; TZ America/Lima; escritura con UID/GID del host; npm run check dentro del contenedor; SQL y scripts sin cambios.
+- **Contexto o límite:** Node global 26 permanece intacto. Es el entorno de desarrollo, no una imagen de producción final; esta se completa en T29.
 
 ### T04 · Crear el backend mínimo de Eve
 

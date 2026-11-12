@@ -31,6 +31,12 @@ Eve es la arquitectura elegida, no una implementación ya instalada. Su servidor
 
 No fijar todavía rutas internas de Nitro ni APIs de Eve desde memoria. Leer docs instaladas y adaptar el montaje web, proxy y flujo de autenticación a la versión fijada en el lockfile.
 
+## Aislamiento y portabilidad
+
+Por instrucción posterior del usuario, Node/npm se ejecutan en Docker mediante scripts/dev. El host no necesita el runtime del proyecto. Compose conserva dependencias Linux y caché en volúmenes y monta código para desarrollo; el usuario del contenedor coincide con UID/GID del host. La imagen base se fija por digest y conserva America/Lima.
+
+Este empaquetado de desarrollo precede a las imágenes de runtime para VPS: los builds y artefactos se definirán con la aplicación real. SQL Server continúa en su contenedor existente y no se recrea desde Compose. Su conectividad se configura en T07. No montar el socket Docker ni credenciales del host en el agente de negocio.
+
 ## Qué calcula el código y qué interpreta la IA
 
 El backend calcula cumplimiento, porcentajes, comparabilidad, horas exactas, antigüedad, vigencia y precedencia de riesgo. El modelo interpreta intención y satisfacción a partir de narrativas; recomienda refuerzo y redacta explicaciones o mensajes con evidencia. Una respuesta del modelo se valida como datos estructurados y se combina con las reglas; no es autoridad para saltarse un permiso.

@@ -4,7 +4,7 @@ Actualizado: 12 de noviembre de 2026. Documento de traspaso para otra sesión o 
 
 ## Próxima tarea
 
-**T03 del [roadmap](ROADMAP.md): preparar y verificar Node 24.** Después, T04 crea el servidor mínimo y T05 verifica el login local de ChatGPT. No comenzar por instalar un stack diferente ni modificar el esquema SQL.
+**T04 del [roadmap](ROADMAP.md): crear el servidor mínimo de Eve.** T03 ya dejó Node aislado en Docker; después, T05 verifica el login local de ChatGPT. No comenzar por instalar un stack diferente ni modificar el esquema SQL.
 
 ## Trabajo completado en esta inicialización
 
@@ -14,11 +14,17 @@ Actualizado: 12 de noviembre de 2026. Documento de traspaso para otra sesión o 
 
 Commits previos identificables: T00 = 513d0c9; T01 = 9059457. El hash de T02 y el estado de publicación se consultan en `git log -3 --oneline`, `git status -sb` y `git branch -vv`; no se escribe el hash de un commit dentro de sí mismo.
 
+## T03: entorno Node aislado en Docker
+
+Decisión del usuario: aislar Node y preparar el proyecto para empaquetar en un VPS. Se añadió compose.yaml, infra/docker/Node.Dockerfile fijado por digest, .dockerignore y scripts/dev con UID/GID del usuario. Dependencias y caché quedan en volúmenes; no se montó el socket Docker. Ver infra/README.md para comandos y límites.
+
+Verificación: Node 24.22.3 y npm 11.19.1, usuario no root, zona America/Lima y chequeo del workspace dentro de Docker. La versión candidata de Eve observada en el registro npm para T04 es eve 1.0.0-rc.10 (repository vercel/eve, engines >=24); todavía no está instalada y se deben leer sus docs antes de implementarla. El Compose no declara SQL Server y no se ejecutó SQL ni se reinició el contenedor existente.
+
 ## Qué existe y qué falta
 
 Existe la base OLTP, sus scripts y este repositorio organizado. No existe todavía apps/server ni apps/web, no se han instalado Eve/React/mssql, no hay agente de negocio implementado ni autenticación de modelo probada. npm run check es la única comprobación de aplicación disponible y revisa estructura/enlaces, no comportamiento funcional.
 
-En el host se observaron Node v26.13.1 y npm 12.2.2. El proyecto declara Node 24 en .nvmrc y engines. La comprobación estructural puede ejecutarse con el Node actual, pero no equivale a haber validado el runtime acordado.
+El host conserva Node v26.13.1 y npm 12.2.2. Node del proyecto se ejecuta en Docker: imagen oficial fijada por digest, Node 24.22.3 y npm 11.19.1. Usar `./scripts/dev npm run check`; el chequeo rechaza Node de otra versión. No se instaló ni cambió Node global.
 
 ## Validación de esta tarea
 
@@ -31,7 +37,7 @@ En el host se observaron Node v26.13.1 y npm 12.2.2. El proyecto declara Node 24
 
 ## Pendientes reales
 
-1. Node 24 y dependencias de aplicación.
+1. Crear apps/server e instalar las dependencias de aplicación con npm dentro del contenedor.
 2. Confirmar el plan de ChatGPT y probar /login con la versión instalada de Eve.
 3. Confirmar si los 2.000 créditos MiniMax son de API o de su aplicación; no consumirlos todavía.
 4. Comprobar el puerto SQL publicado y configurar el usuario de aplicación. Los datos de .env.example son plantilla, no conexión ya provisionada.

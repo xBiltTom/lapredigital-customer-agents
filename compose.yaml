@@ -1,0 +1,25 @@
+name: lapredigital-customers
+
+services:
+  tools:
+    profiles: [tools]
+    build:
+      context: .
+      dockerfile: infra/docker/Node.Dockerfile
+      target: toolchain
+      args:
+        LOCAL_UID: ${LOCAL_UID:-1000}
+        LOCAL_GID: ${LOCAL_GID:-1000}
+    init: true
+    working_dir: /workspace
+    environment:
+      TZ: America/Lima
+      NPM_CONFIG_CACHE: /home/node/.npm
+    volumes:
+      - .:/workspace
+      - node_modules:/workspace/node_modules
+      - npm_cache:/home/node/.npm
+
+volumes:
+  node_modules:
+  npm_cache:

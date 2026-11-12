@@ -36,9 +36,13 @@ Una tarea del roadmap = un commit. Incluir en ese commit su implementación, pru
 
 Revisar git status antes de editar; las consultas personales del 04 y cualquier cambio del usuario se conservan. Las instrucciones actuales del usuario prevalecen sobre estos acuerdos si cambia el alcance.
 
+## Entorno aislado
+
+Node/npm del proyecto se ejecutan en Docker: `./scripts/dev node --version` y `./scripts/dev npm run check`. No instalar dependencias con el npm global del host. Imagen oficial fijada por digest, usuario sin privilegios y volúmenes del workspace. El Compose de desarrollo no administra ni reconstruye SQL Server; no confundirlo con la imagen de producción que se completará en T29.
+
 ## Verificación y continuidad
 
-Hoy: `npm run check` valida únicamente el workspace. No hay agente funcionando, dependencias instaladas ni comandos dev/build de las apps.
+Hoy: `./scripts/dev npm run check` valida únicamente el workspace. No hay agente funcionando, dependencias instaladas ni comandos dev/build de las apps.
 
 Separar resultados históricos, revisión estática y ejecución real. Los datos ficticios envejecen; no ocultar los cinco HALLAZGO conocidos cambiando las expectativas de prueba. Usar una base aislada para integración destructiva, no la base académica activa. No subir .env, .eve, tokens, volcados ni archivos de datos a Git.
 
