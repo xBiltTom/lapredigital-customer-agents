@@ -2,6 +2,14 @@
 
 Proyecto académico de Ingeniería de Sistemas de la Universidad Nacional de Trujillo. El objetivo es acompañar la preparación de estudiantes mediante un agente que consulte su progreso, explique riesgos y proponga acciones compatibles con su servicio.
 
+## Continuar el proyecto
+
+1. Leer [AGENTS.md](AGENTS.md) y [el punto de continuación](docs/ESTADO.md).
+2. Seguir [el roadmap de tareas y commits](docs/ROADMAP.md).
+3. Consultar [contexto y decisiones](docs/CONTEXTO.md) y [arquitectura](docs/ARQUITECTURA.md).
+
+**Siguiente tarea: T03, verificar Node 24.** Una tarea corresponde a un commit; el roadmap incluye dependencias y criterios para cerrarla.
+
 ## Estado actual
 
 La base OLTP y los escenarios ficticios ya existen. La aplicación, el agente y la interfaz todavía no están implementados. Por decisión del usuario se conserva el esquema actual mientras se desarrolla el prototipo local.
