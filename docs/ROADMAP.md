@@ -35,6 +35,12 @@ Actualizado el 12/11/2026. El usuario adelantó el deadline y autorizó terminar
 - Comprobar desktop/móvil, autenticación, casos principales y flujo de propuesta.
 - README con pasos exactos de arranque y demo; ESTADO.md distingue ejecución real de límites.
 
+## Mejoras posteriores solicitadas
+
+| ID | Estado | Resultado |
+| --- | --- | --- |
+| M04 | Hecha | Ficha visible de contacto del estudiante/apoderado y pestaña de desempeño con todos los intentos, versiones de ruta, actividades, dificultades y revisiones. Reutiliza la API existente; compilación y reconstrucción Docker. |
+
 ## Fuera de esta entrega
 
 DataMarts/cierres mensuales, KPI oficiales C-1–C-7 completos, agenda automática, proveedores de comunicación, agentes de otras fases, cobros, cambios de plan, referidos, portal familiar y autenticación de producción. No bloquear la demo por esas extensiones.

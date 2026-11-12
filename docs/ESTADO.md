@@ -2,6 +2,12 @@
 
 Actualizado: 12/11/2026. Instrucción vigente: terminar un MVP local en una sola pasada de máximo una hora; reemplaza el plan individual B02–B08.
 
+## Último cambio: M04 — ficha completa del estudiante
+
+Se muestran en Resumen los contactos del estudiante y apoderado, parentesco, universidad/carrera, fecha de examen, disponibilidad en horas y registro. Nueva pestaña Desempeño: todos los intentos finalizados, aciertos/total/porcentaje, contexto de comparabilidad, actividades de todas las versiones con fechas y estados, dificultades y revisiones. Usa campos ya disponibles en la API; no cambia SQL ni herramientas del agente.
+
+Verificación acotada por petición del usuario: build web con TypeScript correcto y lectura de la ficha SQL/API 200 con contactos e intentos. Imagen Docker reconstruida y servicio compilado reiniciado; no se ejecutaron suites SQL, navegador ni llamadas al modelo para este cambio. Siguiente paso: el usuario revisa la ficha desde el panel.
+
 ## Resultado
 
 M01 (5ae8bde): diagnóstico SQL, reglas, interpretación de narrativas por el modelo y propuestas transaccionales.
