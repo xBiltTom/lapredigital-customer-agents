@@ -8,7 +8,7 @@ Actualizado el 12/11/2026. El usuario adelantó el deadline y autorizó terminar
 | --- | --- | --- | --- |
 | M01 | Hecha | Diagnóstico SQL, agente con herramientas y propuestas transaccionales con aprobación/simulación | B02, B03, B06 y backend B07 |
 | M02 | Hecha | Panel React/Vite: selección, ficha, evidencias, chat real y bandeja de intervenciones | B04, B05 y UI B07 |
-| M03 | En verificación | Arranque reproducible, empaquetado, pruebas de navegador y guía de demo | B08 |
+| M03 | Hecha | Arranque reproducible, empaquetado, pruebas de navegador y guía de demo | B08 |
 
 ## M01: backend defendible
 

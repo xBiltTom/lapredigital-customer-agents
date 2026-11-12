@@ -21,3 +21,23 @@ WORKDIR /workspace
 USER node
 
 CMD ["npm", "run", "check"]
+
+# Artefactos del MVP, sin bind mounts ni secretos del equipo.
+FROM toolchain AS mvp-build
+ENV AI_PROVIDER=chatgpt
+COPY --chown=node:node package.json package-lock.json .npmrc ./
+COPY --chown=node:node apps/server ./apps/server
+COPY --chown=node:node apps/web ./apps/web
+RUN --mount=type=cache,target=/home/node/.npm,uid=1000,gid=1000 npm ci --no-audit --no-fund
+RUN npm run build:web && npm run build:server
+
+FROM toolchain AS mvp-runtime
+ENV AI_PROVIDER=chatgpt WEB_DIST_DIR=/workspace/apps/web/.dist
+COPY --from=mvp-build --chown=node:node /workspace/package.json ./package.json
+COPY --from=mvp-build --chown=node:node /workspace/node_modules ./node_modules
+COPY --from=mvp-build --chown=node:node /workspace/apps/server/package.json ./apps/server/package.json
+COPY --from=mvp-build --chown=node:node /workspace/apps/server/.eve/packaged ./apps/server/.eve/packaged
+COPY --from=mvp-build --chown=node:node /workspace/apps/web/.dist ./apps/web/.dist
+COPY --chown=node:node scripts/eve-local ./scripts/eve-local
+EXPOSE 3000
+CMD ["npm","run","start:server"]

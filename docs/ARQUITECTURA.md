@@ -1,83 +1,41 @@
-# Arquitectura acordada para el prototipo local
+# Arquitectura del MVP
 
-## Recorrido
+React/Vite en 5173 usa /api mediante proxy hacia Eve/Nitro en 3000. Una imagen compilada sirve el mismo frontend/API en 3010 sin bind mounts de código. SQL Server existente conserva los hechos; el modelo ChatGPT usa el llavero local desbloqueado.
 
-```text
-React/Vite (apps/web)
-        |
-        | API del panel y cliente de Eve
-        v
-Eve/Nitro sobre Node 24 (apps/server)
-        |-- configuración y contexto de identidad validados
-        |-- repositorios mssql con SQL parametrizado
-        |-- servicios con reglas, permisos y transacciones
-        |-- herramientas concretas del Agente Académico
-        |-- simulador de comunicación
-        |
-        +--> SQL Server existente: LaPreDigital_Customers
-        +--> ChatGPT mediante login local de Eve (T05: TUI verificada)
-        +--> persistencia local de sesiones/trazas fuera de Git
-```
+## Identidad
 
-T04 instaló Eve 1.0.0-rc.10, AI SDK 7.0.137 y Zod 4.6.7, fijados en el lockfile raíz. T07/T08 añadieron configuración SQL, pool y repositorios de perfil/servicio; falta el recorrido de negocio del diagrama. R01 compactó la implementación en B01–B08: priorizar servicios pequeños y trazas nativas, sin framework propio de repositorios, roles u observabilidad. Eve es una versión candidata: revisar sus docs instaladas antes de ampliar la integración. Su servidor se basa en Nitro; Node ejecuta el programa y TypeScript es el lenguaje. No se acordó Next.js ni NestJS. Una sola instancia local basta; no se añaden Redis, colas distribuidas, vector DB ni otro motor de negocio sin una necesidad demostrada.
+Bearer local del dueño resuelto a PersonalInterno con Rol N'DUEÑO' y Activo=1. El token no incorpora un contactoId elegido por el cliente y permanece solo en sessionStorage del navegador. Salud pública; datos/acciones protegidos.
 
-## Organización prevista del código
+Cada conversación del panel se identifica por dueño + alumno + UUID. El canal pasa ese alumno en auth.attributes y las tools no aceptan un ID diferente. El backend mantiene la autorización en todas sus operaciones.
 
-- apps/server: aplicación npm del backend. Dentro, agent/ contiene instrucciones/tools, y lib/ (o la estructura documentada por la versión instalada) contiene database/, domain/ y services/.
-- apps/web: aplicación npm React/Vite.
-- packages/contracts: esquemas/tipos compartidos cuando tengan consumidores en ambas apps.
-- database: fuentes canónicas de la base actual y el laboratorio SQL.
-- infra: configuración local documentada; scripts de arranque nunca reconstruyen datos.
+El acceso interno familiar exige REPORTES_APODERADO vigente; no existe un portal familiar ni autenticación multiusuario de producción.
 
-No fijar todavía rutas internas de Nitro ni APIs de Eve desde memoria. Leer docs instaladas y adaptar el montaje web, proxy y flujo de autenticación a la versión fijada en el lockfile.
+## Lógica y evidencia
 
-## Aislamiento y portabilidad
+lib/domain.ts calcula umbrales, vigencia, cumplimiento y mejora. lib/diagnostico.ts consulta fuentes parametrizadas con corte GETDATE. Sin tareas/pruebas comparables hay no aplicable/sin datos; pendiente no se fuerza a bajo.
 
-Por instrucción posterior del usuario, Node/npm se ejecutan en Docker mediante scripts/dev. El host no necesita el runtime del proyecto. Compose conserva dependencias Linux y caché en volúmenes y monta código para desarrollo; el usuario del contenedor coincide con UID/GID del host. La imagen base se fija por digest y conserva America/Lima.
+El modelo trata mensajes/comentarios como datos no confiables y propone interpretación con IDs y huella. El backend valida pertenencia y descarta el contexto si cambian las narrativas. Cache privada por base de datos. No se inventan caducidad de intención ni frecuencia de contacto.
 
-Este empaquetado de desarrollo precede a las imágenes de runtime para VPS: los builds y artefactos se definirán con la aplicación real. Compose no administra SQL Server; T07 verificó la instancia local de Windows. No montar el socket Docker ni credenciales del host en el agente de negocio.
+Datos operativos actuales; no se reconstruye un cierre mensual histórico a partir de estados mutables.
 
-T07/T08 añadieron pool diferido y repositorios de perfil/servicio. B01 los verificó en CachyOS con cuenta SQL de lectura y host-gateway; Windows conserva su procedimiento con permisos comunes de infra/sql. La identidad interna permite dueño activo, estudiante propio o apoderado con REPORTES_APODERADO vigente; no se acepta ese objeto desde el cuerpo HTTP. El token local se resuelve al dueño configurado y se revalida en PersonalInterno. No hay sistema completo de usuarios ni portal familiar. B03 integra herramientas concretas; el modelo nunca recibe SQL libre.
+## Propuestas
 
-El servidor publica solo 127.0.0.1:3000. Canal del dueño con Bearer y permiso allowAgentInfo, sin permitir reemplazo de herramientas. TUI interna admite localDev solo en desarrollo y con el mismo dueño activo; un Bearer incorrecto no tiene esa alternativa. Salud pública. scripts/chat-local inicia D-Bus/llavero interactivo y Eve juntos; el servicio estándar no desbloquea ese llavero. Estado en eve_state, llavero en keyring_state. B01 verificó login, respuesta y herramienta reales por API aquí; persistencia del login tras recreación aún no probada. T05 conserva evidencia Windows. defaultTools: false excluye herramientas generales; no se montó el socket Docker.
+lib/propuestas.ts guarda evaluación/señales/intervención/evento dentro de transacción con bloqueo por alumno. Revalida las fuentes, su nivel y pertenencia, el dueño, servicio, plan y permisos. La clave de negocio persistente evita duplicados. Antes de aprobar/simular se comprueba de nuevo la evaluación y sus fuentes.
 
-B01 compila una copia mínima de fuentes en .eve/packaged, dentro del volumen Docker, para que staging y .output compartan sistema de archivos. Se probaron build y arranque compilado. Desarrollo y compilado tienen raíces de sesiones distintas dentro del volumen; no se afirma intercambio entre modalidades. B08 construirá la imagen final, sin estado privado ni secretos.
+El modelo solo propone. El dueño aprueba/rechaza/simula por API. Simulación deja MensajeSeguimientoId NULL, resultado explícito y ningún mensaje enviado: no acredita C-4. No hay cobros ni cambios de ruta/plan/etapa.
 
-## Qué calcula el código y qué interpreta la IA
+Permisos acotados: SELECT de fuentes, INSERT de evaluación/señales/eventos e INSERT/UPDATE de intervención. Sin sa ni DDL. Las validaciones de la app no protegen cualquier SQL directo; los cinco huecos del esquema siguen documentados.
 
-El backend calcula cumplimiento, porcentajes, comparabilidad, horas exactas, antigüedad, vigencia y precedencia de riesgo. El modelo interpreta intención y satisfacción a partir de narrativas; recomienda refuerzo y redacta explicaciones o mensajes con evidencia. Una respuesta del modelo se valida como datos estructurados y se combina con las reglas; no es autoridad para saltarse un permiso.
+## Runtime
 
-La misma capa de servicios se usa desde endpoints, herramientas y trabajos programados. No duplicar la política en un prompt y en otra ruta HTTP con criterios distintos. Los mensajes/comentarios del estudiante son datos no confiables como instrucciones de sistema.
+Node 24 en Docker, npm workspaces. Build en .eve/packaged conserva staging/output en el mismo almacenamiento. La imagen copia código/artefactos/dependencias y frontend, sin .env o estado privado del host. No hay Next/Nest, Redis, colas o framework propio.
 
-## Herramientas iniciales
+Sesiones/trazas en Eve; llavero cifrado separado y desbloqueado por scripts/chat-local. No se copiaron tokens de Codex. No se afirma intercambio de sesiones entre dev/compilado ni persistencia del login tras recreación.
 
-consultar_perfil_estudiante, consultar_progreso, consultar_uso, consultar_incidencias, consultar_evidencias y consultar_contacto_y_seguimiento. Después: registrar_evaluacion_con_senales, proponer_intervencion, solicitar_revision_ruta y derivar_atencion_humana.
+SQL DATETIME2 y GETDATE peruanos; mssql useUTC:false y Node America/Lima. La API serializa Date con offset -05:00; se comprobó contra la hora textual SQL.
 
-Cada herramienta valida un esquema de entrada pequeño y el contexto de identidad; consulta solo las columnas necesarias y devuelve IDs de evidencia. No exponer execute_sql, shell o edición de archivos al agente de negocio. El navegador no recibe credenciales de SQL ni del modelo.
+## Verificación y límites
 
-## Escrituras y aprobación
+Pruebas de escritura solo en LaPreDigital_Customers_MvpTest. Navegador con UI real y esa API; chats reales verificados aparte para evitar consumo automático.
 
-- Evaluación y señales: operación atómica validada; conservar evaluaciones anteriores, revalidar referencias antes de escribir.
-- Intervención y eventos: transacción y deduplicación por operación de negocio, no por una frase del modelo. El modelo no se autoaprueba.
-- La autorización se revalida al ejecutar, aunque la propuesta ya esté aprobada.
-- La aceptación de términos origina permisos previstos; la revocación posterior debe respetarse. No inferir aceptación donde no hay evidencia.
-- Las rutas solo las publica el dueño. Los casos económicos se derivan; no se crean herramientas de cobro o compensación.
-- En simulación no se escribe ENVIADO/ENTREGADO. Una intervención puede tener un resultado de simulación explícito sin acreditar C-4 de comunicación real.
-
-La deduplicación debe sobrevivir al reinicio con estado persistente y validación en SQL. Este diseño se limita inicialmente a un proceso; la protección para varias réplicas exige volver a evaluar garantías. No prometer exactly-once para sistemas externos.
-
-## Persistencia y fechas
-
-SQL Server conserva hechos del negocio; Eve conserva sus sesiones y ejecución en almacenamiento local persistente, excluido de Git. No se asume un adaptador SQL Server para la persistencia interna de Eve: se accede al OLTP mediante mssql desde herramientas propias.
-
-Las fechas de negocio siguen siendo peruanas, con GETDATE en SQL Server. T07 confirmó offset -05:00 del servidor y configuró `useUTC: false` en `mssql`; queda por probar la serialización de columnas DATETIME2 al exponerlas. El contrato HTTP debe documentar cómo representa una fecha peruana sin offset; no convertir silenciosamente las columnas a UTC.
-
-La trazabilidad técnica incluirá operación, corte, versiones, fuentes, acción y resultado. Una referencia a una fila mutable no basta para afirmar que se conserva su contenido original. Las limitaciones del esquema se declaran y se registra el contexto local necesario; los cierres mensuales siguen fuera de alcance hasta un diseño específico.
-
-## Acceso al modelo y alcance económico
-
-La [documentación de Eve](https://eve.dev/docs/agent-config) contempla chatgpt() con login local y limita esa modalidad a desarrollo local. T05 verificó una llamada real con la suscripción del usuario y el modelo observado `gpt-6-luna-fast`; esto no establece cupos ni viabilidad de despliegue. No copiar tokens de Codex/ChatGPT manualmente al repositorio ni implementar un proxy para eludir la modalidad admitida.
-
-MiniMax puede ser alternativo mediante su API compatible si el saldo del usuario es utilizable por API y autoriza su consumo. La clave se guarda fuera de Git. No hay fallback automático a un proveedor de pago ni servicio de nube contratado.
-
-Para los detalles de herramientas, consultar [Eve tools](https://eve.dev/docs/tools); para persistencia, [self-hosting](https://eve.dev/docs/guides/deployment/self-hosting); para SQL, [mssql](https://github.com/tediousjs/node-mssql). El código debe seguir la documentación de las versiones efectivamente instaladas.
+Un proceso local, chat por turnos sin streaming. Sin DataMarts/cierres congelados, agenda, KPI oficiales completos, proveedores de comunicación ni extensiones del embudo. La modalidad ChatGPT local no garantiza API/VPS; MiniMax no se consumió.

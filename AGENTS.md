@@ -17,7 +17,7 @@ Leer [README.md](README.md), [docs/ESTADO.md](docs/ESTADO.md), [docs/CONTEXTO.md
 
 ## Stack y código
 
-TypeScript + Node 24; npm workspaces; Eve/Nitro en apps/server; React/Vite en apps/web; mssql; Zod; Vitest. Existe el backend mínimo, la conexión SQL de lectura y repositorios de perfil/servicio con identidad validada; frontend y herramientas de negocio siguen pendientes. No introducir Next.js/NestJS, Python u otro framework de agentes sin una decisión nueva del usuario.
+TypeScript + Node 24; npm workspaces; Eve/Nitro, React/Vite, mssql, Zod y node:test. MVP implementado: panel, diagnóstico, herramientas académicas, chat real y propuestas/aprobación/simulación. Mantener este stack; no añadir frameworks, colas o infraestructura sin necesidad. Playwright verifica el navegador.
 
 Verificar login local ChatGPT temprano. No asumir que una suscripción es una API key ni que sirve para un despliegue. Leer docs de la versión instalada de Eve/AI SDK antes de programar su integración.
 
@@ -34,7 +34,7 @@ El modelo llama herramientas concretas, no SQL libre. SQL parametrizado en repos
 
 ## Trabajo y commits
 
-Una tarea activa del roadmap = un commit. El usuario pidió compactar el trabajo: B01–B08 sustituyen la ejecución individual de T09–T32; conservar su correspondencia y las extensiones pospuestas. Incluir implementación, pruebas pertinentes y actualización breve de ESTADO.md en ese commit. No crear commits vacíos ni agrupar tareas inconexas. No hacer push forzado. Reutilizar node:test y las trazas nativas de Eve; no añadir infraestructura o migrar pruebas sin necesidad concreta. Reinstalar dependencias solo si cambió el lockfile o faltan; repetir comprobaciones si hubo cambios relevantes o fallos.
+Una tarea activa del roadmap = un commit. El deadline sustituyó B02–B08 por M01–M03: backend, panel y empaquetado. No retomar extensiones automáticamente. Incluir pruebas pertinentes y ESTADO.md en cada tarea. Sin commits vacíos ni push forzado. Reutilizar node:test y trazas nativas; no reinstalar ni repetir pruebas sin cambios/fallos que lo justifiquen.
 
 Revisar git status antes de editar; las consultas personales del 04 y cualquier cambio del usuario se conservan. Las instrucciones actuales del usuario prevalecen sobre estos acuerdos si cambia el alcance.
 
@@ -44,7 +44,7 @@ Node/npm del proyecto se ejecutan en Docker: `./scripts/dev node --version` y `.
 
 ## Verificación y continuidad
 
-Hoy: check valida estructura, typecheck y 10 pruebas unitarias pasan; db:check/db:t08/db:b01 verifican SQL de lectura en CachyOS. B01 corrigió EXDEV en .eve/packaged y start:server pasó salud/autenticación. Usuario SQL, .env privado y host-gateway configurados sin recrear la base. Dueño autenticado con token y rol activo; apoderados requieren REPORTES_APODERADO vigente. El usuario completó login y se verificó respuesta y comprobar_conexion reales por API. B01 finalizada; el usuario pidió reestructurar antes de seguir: no iniciar B02 todavía. La terminal interactiva se cerró después; comprobar servicios al retomar. El servidor estándar no desbloquea el llavero; usar scripts/chat-local cuando corresponda. Sin herramientas académicas ni T09 completada. Estado/llavero fuera de Git; persistencia del login tras recreación no verificada. Consultar ESTADO.md.
+Hoy: 14 pruebas unitarias, tipos y builds pasan; scripts/test-mvp prueba escrituras solo en LaPreDigital_Customers_MvpTest. scripts/test-browser usa UI real y API aislada, sin invocar al modelo. Chats reales comprobados para Carla, Gabriela e Inés. Panel en 5173; imagen compilada en 3010 verificada para UI/API/SQL. La demo con modelo usa scripts/chat-local y requiere llavero abierto; no reiniciar esa terminal ni reinstalar npm sin necesidad. Mantener sesiones/contextos/keyring fuera de Git. No se verificó desbloqueo del modelo en el runtime compilado ni persistencia real tras recreación. Consultar ESTADO.md.
 
 Separar resultados históricos, revisión estática y ejecución real. Los datos ficticios envejecen; no ocultar los cinco HALLAZGO conocidos cambiando las expectativas de prueba. Usar una base aislada para integración destructiva, no la base académica activa. No subir .env, .eve, tokens, volcados ni archivos de datos a Git.
 

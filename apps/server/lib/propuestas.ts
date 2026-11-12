@@ -2,7 +2,7 @@ import sql from 'mssql';
 import { createHash } from 'node:crypto';
 import { getPool } from './database/pool.ts';
 import { diagnostico } from './diagnostico.ts';
-import {inactividad,incidencia,type Senal} from './domain.ts';
+import {inactividad,incidencia,vigente,type Senal} from './domain.ts';
 
 export const tipos = ['SEGUIMIENTO','RECOMENDACION_RUTA','DERIVACION_HUMANA'] as const;
 export type Tipo = typeof tipos[number];
@@ -39,11 +39,12 @@ async function validarSenal(tx:sql.Transaction, estudianteId:number, s:Senal) {
   const r=await new sql.Request(tx).input('id',sql.Int,s.id).input('fecha',sql.DateTime2(0),s.fecha).query(query);
   if(r.recordset.length!==1||r.recordset[0].EstudianteId!==estudianteId) throw new Error('La evidencia cambió o pertenece a otro estudiante.');
 }
-async function validarEvaluacion(tx:sql.Transaction,estudianteId:number,evaluacionId:number|null,huella:string) {
+async function validarEvaluacion(tx:sql.Transaction,estudianteId:number,evaluacionId:number|null,huella:string,corte:Date) {
   if(evaluacionId===null)return;
   const evalR=await new sql.Request(tx).input('id',sql.Int,evaluacionId).input('e',sql.Int,estudianteId)
     .query('SELECT FechaEvaluacion,Estado,Nivel,Motivo,Origen FROM dbo.EvaluacionRiesgo WITH(HOLDLOCK) WHERE EvaluacionRiesgoId=@id AND EstudianteId=@e');
   const evaluacion=evalR.recordset[0];if(!evaluacion)throw new Error('La evaluación ya no pertenece al estudiante.');
+  if(evaluacion.Estado==='CLASIFICADA'&&!vigente(evaluacion.FechaEvaluacion,corte))throw new Error('La evaluación venció. Rechaza la propuesta anterior y solicita una reevaluación.');
   if(evaluacion.Origen==='IA_ACADEMICO') {
     let motivo;try{motivo=JSON.parse(evaluacion.Motivo);}catch{throw new Error('La evaluación no tiene contexto verificable.');}
     if(motivo.huella!==huella)throw new Error('Cambió el contenido de las evidencias. Requiere una propuesta nueva.');
@@ -75,7 +76,7 @@ export async function proponer(personalInternoId:number, estudianteId:number, ti
     const previa=await new sql.Request(tx).input('e',sql.Int,estudianteId).input('tipo',sql.VarChar(25),tipo).input('key',sql.NVarChar(100),`MVP:${key}`).query(`
       SELECT TOP(1) i.IntervencionId id FROM dbo.Intervencion i WITH(UPDLOCK,HOLDLOCK)
       WHERE i.EstudianteId=@e AND i.Tipo=@tipo AND
-        (i.Estado IN ('PROPUESTA','PROGRAMADA','EN_CURSO') OR EXISTS(SELECT 1 FROM dbo.EventoIntervencion ev WHERE ev.IntervencionId=i.IntervencionId AND ev.Detalle=@key))
+        (i.Estado IN ('PROPUESTA','PROGRAMADA','EN_CURSO') OR (i.Estado<>'CANCELADA' AND EXISTS(SELECT 1 FROM dbo.EventoIntervencion ev WHERE ev.IntervencionId=i.IntervencionId AND ev.Detalle=@key)))
       ORDER BY i.IntervencionId DESC;`);
     if(previa.recordset[0]) {await tx.commit();return {id:previa.recordset[0].id as number,reutilizada:true};}
     for(const s of d.riesgo.senales) await validarSenal(tx,estudianteId,s);
@@ -102,7 +103,7 @@ export async function proponer(personalInternoId:number, estudianteId:number, ti
 export async function decidir(personalInternoId:number, estudianteId:number, id:number, accion:'aprobar'|'rechazar'|'simular') {
   const d=await diagnostico(personalInternoId,estudianteId);
   const actual=d.acciones.find(i=>i.id===id);if(!actual) throw new Error('Intervención ajena o inexistente.');
-  if(accion==='simular'&&actual.tipo==='SEGUIMIENTO'&&!d.seguimiento.permitido) throw new Error(d.seguimiento.causas.join('; '));
+  if(accion!=='rechazar'&&actual.tipo==='SEGUIMIENTO'&&!d.seguimiento.permitido) throw new Error(d.seguimiento.causas.join('; '));
   if(accion!=='rechazar'&&!d.ficha.servicioActual) throw new Error('El servicio ya no está vigente.');
   const tx=new sql.Transaction(await getPool());await tx.begin();
   try {
@@ -112,7 +113,7 @@ export async function decidir(personalInternoId:number, estudianteId:number, id:
     const row=locked.recordset[0];if(!row) throw new Error('Intervención no disponible.');
     if(['COMPLETADA','CANCELADA'].includes(row.Estado)){await tx.commit();return {id,estado:row.Estado,reutilizada:true};}
     if(accion!=='rechazar') await validarServicio(tx,estudianteId,personalInternoId,actual.tipo);
-    if(accion!=='rechazar') await validarEvaluacion(tx,estudianteId,actual.evaluacionId,d.huella);
+    if(accion!=='rechazar') await validarEvaluacion(tx,estudianteId,actual.evaluacionId,d.huella,d.corte);
     if(accion==='aprobar'&&row.Estado==='PROGRAMADA'&&row.AprobadoPorId){await tx.commit();return {id,estado:row.Estado,reutilizada:true};}
     if(accion==='aprobar'&&row.Estado!=='PROPUESTA') throw new Error('Solo se aprueban propuestas pendientes.');
     if(accion==='simular'&&(!row.AprobadoPorId||!['PROGRAMADA','EN_CURSO'].includes(row.Estado))) throw new Error('El dueño debe aprobar antes de simular.');

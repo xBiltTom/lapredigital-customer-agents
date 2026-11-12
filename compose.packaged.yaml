@@ -1,0 +1,39 @@
+name: lapredigital-packaged
+services:
+  app:
+    build:
+      context: .
+      dockerfile: infra/docker/Node.Dockerfile
+      target: mvp-runtime
+    init: true
+    environment:
+      TZ: America/Lima
+      AI_PROVIDER: chatgpt
+      EVE_TELEMETRY_DISABLED: "1"
+      SQLSERVER_HOST: ${SQLSERVER_HOST:-host.docker.internal}
+      SQLSERVER_PORT: ${SQLSERVER_PORT:-1433}
+      SQLSERVER_DATABASE: LaPreDigital_Customers
+      SQLSERVER_USER: ${SQLSERVER_USER}
+      SQLSERVER_PASSWORD: ${SQLSERVER_PASSWORD}
+      SQLSERVER_ENCRYPT: ${SQLSERVER_ENCRYPT:-true}
+      SQLSERVER_TRUST_SERVER_CERTIFICATE: ${SQLSERVER_TRUST_SERVER_CERTIFICATE:-true}
+      OWNER_PERSONAL_ID: ${OWNER_PERSONAL_ID}
+      OWNER_ACCESS_TOKEN: ${OWNER_ACCESS_TOKEN}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:3010:3000"
+    volumes:
+      - runtime_state:/workspace/apps/server/.eve/packaged/.eve
+      - keyring_state:/home/node/.local/share/keyrings
+    healthcheck:
+      test: [CMD,node,--input-type=module,-e,"const r=await fetch('http://127.0.0.1:3000/eve/v1/health');if(!r.ok)process.exit(1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+volumes:
+  runtime_state:
+  keyring_state:
+    external: true
+    name: lapredigital-customers_keyring_state

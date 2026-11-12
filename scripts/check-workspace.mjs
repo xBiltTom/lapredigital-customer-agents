@@ -23,6 +23,8 @@ const required = [
   'apps/server/agent/instructions.md', 'apps/server/agent/channels/eve.ts',
   'apps/server/lib/auth.ts', 'infra/sql/app-read-permissions.sql',
   'scripts/provision-sql-app', 'scripts/chat-local',
+  'apps/web/package.json', 'apps/web/src/App.tsx', 'apps/web/README.md',
+  'compose.packaged.yaml', 'scripts/start', 'scripts/open-panel',
 ];
 for (const name of required) await access(path.join(root, name));
 const pkg = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
@@ -34,7 +36,7 @@ assert.equal((await readFile(path.join(root, 'docs/reference/documento_Inteligen
 async function markdownFiles(dir) {
   const result = [];
   for (const entry of await readdir(dir, { withFileTypes: true })) {
-    if (['.git', 'node_modules', '.eve', '.output', 'dist', 'coverage'].includes(entry.name)) continue;
+    if (['.git', 'node_modules', '.eve', '.output', 'dist', '.dist', 'coverage'].includes(entry.name)) continue;
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) result.push(...await markdownFiles(full));
     else if (entry.name.endsWith('.md')) result.push(full);

@@ -1,63 +1,106 @@
 # LaPreDigital · Agente Académico de CUSTOMERS
 
-Proyecto académico de Ingeniería de Sistemas de la Universidad Nacional de Trujillo. El objetivo es acompañar la preparación de estudiantes mediante un agente que consulte su progreso, explique riesgos y proponga acciones compatibles con su servicio.
+MVP académico local para preparación de ingreso a la UNT. **Panel, SQL Server y agente reales**, con aprobación humana y seguimiento simulado.
 
-## Continuar el proyecto
+## Abrir la demo en este equipo
 
-1. Leer [AGENTS.md](AGENTS.md) y [el punto de continuación](docs/ESTADO.md).
-2. Seguir [el roadmap de tareas y commits](docs/ROADMAP.md).
-3. Consultar [contexto y decisiones](docs/CONTEXTO.md) y [arquitectura](docs/ARQUITECTURA.md).
+Si la terminal de Eve sigue abierta:
 
-**B01 finalizada; pendiente la reestructuración solicitada antes de continuar.** Se verificaron SQL, acceso del dueño, build y una respuesta/herramienta reales del modelo en este equipo. El roadmap posterior queda como referencia hasta incorporar la nueva dirección. Cada bloque corresponde a un commit. Ver [la revisión](docs/REVISION_T08_Y_PLAN.md) y [el estado vigente](docs/ESTADO.md).
+~~~bash
+./scripts/start
+./scripts/open-panel
+~~~
 
-## Estado actual
+Panel: **http://localhost:5173**. open-panel toma el acceso local de .env sin imprimirlo, lo pasa por fragmento y el panel lo elimina del URL. El token solo permanece en sessionStorage.
 
-La base OLTP y los escenarios ficticios ya existen. El backend mínimo de Eve arranca en Docker y tiene un endpoint de salud. El login local de ChatGPT, una herramienta fija, la conexión SQL de lectura y los repositorios de perfil/servicio se verificaron; aún faltan las herramientas de negocio y la interfaz. Por decisión del usuario se conserva el esquema actual mientras se desarrolla el prototipo local.
+Si apagaste todo, primero en una terminal:
 
-Stack acordado: TypeScript, Node.js 24, Eve/Nitro, React/Vite, SQL Server 2022 en Docker, `mssql`, Zod y Vitest. El acceso local al modelo se comprobó con la suscripción de ChatGPT en la TUI de Eve; no equivale a acceso API ni a despliegue. MiniMax queda como alternativa si sus créditos son utilizables por API.
+~~~bash
+docker start sql-server-local
+./scripts/chat-local
+~~~
 
-## Organización
+Desbloquea el llavero y completa /login → ChatGPT Subscription si Eve lo solicita. **Deja esa terminal abierta**. En otra terminal ejecuta start y open-panel. Si cambiaste el proceso de Eve, repite start para actualizar el proxy.
+
+El chat necesita el llavero abierto; sin él las consultas SQL y la bandeja siguen disponibles y el chat muestra un error explícito. No hay respuestas prefabricadas que sustituyan al modelo.
+
+## Qué puedes demostrar
+
+- Seleccionar estudiantes y consultar plan, vigencia, beca, reactivación, historial y prestaciones.
+- Revisar cumplimiento de ruta, resultados comparables, uso, valoración e incidencias.
+- Explicar el riesgo con datos y referencias; sin datos suficientes queda pendiente.
+- Conversar con el agente, ver qué herramientas usó y su referencia de sesión.
+- Registrar una propuesta, aprobar/rechazar y **simular** el seguimiento.
+- Respetar el plan, los permisos de contacto y la petición de no contacto de Inés.
+
+Guion sugerido: **Carla C003** (riesgo alto y -25 pp), **Gabriela C007** (pendiente, no aplicable), **Inés C009** (no contacto), **Fabio C006** (beca sin pago) y **Lucía C011** (reactivación). Las fechas de la demo envejecen.
+
+Toda comunicación es simulada: no se llama a WhatsApp/correo ni se crean mensajes ENVIADO/ENTREGADO. Una simulación no acredita C-4. El modelo propone; solo el dueño aprueba y simula. Las rutas y los pagos no se modifican.
+
+## Primera instalación
+
+Requisitos: Docker Engine/Compose, Git y shell POSIX. Node 24 está aislado en Docker.
+
+~~~bash
+./scripts/dev npm ci
+# Solo si no existe .env y el SQL Docker existente aún no tiene usuario de app:
+./scripts/provision-sql-app
+# Permisos mínimos para los módulos MVP sobre la base existente:
+./scripts/grant-mvp
+./scripts/dev npm run build:web
+./scripts/chat-local
+# Otra terminal:
+./scripts/start
+./scripts/open-panel
+~~~
+
+Nunca ejecutar 01/02 para arrancar la aplicación. El aprovisionamiento no sobrescribe .env/logins. Windows conserva los scripts PowerShell; aplicar también infra/sql/mvp-permissions.sql con una cuenta administradora. El arranque completo se verificó en CachyOS; los scripts Windows se revisaron estáticamente.
+
+## Comprobaciones
+
+~~~bash
+./scripts/dev npm run check
+./scripts/dev npm run typecheck
+./scripts/dev npm test
+./scripts/dev npm run build:web
+./scripts/dev npm run build:server
+./scripts/test-mvp
+./scripts/test-browser
+~~~
+
+test-mvp crea/recrea **solo LaPreDigital_Customers_MvpTest** con copias en memoria de los SQL canónicos, y verifica transacciones, evidencias, permisos, duplicados y simulación. test-browser usa la UI real y dirige sus escrituras a esa base aislada. Sus capturas quedan en tmp/, fuera de Git. No ejecutan llamadas al modelo: esas se verificaron aparte con Carla, Gabriela e Inés.
+
+Los 29 casos del SQL 03 y sus cinco HALLAZGO son históricos; el MVP no modifica ese esquema ni oculta sus limitaciones frente a SQL directo.
+
+## Imagen compilada
+
+~~~bash
+docker compose -f compose.packaged.yaml up --build -d --wait
+PANEL_URL=http://localhost:3010 ./scripts/open-panel
+~~~
+
+La imagen sirve frontend y API en **3010**, sin montar las fuentes del host. Se verificaron build, salud, autenticación y consulta SQL. El token y la contraseña se inyectan en ejecución, no dentro del bundle.
+
+Para habilitar el modelo del proceso compilado con el llavero local, detener ese servicio y abrirlo interactivamente:
+
+~~~bash
+docker compose -f compose.packaged.yaml stop app
+docker compose -f compose.packaged.yaml run --rm --service-ports app sh /workspace/scripts/eve-local npm run start:server
+~~~
+
+Introduce la contraseña del llavero y mantén esa terminal abierta. **Ese desbloqueo del modo compilado aún no se verificó**; la demo con modelo real sí se verificó mediante chat-local. La suscripción ChatGPT es una modalidad local, no una API key ni garantía de despliegue en VPS. Nube/proveedor de modelo se revisan después.
+
+## Estructura y continuidad
 
 | Ruta | Contenido |
 | --- | --- |
-| [database/](database/README.md) | Creación, población, pruebas y consultas del OLTP |
-| [docs/reference/](docs/reference/documento_InteligenciaNegocios.pdf) | Informe del negocio, identificado por el usuario como versión 7.1 |
-| [docs/database/](docs/database/REVISION_CUSTOMERS.md) | Revisión y verificaciones previas de la base |
-| [apps/](apps/README.md) | Backend mínimo y ubicación prevista del frontend |
-| [packages/](packages/README.md) | Ubicación prevista de contratos compartidos |
-| [infra/](infra/README.md) | Docker, persistencia y comandos locales |
-| scripts/ | Comprobaciones del workspace |
+| [apps/server](apps/server/README.md) | Eve/Nitro, reglas, SQL, herramientas y API |
+| [apps/web](apps/web/README.md) | Panel React/Vite |
+| [database](database/README.md) | Cuatro scripts canónicos conservados |
+| [infra](infra/README.md) | Docker, permisos y persistencia |
+| [docs/ESTADO.md](docs/ESTADO.md) | Qué se ejecutó y límites |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | M01–M03 y alcance del MVP |
+| [docs/CONTEXTO.md](docs/CONTEXTO.md) | Reglas y acuerdos del negocio |
+| [AGENTS.md](AGENTS.md) | Instrucciones para continuar |
 
-## Arranque local
-
-```bash
-./scripts/dev node --version
-./scripts/dev npm --version
-# Solo al clonar o cambiar el lockfile, con el servidor detenido:
-./scripts/dev npm ci
-# CachyOS con SQL Docker existente: una sola vez, si no existe .env:
-./scripts/provision-sql-app
-./scripts/dev npm run check
-./scripts/dev npm run typecheck
-./scripts/dev npm run build:server
-docker compose up --build -d --wait server
-curl http://127.0.0.1:3000/eve/v1/health
-```
-
-Node está aislado en Docker: imagen oficial fijada por digest, Node 24.22.3 y npm 11.19.1. `scripts/dev` ejecuta cada comando en un contenedor temporal con tu UID/GID; dependencias, caché y estado de Eve quedan en volúmenes del proyecto. No es necesario instalar Node en el host. Ver [la guía de infraestructura](infra/README.md). Si tu UID/GID difiere de 1000, exporta `LOCAL_UID=$(id -u)` y `LOCAL_GID=$(id -g)` antes de usar Compose directamente.
-
-La salud es pública y devuelve ok: true. El resto requiere el token local del dueño; el backend comprueba su rol DUEÑO y estado activo en SQL. La terminal interna de Eve también puede acceder durante desarrollo mediante localDev y el mismo dueño validado. No hay panel todavía.
-
-El build copia las fuentes mínimas a .eve/packaged dentro del volumen Docker y compila allí. El resultado .eve/packaged/.output permanece en Docker y ya no cruza sistemas de archivos: EXDEV corregido. Con server detenido, se puede probar el compilado con docker compose run --rm --no-deps --service-ports server npm run start:server. Es una verificación local, todavía no la imagen final de VPS.
-
-Para usar el modelo: ejecutar ./scripts/chat-local en una terminal interactiva. Detiene server, abre el llavero y lanza Eve en el mismo proceso de entorno. Completar /login → ChatGPT Subscription y mantener la terminal abierta mientras se usa el chat. El servicio estándar no desbloquea el llavero. [Guía del servidor](apps/server/README.md).
-
-El aprovisionamiento Linux genera .env privado con la cuenta lapredigital_app de solo lectura, el ID del dueño existente y su token aleatorio. No sobrescribe .env/logins ni recrea la base. Windows conserva provision-sql-app.ps1 y grant-sql-read.ps1; ambos usan el mismo archivo de permisos de infra/sql. Compose resuelve host.docker.internal en Linux con host-gateway. SQL se conecta al solicitar datos o autenticar al dueño, no al arrancar salud.
-
-Pruebas de lectura: docker compose run --rm --no-deps --workdir /workspace/apps/server server npm run db:check, db:t08 y db:b01. npm test --workspace=@lapredigital/server (mediante scripts/dev) comprueba configuración, paginación y autenticación; check solo revisa estructura/enlaces. El estado separa pruebas actuales, login pendiente y resultados históricos.
-
-## Base de datos
-
-Los scripts se ejecutan en orden 01 → 02; 03 sirve para verificar y 04 para explorar. No ejecutar 01/02 sobre la base actual para arrancar la aplicación. Consultar [las instrucciones de database](database/README.md).
-
-Última verificación SQL documentada: 12 de noviembre de 2026, 29 casos con 24 OK y 5 hallazgos pendientes. Ese resultado es previo a esta organización del repositorio; en esta tarea no se ha reconstruido ni modificado la base.
+SQL guarda fechas peruanas con GETDATE; la API las serializa con offset -05:00. No hay cierres mensuales congelados, DataMart, agenda, referidos, cambios de plan, portal familiar ni otros agentes del embudo en este MVP. MiniMax no se consumió.

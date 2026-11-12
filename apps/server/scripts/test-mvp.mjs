@@ -31,5 +31,10 @@ try {
  const eventos=await cantidad('EventoIntervencion');
  assert.equal((await decidir(owner,id('C006'),propuesta.id,'simular')).reutilizada,true);
  assert.equal(await cantidad('EventoIntervencion'),eventos);assert.equal(await cantidad('Mensaje'),mensajes);
+ const seguimiento=await proponer(owner,id('C004'),'SEGUIMIENTO','Acompañar al estudiante por su incidencia de acceso, sin enviar mensajes reales.');
+ await decidir(owner,id('C004'),seguimiento.id,'aprobar');
+ assert.equal((await decidir(owner,id('C004'),seguimiento.id,'simular')).estado,'COMPLETADA');
+ assert.equal((await pool.request().input('id',seguimiento.id).query('SELECT MensajeSeguimientoId FROM dbo.Intervencion WHERE IntervencionId=@id')).recordset[0].MensajeSeguimientoId,null);
+ assert.equal(await cantidad('Mensaje'),mensajes,'Seguimiento simulado tampoco crea mensajes.');
  console.log('MVP SQL OK: progreso, riesgo, permisos, evidencia ajena, rollback, deduplicación, aprobación y simulación sin envíos.');
 }finally{await closePool();}
