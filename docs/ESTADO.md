@@ -2,7 +2,13 @@
 
 Actualizado: 12/11/2026. Instrucción vigente: terminar un MVP local en una sola pasada de máximo una hora; reemplaza el plan individual B02–B08.
 
-## Último cambio: M09 — entrega del circuito local
+## Último cambio: M10 — diseño y navegación unificados
+
+Dashboard y Acompañamiento comparten WorkspaceNav en una barra lateral con selección activa y descripción de cada modo. Se bloquea el cambio mientras hay una operación de chat activa. Dashboard conserva el marco visual del workspace: cabecera, tarjetas con iconos, avance por tema con barras, avatares y panel de dirección. Ajustes responsive sin cambios de datos ni negocio.
+
+Verificación acotada: build web con TypeScript correcto; sin suites adicionales. El frontend de desarrollo aplica los cambios al recargar; se reconstruye también la imagen compilada. Siguiente paso: revisión visual del dueño, sin ampliar alcance.
+
+## M09 — entrega del circuito local
 
 Servicios: dashboard/acompañamiento 5173; portal Docker separado 5180, con su propio proceso Vite y proxy al mismo Eve desbloqueado; paquete compilado 3010. scripts/start arranca web y portal y conserva el proceso del modelo. README contiene el guion de demostración y la carga idempotente. La imagen se reconstruyó con backend y frontend actualizados; el modelo compilado sigue requiriendo el desbloqueo documentado, sin promesa de VPS con suscripción.
 
