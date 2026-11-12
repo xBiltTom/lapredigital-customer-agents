@@ -2,7 +2,15 @@
 
 Actualizado: 12/11/2026. Instrucción vigente: terminar un MVP local en una sola pasada de máximo una hora; reemplaza el plan individual B02–B08.
 
-## Último cambio: M04 — ficha completa del estudiante
+## Último cambio: M05 — historial por estudiante y Markdown progresivo
+
+La dirección de chat ahora es estable por dueño/alumno y la fija el servidor. GET /api/estudiantes/:id/chat reconstruye mensajes de usuario y respuestas públicas mediante foldEvents/conversation/reply de Eve, sin exponer razonamiento o salidas de herramientas. El panel recupera ese historial al cambiar de alumno o recargar. No se guardan chats ni credenciales en localStorage. Las antiguas sesiones con UUID aleatorio permanecen en Eve; no se fusionan automáticamente con la nueva conversación principal.
+
+POST /api/chat admite application/x-ndjson: entrega texto mientras se genera, nombres de herramientas y resultado final. Conserva JSON por compatibilidad. Al terminar corrige la respuesta visible con el reply final; las fallas se muestran explícitamente. Desconectar el lector no cancela el turno de Eve. Streamdown 2.7.1 renderiza Markdown, listas, tablas y código con CSS del panel; HTML e imágenes incrustadas desactivados. Sin plugins adicionales ni Tailwind.
+
+Verificación dirigida: tipos backend y build web correctos. Chat real del alumno 7: inicio, herramientas y texto antes de fin; cambio de alumno 7 → 3 → 7 recuperó 2 mensajes y misma sesión. Segundo mensaje recordó «prueba de continuidad jazmín» sin consultar herramientas. No se ejecutaron suites SQL ni de navegador. Se reconstruyó/reinició el paquete Docker; la demo con modelo continúa en el proceso de Eve desbloqueado de 5173. Siguiente paso: el usuario recarga y usa el chat.
+
+## M04 — ficha completa del estudiante
 
 Se muestran en Resumen los contactos del estudiante y apoderado, parentesco, universidad/carrera, fecha de examen, disponibilidad en horas y registro. Nueva pestaña Desempeño: todos los intentos finalizados, aciertos/total/porcentaje, contexto de comparabilidad, actividades de todas las versiones con fechas y estados, dificultades y revisiones. Usa campos ya disponibles en la API; no cambia SQL ni herramientas del agente.
 
@@ -65,6 +73,6 @@ B01 (795aad2) verificó login y herramienta fija, cuenta SQL, dueño y build. T0
 
 ## Límites del MVP
 
-Un proceso local, respuesta de chat por turno (sin streaming de tokens), datos operativos actuales y aprobación humana. Sin cierres congelados/DataMarts/KPI oficiales completos, agenda automática, proveedores de comunicación, portal familiar, referidos, cambios de plan o agentes de otras fases.
+Un proceso local, chat progresivo con historial por estudiante, datos operativos actuales y aprobación humana. Sin cierres congelados/DataMarts/KPI oficiales completos, agenda automática, proveedores de comunicación, portal familiar, referidos, cambios de plan o agentes de otras fases.
 
 No se prometen cuotas del modelo, despliegue con suscripción o persistencia del login real tras recreación. La fuente de verdad de negocio es informe 7.1 con decisiones posteriores del usuario. El código Windows se revisó estáticamente; la demo completa y el navegador se ejecutaron en CachyOS.

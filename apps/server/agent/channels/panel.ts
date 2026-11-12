@@ -4,6 +4,7 @@ import {dueno} from '../../lib/panel-auth.ts';
 import {listarEstudiantes} from '../../lib/database/estudiantes.ts';
 import {diagnostico,jsonSeguro} from '../../lib/diagnostico.ts';
 import {proponer,decidir,tipos} from '../../lib/propuestas.ts';
+import {direccionChat,historialChat} from '../../lib/chat.ts';
 
 const idSchema=z.coerce.number().int().positive().max(2147483647);
 const json=(data:unknown,status=200)=>Response.json(jsonSeguro(data),{status,headers:{'cache-control':'no-store'}});
@@ -29,15 +30,55 @@ export default defineChannel({routes:[
     const owner=await dueno(request);if(!owner)return json({error:'Acceso requerido.'},401);
     try{const b=z.object({accion:z.enum(['aprobar','rechazar','simular'])}).parse(await request.json());return json(await decidir(owner.id,idSchema.parse(params.id),idSchema.parse(params.intervencionId),b.accion));}catch(e){return error(e);}
   }),
+  GET('/api/estudiantes/:id/chat',async(request,{params,resolveSession})=>{
+    const owner=await dueno(request);if(!owner)return json({error:'Acceso requerido.'},401);
+    try{
+      const id=idSchema.parse(params.id);await diagnostico(owner.id,id);
+      const session=await resolveSession(direccionChat(owner.id,id));
+      return json(session?await historialChat(session):{mensajes:[],sesionId:null});
+    }catch(e){return error(e);}
+  }),
   POST('/api/chat',async(request,{from})=>{
     const owner=await dueno(request);if(!owner)return json({error:'Acceso requerido.'},401);
     try{
-      const b=z.object({estudianteId:idSchema,conversacionId:z.string().uuid(),mensaje:z.string().trim().min(1).max(2000)}).parse(await request.json());
+      const b=z.object({estudianteId:idSchema,mensaje:z.string().trim().min(1).max(2000)}).parse(await request.json());
       await diagnostico(owner.id,b.estudianteId);
       const info=await fetch('http://127.0.0.1:3000/eve/v1/info',{headers:{authorization:request.headers.get('authorization')!}}).then(r=>r.json());
       if(info.agent?.model?.endpoint?.state!=='ready')return json({error:'Modelo sin conexión. Abre scripts/chat-local y desbloquea el llavero.'},503);
-      const source=from(`dueno:${owner.id}:alumno:${b.estudianteId}:chat:${b.conversacionId}`);
+      const source=from(direccionChat(owner.id,b.estudianteId));
       const delivery=await source.send(b.mensaje,{auth:{...owner.auth,attributes:{...owner.auth.attributes,estudianteId:String(b.estudianteId)}},turnPolicy:'queue'});
+      if(request.headers.get('accept')?.includes('application/x-ndjson')){
+        const encoder=new TextEncoder(),signal=AbortSignal.any([request.signal,AbortSignal.timeout(180000)]);
+        const iterator=(async function*(){
+          yield {tipo:'inicio',sesionId:delivery.sessionId};
+          const partes=new Map<string,string>(),clases=new Map<string,string>(),herramientas=new Set<string>();
+          try{
+            for await(const event of delivery.stream({signal})){
+              if(event.type==='content.delta'){
+                if(event.data.kind)clases.set(event.data.partId,event.data.kind);
+                if(clases.get(event.data.partId)!=='text')continue;
+                partes.set(event.data.partId,(partes.get(event.data.partId)??'')+event.data.delta);
+                yield {tipo:'texto',texto:[...partes.values()].join('\n\n')};
+              }
+              if(event.type==='content.completed'&&event.data.kind==='text'&&typeof event.data.value==='string'){
+                partes.set(event.data.partId,event.data.value);
+                yield {tipo:'texto',texto:[...partes.values()].join('\n\n')};
+              }
+              if(event.type==='call.requested'&&event.data.capability.kind==='tool'){
+                herramientas.add(event.data.capability.name);
+                yield {tipo:'herramientas',herramientas:[...herramientas]};
+              }
+            }
+            const result=await delivery.result({signal});
+            if(result.status!=='completed')throw new Error(result.error?.message??'El modelo requiere atención en Eve.');
+            yield {tipo:'fin',texto:result.reply,sesionId:result.sessionId,herramientas:[...herramientas]};
+          }catch(e){yield {tipo:'error',error:e instanceof Error?e.message.slice(0,300):'Se interrumpió la respuesta.'};}
+        })();
+        return new Response(new ReadableStream<Uint8Array>({
+          async pull(controller){const next=await iterator.next();if(next.done)controller.close();else controller.enqueue(encoder.encode(JSON.stringify(next.value)+'\n'));},
+          async cancel(){await iterator.return(undefined);},
+        }),{headers:{'content-type':'application/x-ndjson; charset=utf-8','cache-control':'no-store, no-transform','x-accel-buffering':'no'}});
+      }
       const result=await delivery.result({signal:AbortSignal.timeout(90000)});
       if(result.status!=='completed')return json({error:result.error?.message??'El modelo requiere atención en la terminal de Eve.',estado:result.status},503);
       const herramientas:string[]=[];

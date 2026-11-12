@@ -29,7 +29,7 @@ El chat necesita el llavero abierto; sin él las consultas SQL y la bandeja sigu
 - Seleccionar estudiantes y consultar plan, vigencia, beca, reactivación, historial y prestaciones.
 - Revisar cumplimiento de ruta, resultados comparables, uso, valoración e incidencias.
 - Explicar el riesgo con datos y referencias; sin datos suficientes queda pendiente.
-- Conversar con el agente, ver qué herramientas usó y su referencia de sesión.
+- Conversar con el agente con Markdown y respuesta progresiva; recuperar su conversación al volver al estudiante o recargar, con herramientas y referencia de sesión.
 - Registrar una propuesta, aprobar/rechazar y **simular** el seguimiento.
 - Respetar el plan, los permisos de contacto y la petición de no contacto de Inés.
 

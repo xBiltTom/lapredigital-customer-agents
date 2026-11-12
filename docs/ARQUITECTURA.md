@@ -6,7 +6,7 @@ React/Vite en 5173 usa /api mediante proxy hacia Eve/Nitro en 3000. Una imagen c
 
 Bearer local del dueño resuelto a PersonalInterno con Rol N'DUEÑO' y Activo=1. El token no incorpora un contactoId elegido por el cliente y permanece solo en sessionStorage del navegador. Salud pública; datos/acciones protegidos.
 
-Cada conversación del panel se identifica por dueño + alumno + UUID. El canal pasa ese alumno en auth.attributes y las tools no aceptan un ID diferente. El backend mantiene la autorización en todas sus operaciones.
+Cada conversación del panel se identifica por dueño + alumno + dirección principal estable. El canal pasa ese alumno en auth.attributes y las tools no aceptan un ID diferente. El backend mantiene la autorización en todas sus operaciones.
 
 El acceso interno familiar exige REPORTES_APODERADO vigente; no existe un portal familiar ni autenticación multiusuario de producción.
 
@@ -38,4 +38,4 @@ SQL DATETIME2 y GETDATE peruanos; mssql useUTC:false y Node America/Lima. La API
 
 Pruebas de escritura solo en LaPreDigital_Customers_MvpTest. Navegador con UI real y esa API; chats reales verificados aparte para evitar consumo automático.
 
-Un proceso local, chat por turnos sin streaming. Sin DataMarts/cierres congelados, agenda, KPI oficiales completos, proveedores de comunicación ni extensiones del embudo. La modalidad ChatGPT local no garantiza API/VPS; MiniMax no se consumió.
+Un proceso local; POST /api/chat transmite texto y nombres de herramientas por NDJSON sin razonamiento interno. GET /api/estudiantes/:id/chat recupera el historial de la dirección principal desde Eve, validando al dueño y al alumno. El cliente usa Streamdown para Markdown y bloquea imágenes/HTML incrustado. Sin DataMarts/cierres congelados, agenda, KPI oficiales completos, proveedores de comunicación ni extensiones del embudo. La modalidad ChatGPT local no garantiza API/VPS; MiniMax no se consumió.

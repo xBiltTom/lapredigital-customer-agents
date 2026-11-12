@@ -39,13 +39,14 @@ Actualizado el 12/11/2026. El usuario adelantó el deadline y autorizó terminar
 
 | ID | Estado | Resultado |
 | --- | --- | --- |
+| M05 | Hecha | Conversación persistente por dueño/alumno, historial desde Eve, respuesta progresiva NDJSON y Markdown con Streamdown. |
 | M04 | Hecha | Ficha visible de contacto del estudiante/apoderado y pestaña de desempeño con todos los intentos, versiones de ruta, actividades, dificultades y revisiones. Reutiliza la API existente; compilación y reconstrucción Docker. |
 
 ## Fuera de esta entrega
 
 DataMarts/cierres mensuales, KPI oficiales C-1–C-7 completos, agenda automática, proveedores de comunicación, agentes de otras fases, cobros, cambios de plan, referidos, portal familiar y autenticación de producción. No bloquear la demo por esas extensiones.
 
-El chat usa respuesta por turno, con espera visible; streaming de tokens queda pospuesto. El login local ChatGPT requiere un proceso con llavero desbloqueado y no equivale a API/despliegue cloud. No consumir MiniMax.
+M05 añadió respuesta progresiva e historial por estudiante sobre las sesiones de Eve. El login local ChatGPT requiere un proceso con llavero desbloqueado y no equivale a API/despliegue cloud. No consumir MiniMax.
 
 ## Convenciones y comprobación
 
