@@ -1,397 +1,131 @@
 # Roadmap de LaPreDigital · CUSTOMERS
 
-Actualizado: 12 de noviembre de 2026. Este archivo es el plan canónico de tareas; cada tarea equivale a un commit coherente y comprobable.
-
-## Para retomar en otra sesión
-
-1. Leer [AGENTS.md](../AGENTS.md), [contexto y acuerdos](CONTEXTO.md), [estado de continuidad](ESTADO.md) y [arquitectura](ARQUITECTURA.md).
-2. Revisar `git status`, `git log -5 --oneline` y `git remote -v`. No sobrescribir cambios del usuario.
-3. Continuar con **T09**, primer pendiente. T08 dejó repositorios de listado y ficha con identidad validada en el backend; T09 debe calcular progreso comparable sin ampliar el esquema.
-4. Leer los scripts de [database/](../database/README.md) y el [informe 7.1](reference/documento_InteligenciaNegocios.pdf) antes de convertir consultas en herramientas. La base está congelada por decisión del usuario.
-5. El login de ChatGPT está verificado solo en la TUI local; no asumir que funciona en despliegue o desde Windows por el puerto publicado. No asumir créditos API de MiniMax ni permisos SQL distintos de los SELECT documentados para el repositorio de T08; no hay DML.
-
-## Objetivo y decisiones aceptadas
-
-LaPreDigital prepara postulantes a la UNT, inicialmente de Trujillo/La Libertad. Se empieza con un Agente Académico de CUSTOMERS y un panel local para el dueño. El primer resultado útil es seleccionar a Carla, consultar datos reales de la demo, explicar su riesgo con evidencias y recomendar una acción. Luego se añade propuesta, aprobación y simulación de comunicación.
-
-Stack: TypeScript, Node 24, backend Eve/Nitro, React/Vite, SQL Server 2022 en Docker, `mssql`, Zod y Vitest. Se usan npm workspaces y un lockfile raíz. La integración local `chatgpt()` de Eve mediante `/login` pasó una prueba real de modelo y herramienta fija en T05. MiniMax es alternativo solo si sus créditos son válidos para API. No se presupuestan claves nuevas, AI Gateway, nube ni mensajes reales para este MVP.
-
-Las reglas de cálculo y permisos se aplican en código. La IA interpreta narrativas, selecciona herramientas y explica recomendaciones. El modelo no recibe SQL arbitrario, credenciales, herramientas de shell ni permiso para autoaprobar acciones. Las tablas actuales se conservan y las escrituras se encapsulan en transacciones con validación y deduplicación.
-
-La aceptación de términos en el registro es la fuente prevista de autorizaciones del servicio: no pedir consentimiento adicional por cada mensaje. Conservar evidencia y respetar solicitudes posteriores de no contacto proactivo. Ese acuerdo es funcional; no se presenta como validación jurídica de un texto de términos todavía inexistente.
-
-## Alcance de los hitos
-
-- **Preparación (T00–T07):** repositorio, documentación, toolchain, servidor mínimo, login y SQL.
-- **MVP 1 (T08–T12 y T16–T20):** consulta y diagnóstico explicado en navegador. También requiere las políticas de T13.
-- **MVP 2 (T13–T15 y T21–T25):** propuestas, aprobación, simulación y pruebas de escritura.
-- **Operación local (T26–T29):** agenda, métricas provisionales, trazas y ejecución reproducible.
-- **Extensiones (T30–T32):** cambios de plan, referidos y vista del apoderado; se priorizan después del núcleo según tiempo.
-
-Los IDs dan una secuencia sugerida, pero mandan las dependencias. T10 y otras tareas deterministas pueden avanzar mientras se resuelve el login de T05.
-
-## Protocolo: una tarea, un commit
-
-- Antes de empezar, verificar el estado de Git y escoger la primera tarea desbloqueada. No implementar varias tareas inconexas dentro de un commit.
-- Si una tarea crece demasiado, dividirla aquí antes de implementarla, manteniendo IDs existentes y actualizando dependencias.
-- Completar sus pruebas y criterios, actualizar su estado en este archivo y el punto de continuación en ESTADO.md, y hacer el commit de la tarea con esos documentos incluidos.
-- No crear un commit separado solo para marcar como terminada la misma tarea. Consultar el hash del propio commit con Git; no intentar escribirlo dentro de sí mismo.
-- Un fallo de auth o entorno se documenta como pendiente real, no como funcionalidad terminada. Indicar qué se verificó estáticamente y qué se ejecutó.
-- No reformatear SQL ni cambiar consultas del usuario como parte incidental de una tarea del agente.
-- Publicar con push normal cuando esté dentro del trabajo autorizado; no forzar ni reescribir la historia compartida.
-
-## Tablero
-
-| ID | Estado | Tarea | Dependencias |
-| --- | --- | --- | --- |
-| T00 | Hecha | Preservar la base y las consultas existentes | Ninguna |
-| T01 | Hecha | Organizar y configurar el workspace | T00 |
-| T02 | Hecha | Documentar roadmap y continuidad | T01 |
-| T03 | Hecha | Preparar Node 24 y el gestor de paquetes | T02 |
-| T04 | Hecha | Crear el backend mínimo de Eve | T03 |
-| T05 | Hecha | Probar ChatGPT local con una herramienta inocua | T04 |
-| T06 | Hecha | Validar la configuración de la aplicación | T04 |
-| T07 | Hecha | Conectar a SQL Server con un usuario de aplicación | T06 |
-| T08 | Hecha | Consultar perfil, servicio y prestaciones | T07 |
-| T09 | Pendiente | Consultar progreso académico y revisiones | T08 |
-| T10 | Pendiente | Implementar las reglas deterministas de riesgo | T06, T08 |
-| T11 | Pendiente | Interpretar mensajes y valoraciones con evidencia | T05, T10 |
-| T12 | Pendiente | Integrar herramientas de consulta y explicación | T09, T10, T11 |
-| T13 | Pendiente | Aplicar política de contacto y prestaciones | T08, T10 |
-| T14 | Pendiente | Registrar evaluaciones y señales atómicamente | T10, T11, T13 |
-| T15 | Pendiente | Registrar propuestas sin duplicar acciones | T13, T14 |
-| T16 | Pendiente | Exponer la API local con contexto de usuario | T08, T09, T10, T13 |
-| T17 | Pendiente | Crear la interfaz React/Vite | T03, T16 |
-| T18 | Pendiente | Mostrar listado y ficha del estudiante | T17, T08 |
-| T19 | Pendiente | Mostrar progreso, incidencias y riesgo | T18, T09, T10 |
-| T20 | Pendiente | Conectar el chat real de Eve al panel | T12, T17, T19 |
-| T21 | Pendiente | Aprobar o rechazar una intervención desde el panel | T15, T20 |
-| T22 | Pendiente | Simular mensajes y registrar seguimiento | T21 |
-| T23 | Pendiente | Gestionar revisión de ruta y derivaciones humanas | T15, T21 |
-| T24 | Pendiente | Probar herramientas de escritura contra SQL Server | T14, T15, T22, T23 |
-| T25 | Pendiente | Preparar regresión de la demo en navegador | T20, T22, T23, T24 |
-| T26 | Pendiente | Programar la revisión local de customers | T24 |
-| T27 | Pendiente | Exponer indicadores operativos del mes | T19, T22, T24 |
-| T28 | Pendiente | Registrar trazas y consumo de la ejecución | T12, T24 |
-| T29 | Pendiente | Empaquetar y documentar el inicio local | T25, T28 |
-| T30 | Pendiente | Preparar propuestas de cambio de plan | T23, T24 |
-| T31 | Pendiente | Preparar invitaciones a referidos | T13, T22, T24 |
-| T32 | Pendiente | Mostrar reportes del apoderado por estudiante | T18, T19, T24 |
-
-## Tareas y criterios de cierre
-
-### T00 · Preservar la base y las consultas existentes
-
-- [x] Tarea completada.
-- **Depende de:** ninguna.
-- **Commit:** `chore(T00): versionar base academica y consultas existentes`.
-- **Entregable:** Importar los seis archivos originales sin alterarlos; inicializar main y origin.
-- **Cierre verificable:** Archivos presentes en el primer commit; repositorio remoto comprobado vacío por git ls-remote.
-- **Contexto o límite:** Concluida en 513d0c9.
-
-### T01 · Organizar y configurar el workspace
-
-- [x] Tarea completada.
-- **Depende de:** T00.
-- **Commit:** `chore(T01): organizar workspace y configurar entorno local`.
-- **Entregable:** Mover SQL a database/ y documentación a docs/; preparar npm workspaces, Node 24, exclusiones de secretos, editor y comprobación local.
-- **Cierre verificable:** Comparar los seis archivos con sus blobs de T00; npm run check y git diff --check.
-- **Contexto o límite:** Concluida en 9059457; bytes de los originales preservados.
-
-### T02 · Documentar roadmap y continuidad
-
-- [x] Tarea completada.
-- **Depende de:** T01.
-- **Commit:** `docs(T02): definir roadmap y contexto de continuidad`.
-- **Entregable:** Crear este plan, contexto, arquitectura, estado y AGENTS.md; enlazarlos desde README; publicar la inicialización en origin/main.
-- **Cierre verificable:** Enlaces locales válidos; tareas con dependencias y criterios; sin secretos; árbol limpio tras commit; verificar remoto al publicar.
-- **Contexto o límite:** La publicación se verifica con Git; el hash de este mismo commit se consulta en git log.
-
-### T03 · Preparar Node 24 y el gestor de paquetes
-
-- [x] Tarea completada.
-- **Depende de:** T02.
-- **Commit:** `chore(T03): aislar toolchain node 24 en docker`.
-- **Entregable:** Imagen oficial Node fijada por digest, Compose con usuario sin privilegios y UID/GID del host, volúmenes de dependencias/caché, wrapper scripts/dev, .dockerignore e instrucciones de uso. El usuario pidió Docker para aislar Node y preparar portabilidad a VPS.
-- **Cierre verificable:** Node 24.22.3 y npm 11.19.1 en contenedor; usuario sin privilegios; TZ America/Lima; escritura con UID/GID del host; npm run check dentro del contenedor; SQL y scripts sin cambios.
-- **Contexto o límite:** Node global 26 permanece intacto. Es el entorno de desarrollo, no una imagen de producción final; esta se completa en T29.
-
-### T04 · Crear el backend mínimo de Eve
-
-- [x] Tarea completada.
-- **Depende de:** T03.
-- **Commit:** `feat(T04): iniciar servidor local de eve`.
-- **Entregable:** apps/server con Eve 1.0.0-rc.10, AI SDK 7.0.137 y Zod 4.6.7; docs instaladas revisadas y lockfile raíz. Compose inicia el backend en 127.0.0.1:3000, con salud y volumen de estado compartido con CLI. Sin Git anidado ni SQL.
-- **Cierre verificable:** npm ci, typecheck y build pasan dentro de Docker; salud 200 antes y después de recrear el contenedor; persistencia de marcador .eve; sesión sin autorización devuelve 401; eve info sin errores y sin herramientas.
-- **Contexto o límite:** Eve es una versión candidata. Sin login ni llamada real al modelo, agente de negocio o permisos de escritura. auth: [] mantiene sesiones cerradas hasta T05; el aviso de sandbox no impide compilar y no se montó Docker del host. Imagen final de VPS en T29.
-
-### T05 · Probar ChatGPT local con una herramienta inocua
-
-- [x] Tarea completada.
-- **Depende de:** T04.
-- **Commit:** `feat(T05): verificar autenticacion local del agente`.
-- **Entregable:** Configurar chatgpt() y /login según la versión instalada; el usuario realiza la autenticación. Probar una herramienta que devuelve datos fijos no sensibles y registrar resultado, modelo disponible y límites observados.
-- **Cierre verificable:** Una respuesta real y una llamada real a la herramienta se completan; un fallo de auth se muestra sin exponer tokens.
-- **Contexto o límite:** El login local con código de dispositivo funcionó desde la TUI en Docker; traza con `gpt-6-luna-fast`, dos pasos y `execute_tool comprobar_conexion`. No se comprobó persistencia del login tras reinicio, acceso al chat desde Windows, ni despliegue. Credenciales en llavero Linux cifrado fuera de Git; MiniMax no se consumió.
-
-### T06 · Validar la configuración de la aplicación
-
-- [x] Tarea completada.
-- **Depende de:** T04.
-- **Commit:** `feat(T06): validar configuracion de entorno`.
-- **Entregable:** Implementar configuración Zod y .env.example coherente, puertos locales, zona horaria y proveedor; separar opciones públicas de secretos del servidor.
-- **Cierre verificable:** Una variable requerida ausente produce un error claro; ningún secreto llega al frontend o al log.
-- **Contexto o límite:** Configuración mínima de TZ y proveedor local; Compose fija el puerto 127.0.0.1:3000. Sin frontend ni conexión SQL, no hay secretos que transmitir. El login se verificó después en T05; no se conecta ni reconstruye la base al importar el módulo.
-
-### T07 · Conectar a SQL Server con un usuario de aplicación
-
-- [x] Tarea completada.
-- **Depende de:** T06.
-- **Commit:** `feat(T07): conectar sql server con pool compartido`.
-- **Entregable:** Comprobar el puerto del contenedor existente; configurar identidad de aplicación y permisos mínimos para la fase de lectura; implementar mssql con un pool reutilizable y cierre ordenado. Documentar los cambios operativos de usuarios/permisos.
-- **Cierre verificable:** Consulta parametrizada SELECT de prueba; fallo de conexión manejado; GETDATE() mantiene hora de Perú; no cambios de tablas o datos.
-- **Contexto o límite:** La instancia actual es SQL Server nativo en Windows, accesible desde Docker por `host.docker.internal:1433`. La cuenta `lapredigital_app` solo tiene `SELECT` sobre `dbo.Estudiante`, no `sa` ni permisos DML; en T08 se ampliarán solo los SELECT necesarios. `db:check` verificó C001, hora local de `GETDATE()`, offset -05:00 de `SYSDATETIMEOFFSET()` y cierre del pool. La contraseña está en `.env` ignorado, nunca en Git ni en herramientas del modelo. La creación de usuario/permisos fue configuración, no un rediseño del esquema.
-
-### T08 · Consultar perfil, servicio y prestaciones
-
-- [x] Tarea completada.
-- **Depende de:** T07.
-- **Commit:** `feat(T08): consultar perfil y servicio del customer`.
-- **Entregable:** Implementar repositorios parametrizados para estudiante, contactos, apoderado, periodos y prestaciones; paginar listados y distinguir servicio actual de historial.
-- **Cierre verificable:** C006 beca sin pago; C011 dos episodios; C013 LEAD; apoderado compartido sin duplicar estudiantes.
-- **Contexto o límite:** La identidad activa proviene del contexto validado del backend; una instrucción del chat no concede acceso a otro estudiante. `apps/server/lib/database/estudiantes.ts` expone listado paginado y ficha; `db:t08` verificó C006, C011, C013, el apoderado compartido de C003/C005 y la denegación de una ficha ajena. `scripts/grant-sql-read.ps1` concedió SELECT solo a las tablas del repositorio y a cuatro columnas de `Pago`; no hay DML ni `sa`. Los repositorios aún no son herramientas del agente ni endpoint (T12/T16).
-
-### T09 · Consultar progreso académico y revisiones
-
-- [ ] Tarea completada.
-- **Depende de:** T08.
-- **Commit:** `feat(T09): calcular progreso academico comparable`.
-- **Entregable:** Implementar cumplimiento por ruta y mejora por grupo comparable; exponer actividades, dificultades y revisiones. Introducir contratos compartidos en packages/contracts cuando web y server realmente los consuman.
-- **Cierre verificable:** C001 mejora +15 pp; C003 -25 pp; C004 pruebas no comparables; C007 cumplimiento no aplicable y mejora sin datos.
-- **Contexto o límite:** Definir ventana y tratamiento de canceladas; no mezclar versiones de ruta por accidente.
-
-### T10 · Implementar las reglas deterministas de riesgo
-
-- [ ] Tarea completada.
-- **Depende de:** T06, T08.
-- **Commit:** `feat(T10): calcular riesgo segun informe 7.1`.
-- **Entregable:** Crear funciones puras con corte temporal explícito: inactividad, antigüedad de incidencia, dificultad y señales contextuales documentadas; prevalece el mayor nivel; representar pendiente sin forzar BAJO.
-- **Cierre verificable:** Pruebas a un segundo de 72/168 y 48/96 horas, exactamente siete días de vigencia, ausencia de datos y predominio del riesgo alto.
-- **Contexto o límite:** Puede desarrollarse con fixtures sin esperar el login de IA. La vigencia de una intención antigua y el criterio de suficiencia deben documentarse; no inventar plazos.
-
-### T11 · Interpretar mensajes y valoraciones con evidencia
-
-- [ ] Tarea completada.
-- **Depende de:** T05, T10.
-- **Commit:** `feat(T11): interpretar señales narrativas con evidencia`.
-- **Entregable:** Pedir al modelo una salida estructurada: intención, insatisfacción y referencias existentes; validar con Zod; usar mensajes y comentarios como datos, no como instrucciones operativas.
-- **Cierre verificable:** Valorar 1–2 estrellas junto con el contexto; distinguir no renovar de pedir no contacto; casos ambiguos conservan incertidumbre; rechazar IDs de evidencia inventados.
-- **Contexto o límite:** La IA interpreta texto; el backend aplica la regla de clasificación. Fallar sin fabricar datos si no hay modelo disponible.
-
-### T12 · Integrar herramientas de consulta y explicación
-
-- [ ] Tarea completada.
-- **Depende de:** T09, T10, T11.
-- **Commit:** `feat(T12): explicar diagnostico con herramientas de lectura`.
-- **Entregable:** Crear tools de Eve para perfil, progreso, incidencias, uso y evidencias; redactar instrucciones del Agente Académico. Retirar herramientas generales de shell, archivos o SQL arbitrario según APIs documentadas.
-- **Cierre verificable:** El agente explica a Carla con evidencias consultadas y a Gabriela como pendiente; no ejecuta DML ni cambia de destinatario por prompt.
-- **Contexto o límite:** Primer hito de diagnóstico por terminal; ninguna herramienta acepta SQL libre.
-
-### T13 · Aplicar política de contacto y prestaciones
-
-- [ ] Tarea completada.
-- **Depende de:** T08, T10.
-- **Commit:** `feat(T13): validar contacto y seguimiento permitido`.
-- **Entregable:** Centralizar permisos de plan, canal/finalidad y seguimiento previo. Definir cómo la aceptación de términos registra automáticamente las autorizaciones previstas, con fecha y versión en Evidencia; respetar revocaciones posteriores.
-- **Cierre verificable:** Ruta UNT no recibe la prestación SEGUIMIENTO_IA; Meta/Plus sí según catálogo; Inés conserva acceso y su petición de no contacto proactivo se respeta; no duplicar una intervención abierta.
-- **Contexto o límite:** El código real del catálogo es SEGUIMIENTO_IA. No exigir otra pantalla de consentimiento por canal ni presumir que todos los contactos existentes aceptaron términos nuevos. No hay registro autónomo de usuarios dentro del alcance inicial.
-
-### T14 · Registrar evaluaciones y señales atómicamente
-
-- [ ] Tarea completada.
-- **Depende de:** T10, T11, T13.
-- **Commit:** `feat(T14): persistir evaluacion de riesgo con sus señales`.
-- **Entregable:** Implementar una operación transaccional que valide pertenencia, fechas, nivel y evidencia actual; agregar evaluaciones completas sin sobrescribir evaluaciones clasificadas anteriores.
-- **Cierre verificable:** Si falla una señal se revierte todo; nivel coincide con el mayor sustentado; una evidencia ajena o alterada impide finalizar la operación.
-- **Contexto o límite:** Usar las tablas actuales. Conservar contexto de ejecución en almacenamiento local de la app si el OLTP no permite una instantánea; no prometer inmutabilidad ante SQL directo.
-
-### T15 · Registrar propuestas sin duplicar acciones
-
-- [ ] Tarea completada.
-- **Depende de:** T13, T14.
-- **Commit:** `feat(T15): proponer intervenciones con deduplicacion`.
-- **Entregable:** Crear Intervencion en estado PROPUESTA y su EventoIntervencion dentro de transacción; verificar plan, evaluación, intervenciones previas y aprobación necesaria. Diseñar una clave estable de operación y recuperación para el único proceso local.
-- **Cierre verificable:** Dos solicitudes/reintentos para la misma operación no crean dos propuestas; rollback consistente; no cambiar etapas, pagos ni rutas.
-- **Contexto o límite:** No basar deduplicación solo en texto del prompt o en el ID efímero de una llamada. Explicitar los límites si en el futuro se ejecutan varias réplicas.
-
-### T16 · Exponer la API local con contexto de usuario
-
-- [ ] Tarea completada.
-- **Depende de:** T08, T09, T10, T13.
-- **Commit:** `feat(T16): exponer api local del panel`.
-- **Entregable:** Añadir endpoints Nitro y contratos para listar, consultar y analizar; validar IDs, errores y sesión local del dueño. La vista simulada de estudiante debe estar identificada como demo.
-- **Cierre verificable:** Pruebas HTTP de datos válidos, inexistentes, entradas inválidas y acceso fuera del contexto; secretos ausentes en respuestas.
-- **Contexto o límite:** Reutilizar el servidor de Eve; no añadir NestJS o Next.js. No presentar la selección de un estudiante como autenticación de producción.
-
-### T17 · Crear la interfaz React/Vite
-
-- [ ] Tarea completada.
-- **Depende de:** T03, T16.
-- **Commit:** `feat(T17): iniciar panel react vite`.
-- **Entregable:** Crear apps/web con TypeScript y React/Vite; configurar proxy local a /api y /eve según docs; navegación, estilos y estados de conexión.
-- **Cierre verificable:** Interfaz inicia junto al backend, muestra errores de conexión y compila; lockfile único en raíz.
-- **Contexto o límite:** Dependencias con función concreta; no instalar una segunda librería de agentes.
-
-### T18 · Mostrar listado y ficha del estudiante
-
-- [ ] Tarea completada.
-- **Depende de:** T17, T08.
-- **Commit:** `feat(T18): mostrar ficha del customer`.
-- **Entregable:** Listado paginado y ficha con servicio, periodos, contacto, apoderado y prestaciones; identificar beca, reactivación y etapa.
-- **Cierre verificable:** Mostrar C006, C011 y las dos estudiantes de María sin confundir personas; sin datos se muestra explícitamente.
-- **Contexto o límite:** Conservar el ámbito de acceso en el backend.
-
-### T19 · Mostrar progreso, incidencias y riesgo
-
-- [ ] Tarea completada.
-- **Depende de:** T18, T09, T10.
-- **Commit:** `feat(T19): visualizar diagnostico y evidencias`.
-- **Entregable:** Presentar cumplimiento, mejora, uso, valoración, incidencias, riesgo y vigencia con evidencias consultables. Mostrar fecha del corte y origen de datos.
-- **Cierre verificable:** C007 nunca aparece bajo por ausencia de datos; C008 requiere reevaluación; notas en pp y pruebas comparables.
-- **Contexto o límite:** Las métricas operativas son actuales; no llamarlas cierres mensuales congelados.
-
-### T20 · Conectar el chat real de Eve al panel
-
-- [ ] Tarea completada.
-- **Depende de:** T12, T17, T19.
-- **Commit:** `feat(T20): conectar chat del agente academico`.
-- **Entregable:** Integrar el cliente React de Eve con sesiones locales y streaming; mostrar herramientas, errores y referencias; conservar el estudiante seleccionado en contexto validado.
-- **Cierre verificable:** Conversación real de Carla en navegador usa perfil y evidencia; cambio de estudiante no arrastra el contexto de otro; reinicio conserva sesión según configuración.
-- **Contexto o límite:** Hito MVP 1: diagnóstico explicado de principio a fin. No sustituir la llamada real por una respuesta fija sin etiquetarla.
-
-### T21 · Aprobar o rechazar una intervención desde el panel
-
-- [ ] Tarea completada.
-- **Depende de:** T15, T20.
-- **Commit:** `feat(T21): aprobar propuestas desde el panel`.
-- **Entregable:** Añadir bandeja de propuestas y detalle de evidencia; aprobación/rechazo del dueño con identidad y fecha verificadas; revalidar condiciones al ejecutar tras aprobación.
-- **Cierre verificable:** Doble clic no ejecuta dos veces; revocación o cambio de plan posterior bloquea la acción; el modelo no puede autoaprobar.
-- **Contexto o límite:** No agregar un estado RECHAZADA inexistente a Intervencion: mapear a CANCELADA con resultado y evento explicativo.
-
-### T22 · Simular mensajes y registrar seguimiento
-
-- [ ] Tarea completada.
-- **Depende de:** T21.
-- **Commit:** `feat(T22): simular comunicacion de seguimiento`.
-- **Entregable:** Crear bandeja simulada de borradores/respuestas y registrar las operaciones de negocio permitidas. Utilizar estados existentes, sin inventar BORRADOR en Mensaje. Identificar toda simulación.
-- **Cierre verificable:** Ningún proveedor externo es llamado; un borrador/simulación no se marca ENVIADO/ENTREGADO ni incrementa C-4 de envíos reales; historial de intervención consistente.
-- **Contexto o límite:** Hito MVP 2: diagnóstico → propuesta → aprobación → simulación visible. Los envíos reales requieren un adaptador posterior.
-
-### T23 · Gestionar revisión de ruta y derivaciones humanas
-
-- [ ] Tarea completada.
-- **Depende de:** T15, T21.
-- **Commit:** `feat(T23): registrar revisiones y derivaciones humanas`.
-- **Entregable:** Registrar recomendaciones en RevisionRuta e intervenciones de derivación con la evidencia correspondiente; ofrecer al dueño su bandeja de revisión.
-- **Cierre verificable:** Solo el dueño publica cambios de ruta mediante operación controlada; el agente propone; una consulta económica queda derivada sin procesar pagos.
-- **Contexto o límite:** No dar por implementado un Agente de Cobranza: por ahora hay una derivación para atención humana.
-
-### T24 · Probar herramientas de escritura contra SQL Server
-
-- [ ] Tarea completada.
-- **Depende de:** T14, T15, T22, T23.
-- **Commit:** `test(T24): validar transacciones del agente en sql server`.
-- **Entregable:** Agregar pruebas de integración sobre una base de prueba aislada, comprobando transacciones, permisos y reintentos; comparar los cinco huecos SQL con la protección aplicada por la app.
-- **Cierre verificable:** 29 pruebas de referencia mantienen su interpretación; pruebas nuevas de app rechazan los cinco casos inconsistentes; ninguna ejecución borra la base principal.
-- **Contexto o límite:** El 03 seguirá mostrando sus cinco HALLAZGO mientras no se modifique el esquema. No cambiarlo para fingir que se corrigieron a nivel de base.
-
-### T25 · Preparar regresión de la demo en navegador
-
-- [ ] Tarea completada.
-- **Depende de:** T20, T22, T23, T24.
-- **Commit:** `test(T25): verificar escenarios completos del panel`.
-- **Entregable:** Automatizar los flujos esenciales con Playwright; aislar pruebas deterministas de las que consumen una sesión/modelo real.
-- **Cierre verificable:** Carla, Gabriela, Hugo, Fabio, Inés y Lucía cubren los caminos esperados; aprobación, aislamiento por alumno y mensajes simulados funcionan.
-- **Contexto o límite:** Las pruebas de modelo real son explícitas y presupuestadas; no ejecutarlas automáticamente en cada commit.
-
-### T26 · Programar la revisión local de customers
-
-- [ ] Tarea completada.
-- **Depende de:** T24.
-- **Commit:** `feat(T26): programar reevaluacion local controlada`.
-- **Entregable:** Añadir ejecución manual por lote y agenda local con un único proceso; evaluar semanalmente y ante señales nuevas según política definida, reutilizando deduplicación y límites.
-- **Cierre verificable:** Reiniciar no duplica trabajos/acciones; la selección respeta servicio vigente y necesidad de reevaluación; registrar corte y resultado por estudiante.
-- **Contexto o límite:** El programa no trabaja cuando el equipo está apagado. No ejecutar un LLM para cálculos que puede resolver el motor de reglas.
-
-### T27 · Exponer indicadores operativos del mes
-
-- [ ] Tarea completada.
-- **Depende de:** T19, T22, T24.
-- **Commit:** `feat(T27): calcular indicadores provisionales de customers`.
-- **Entregable:** Implementar cohortes y denominadores de C-1 a C-7 según datos disponibles; mostrar numerador, denominador, corte y no aplicable; separar pendientes y evaluaciones vencidas.
-- **Cierre verificable:** No contar aceptado como aplicado; reactivación no cuenta como renovación continua; no duplicar customers por sus eventos; no incluir envíos simulados en C-4.
-- **Contexto o límite:** Resolver con el usuario las ambigüedades de C-1.1 con varias revisiones y cobertura de pendientes en C-3.1 antes de rotularlos como KPI oficiales. Los cierres históricos permanecen fuera de alcance.
-
-### T28 · Registrar trazas y consumo de la ejecución
-
-- [ ] Tarea completada.
-- **Depende de:** T12, T24.
-- **Commit:** `feat(T28): registrar trazas y consumo del agente`.
-- **Entregable:** Añadir identificador de ejecución, versión de reglas/instrucciones, referencias de evidencia, herramientas, tiempos, resultado y consumo disponible; redactar secretos y minimizar datos personales.
-- **Cierre verificable:** Una ejecución puede explicarse a partir de su rastro; un error no deja un estado ficticio exitoso; se distinguen tokens medidos de estimaciones.
-- **Contexto o límite:** Sesiones y trazas locales quedan fuera de Git y con persistencia; no duplicar automáticamente conversaciones completas en cada log.
-
-### T29 · Empaquetar y documentar el inicio local
-
-- [ ] Tarea completada.
-- **Depende de:** T25, T28.
-- **Commit:** `chore(T29): preparar inicio local reproducible`.
-- **Entregable:** Consolidar scripts dev/build/test y runbook; documentar red/puertos/volúmenes de SQL existente, restauración de copias y persistencia de Eve. Añadir Compose solo si aporta al arranque sin reemplazar el contenedor actual.
-- **Cierre verificable:** Una sesión nueva puede seguir el README y ejecutar la demo; los datos y sesiones sobreviven al reinicio previsto; ninguna tarea de arranque reconstruye el OLTP.
-- **Contexto o límite:** Verificar America/Lima y distinguir prueba ejecutada de configuración propuesta. No desplegar servicios de pago.
-
-### T30 · Preparar propuestas de cambio de plan
-
-- [ ] Tarea completada.
-- **Depende de:** T23, T24.
-- **Commit:** `feat(T30): proponer cambios de plan compatibles`.
-- **Entregable:** Extensión posterior al núcleo: sugerir modalidad según necesidad explícita y prestaciones; registrar propuesta/respuesta de manera controlada.
-- **Cierre verificable:** Mateo aceptado sigue sin plan aplicado; no modificar precio ni compensar periodo pagado; aplicación solo en operación autorizada.
-- **Contexto o límite:** No es requisito para cerrar el primer diagnóstico conversacional.
-
-### T31 · Preparar invitaciones a referidos
-
-- [ ] Tarea completada.
-- **Depende de:** T13, T22, T24.
-- **Commit:** `feat(T31): preparar invitaciones de referidos`.
-- **Entregable:** Extensión posterior: identificar satisfacción contextual, proponer invitación y consultar referente/conversión respetando atribución única.
-- **Cierre verificable:** No invitar por promedio sin contexto; no alterar referente fijado al primer pago; distinguir formulario válido de compra.
-- **Contexto o límite:** Conservar simulación de mensajes mientras no exista canal real.
-
-### T32 · Mostrar reportes del apoderado por estudiante
-
-- [ ] Tarea completada.
-- **Depende de:** T18, T19, T24.
-- **Commit:** `feat(T32): mostrar reportes autorizados del apoderado`.
-- **Entregable:** Extensión posterior: vista vinculada por estudiante con verificación de prestaciones de Meta UNT Plus y contexto de identidad en el backend.
-- **Cierre verificable:** María puede tener dos alumnos, pero cada acceso depende del plan de ese alumno; Pedro no accede por el mero vínculo con Ana.
-- **Contexto o límite:** La demo de roles no equivale a autenticación real de usuarios finales; documentar alcance y cuentas de prueba.
-
-## Pendientes que no deben convertirse en supuestos
-
-- No está confirmado si la suscripción es Plus/Pro ni qué modelos permite su integración local con Eve.
-- Los 2.000 créditos de MiniMax no se han identificado como saldo API o créditos de su aplicación.
-- No se ha fijado una política de frecuencia de contacto de CUSTOMERS; no trasladar la secuencia comercial de LEADS a esta fase.
-- Hay cinco huecos conocidos de integridad descritos en [CONTEXTO.md](CONTEXTO.md). La app los cubre en sus operaciones; el esquema no queda mágicamente protegido frente a SQL directo.
-- Todavía no existen cierres mensuales congelados ni DataMarts. Los reportes del MVP son provisionales.
-- Las consultas personales añadidas por el usuario al 04 se conservan; el resultado histórico de sus 20 bloques no certifica automáticamente cualquier edición posterior.
-
-## Fuentes técnicas que debe verificar quien implemente
-
-- [Eve: inicio y Node requerido](https://eve.dev/docs/getting-started).
-- [Eve: configuración del modelo y ChatGPT local](https://eve.dev/docs/agent-config).
-- [Eve: herramientas y aprobaciones](https://eve.dev/docs/tools).
-- [Eve: self-hosting y persistencia](https://eve.dev/docs/guides/deployment/self-hosting).
-- [mssql para Node.js](https://github.com/tediousjs/node-mssql).
-
-Las opciones de acceso al modelo son documentadas, no probadas en este proyecto. Al instalar Eve, sus docs en `node_modules/eve/docs/README.md` y las del AI SDK instalado prevalecen para escribir APIs concretas. No copiar ejemplos de versiones incompatibles ni elegir un modelo por un nombre antiguo del chat.
+Reorganizado el 12 de noviembre de 2026 por pedido del usuario: entregar resultados completos con menos tareas y validaciones repetidas. Este plan sustituye la ejecución individual de T09–T32; sus IDs se conservan en la correspondencia. Agrupar pendientes no los convierte en trabajo terminado.
+
+## Para continuar
+
+1. Leer [AGENTS.md](../AGENTS.md), [ESTADO.md](ESTADO.md), [CONTEXTO.md](CONTEXTO.md) y [ARQUITECTURA.md](ARQUITECTURA.md).
+2. Revisar git status y los últimos commits; preservar cambios del usuario.
+3. Empezar por **B01**. La revisión [R01](REVISION_T08_Y_PLAN.md) encontró problemas de acceso y portabilidad que deben abordarse antes de integrar más funciones.
+4. Antes de escribir SQL o reglas, contrastar el [informe 7.1](reference/documento_InteligenciaNegocios.pdf) y los cuatro scripts de [database/](../database/README.md). El esquema sigue congelado.
+
+## Primer resultado útil
+
+El dueño selecciona a Carla en un panel local, ve progreso y señales reales, conversa con el agente y entiende su diagnóstico con evidencias. Después se añade propuesta → aprobación → simulación. React/Vite y Eve/Nitro comparten servicios; no se agrega otro backend ni otro framework de agentes.
+
+Node 24 sigue en Docker; npm workspaces, SQL Server 2022, mssql y Zod se conservan. Las siete pruebas actuales usan node:test: conservarlas; no migrarlas a Vitest como preparación. Otra herramienta de pruebas se introduce cuando aporte una capacidad necesaria. El login ChatGPT de T05 fue real, pero solo en la TUI de Windows; no demuestra chat web ni despliegue.
+
+## Tareas activas: un bloque, un commit
+
+| ID | Estado | Resultado | Integra tareas anteriores | Depende de |
+| --- | --- | --- | --- | --- |
+| R01 | Hecha | Revisar T08, encender servicios y compactar el plan | Revisión solicitada | T08 |
+| B01 | Pendiente | Acceso local, conexión y build utilizables | Ajustes T05/T07/T08; identidad de T16 | R01 |
+| B02 | Pendiente | Diagnóstico académico y políticas con datos SQL | T09, T10, T13 | B01 |
+| B03 | Pendiente | Agente que explica el diagnóstico en terminal | T11, T12, trazas mínimas T28 | B02 |
+| B04 | Pendiente | Panel con listado, ficha y diagnóstico | T16, T17, T18, T19 | B02 |
+| B05 | Pendiente | Conversación real del agente en el panel | T20 | B03, B04 |
+| B06 | Pendiente | Evaluaciones y propuestas persistidas consistentemente | T14, T15, integración pertinente T24/T28 | B03 |
+| B07 | Pendiente | Aprobar, simular seguimiento y derivar al dueño | T21, T22, T23; pruebas pertinentes T24/T25 | B05, B06 |
+| B08 | Pendiente | Demo reproducible y empaquetada | T29; cierre acotado T24/T25/T28 | B07 |
+
+B03 y B04 pueden avanzar de manera independiente después de B02; no requieren delegación automática. B06 tampoco necesita esperar el diseño visual. No crear un commit por cada antiguo ID incluido en un bloque. Si surge una separación funcional necesaria, actualizar el plan antes de implementarla.
+
+### B01 · Acceso local, conexión y build
+
+- **Entregar:** configurar este CachyOS con usuario SQL de lectura y .env local, sin reconstruir el OLTP; resolver la dirección SQL desde Docker. Conservar el procedimiento Windows y documentar ambos entornos.
+- Definir el contexto confiable del dueño. No hace falta un portal de estudiante/apoderado en el MVP: conservar repositorios útiles, pero no exponer acceso familiar por el mero vínculo; si se habilita, exigir REPORTES_APODERADO vigente por alumno. Un contactoId enviado por el cliente no autentica al usuario.
+- Resolver el movimiento final del build entre .eve y .output. Comprobar acceso local al canal y que el proceso del chat pueda usar el llavero; el usuario desbloquea/inicia sesión cuando corresponda. No copiar tokens ni abrir el canal sin autenticación para sortear Docker.
+- **Comprobar:** salud, db:check y db:t08 de lectura; dueño puede seleccionar alumnos, acceso ajeno denegado; build termina; prueba real mínima de canal/modelo con participación del usuario. Si falta login, registrar ese bloqueo y avanzar solo en trabajo independiente.
+- **Límite:** sin sistema completo de usuarios/roles, OAuth propio, MiniMax ni servicios contratados.
+
+### B02 · Diagnóstico académico y políticas
+
+- **Entregar:** repositorios de progreso, uso, incidencias y evidencias; funciones con corte explícito; permisos de plan/contacto y seguimiento previo en un servicio reutilizable. No crear una clase/interfaz por tabla.
+- Cumplimiento por ruta/versión y ventana documentada, con tratamiento de canceladas; mejora por grupo comparable en puntos porcentuales. Sin actividades: no aplicable; sin pruebas comparables: sin datos suficientes.
+- Riesgo por umbrales exactos, predominio de la señal mayor y pendiente ante información insuficiente. Separar narrativas aún no interpretadas; no fabricar intención/suficiencia ni inventar caducidad o frecuencia de contacto.
+- **Comprobar:** C001 +15 pp, C003 -25 pp, C004 pruebas no comparables, C007 sin datos; límites 72/168 y 48/96 horas y siete días; Inés sin contacto proactivo y Ruta UNT sin SEGUIMIENTO_IA. Probar resultados de negocio, no cada SELECT.
+- **Límite:** términos origina las autorizaciones previstas; respetar revocaciones sin nueva pantalla de consentimiento por canal.
+
+### B03 · Agente de lectura y explicación
+
+- **Entregar:** herramientas concretas de Eve reutilizando B02; interpretación estructurada de mensajes/valoraciones con Zod y referencias existentes; instrucciones académicas y manejo de falta de modelo.
+- Conservar trazas nativas de Eve; añadir solo corte, versión de reglas y referencias que falten. Sin plataforma propia de observabilidad. Registrar tokens si se midieron, sin atribuir costo API inventado a una suscripción.
+- **Comprobar:** llamada real explica Carla y presenta Gabriela pendiente; rechaza evidencia inventada e instrucciones incrustadas para cambiar identidad/reglas; sin SQL libre, shell, archivos generales ni DML.
+- **Límite:** una prueba real dirigida al cerrar el bloque; casos con datos fijos no se presentan como prueba del modelo.
+
+### B04 · Panel con datos y diagnóstico
+
+- **Entregar:** endpoints Nitro y panel React/Vite juntos, con listado, ficha, servicio/historial, progreso, incidencias, riesgo y evidencias. Mostrar corte, carga, error y falta de datos.
+- Contexto del dueño validado en backend. Extraer contratos compartidos cuando ambos consumidores los necesiten. Serializar DATETIME2 peruano con convención explícita y una prueba que evite desfase de cinco horas.
+- **Comprobar:** C006 beca sin pago, C011 reactivación, C007 pendiente y C008 evaluación vencida; petición inválida y acceso fuera del contexto rechazados; panel inicia y compila. Reutilizar cálculos de B02.
+- **Límite:** sin dashboard complejo, editor de rutas, portal familiar ni diseño perfecto antes de conectar datos.
+
+### B05 · Chat dentro del panel
+
+- **Entregar:** cliente de Eve, streaming, herramientas/evidencias y errores visibles; estudiante controlado por backend. Reutilizar el acceso probado en B01.
+- **Comprobar:** conversación real de Carla en navegador; cambiar de alumno no arrastra contexto ajeno; reinicio conserva sesión según configuración verificada.
+- **Límite:** no sustituir silenciosamente al modelo con una frase fija ni repetir el login si sigue funcionando.
+
+### B06 · Evaluaciones y propuestas consistentes
+
+- **Entregar:** servicios transaccionales para evaluación/señales y propuesta/evento de intervención. Validar mayor nivel, pertenencia y actualidad de evidencias, prestaciones y duplicados de la misma operación.
+- Preparar base aislada de integración y permitir seleccionarla: hoy SQLSERVER_DATABASE está fijada con z.literal a la base activa. Rechazar operaciones destructivas contra la base académica. Mantener identidad SQL de aplicación y permisos acotados.
+- **Comprobar:** señal inválida revierte evaluación completa; evidencia ajena/alterada se rechaza; repetir operación no duplica propuesta. Cubrir los cinco huecos conocidos en las operaciones de la app, sin cambiar los esperados del 03.
+- **Límite:** un proceso local y deduplicación persistente verificable; sin Redis/colas distribuidas ni garantías multirréplica. No sobrescribir evaluaciones previas.
+
+### B07 · Aprobación, simulación y atención humana
+
+- **Entregar:** bandeja del dueño para aprobar/rechazar; simulación visible de seguimiento; recomendaciones de revisión de ruta y derivaciones humanas registradas. Revalidar permisos al ejecutar y proteger doble clic/reintento.
+- El agente no publica rutas ni gestiona pagos. Rechazo de intervención: CANCELADA y evento/resultado, sin inventar RECHAZADA. Simulación: nunca ENVIADO/ENTREGADO ni estado BORRADOR inexistente en Mensaje.
+- **Comprobar:** diagnóstico → propuesta → aprobación → simulación; revocación posterior bloquea acción; C-4 no cuenta simulación; rollback y duplicados de escrituras probados en base aislada.
+- **Límite:** sin comunicación real ni editor completo de rutas; el dueño sigue siendo quien las actualiza.
+
+### B08 · Cierre y empaquetado
+
+- **Entregar:** scripts inicio/build/test, imágenes con artefactos compilados y Compose/runbook reproducibles; documentar SQL existente, volúmenes, respaldo/restauración y America/Lima sin reemplazar la instancia activa.
+- Añadir solo regresión de navegador que falte para flujos esenciales; Playwright si aporta esa cobertura. Reutilizar pruebas B02/B06/B07 y trazas nativas.
+- **Comprobar:** otra sesión sigue README y completa diagnóstico → aprobación → simulación; build y arranque compilado pasan; datos/sesiones sobreviven al reinicio previsto; imagen sin secretos, .git ni archivos del OLTP.
+- **Límite:** empaquetable para VPS no significa desplegado. Revisar una modalidad admitida del modelo antes de llevarlo a nube.
+
+## Extensiones después de la demo
+
+| ID anterior | Cuándo abordar | Alcance conservado |
+| --- | --- | --- |
+| T26 | Después de B08, si hace falta automatización | Primero lote manual, agenda local después; sin LLM para aritmética ni duplicados al reiniciar |
+| T27 | Después de B08 y aclarar denominadores | C-1–C-7 provisionales con corte/numerador/denominador; aclarar varias revisiones C-1.1 y pendientes C-3.1; sin cierres congelados |
+| T30 | Después de B07, según prioridad | Cambio aceptado no es aplicado; sin modificar precio ni compensar periodo pagado |
+| T31 | Después de B07, según prioridad | Referidos por satisfacción contextual y atribución única fijada al primer pago; comunicación simulada |
+| T32 | Después de B04/B07, según prioridad | Portal de apoderado por alumno solo con Meta UNT Plus; vínculo familiar no basta |
+
+No son requisitos para B01–B08. Antes de implementarlas, convertir la extensión elegida en tarea concreta, con criterio de cierre y commit propio.
+
+## Trabajo completado
+
+| ID | Resultado | Commit |
+| --- | --- | --- |
+| T00 | Preservar SQL y documentos originales | 513d0c9 |
+| T01 | Organizar workspace y remoto | 9059457 |
+| T02 | Roadmap, contexto y continuidad | d308ea6 |
+| T03 | Node 24 aislado en Docker | 381cd70 |
+| T04 | Backend mínimo Eve | 37a1910 |
+| T05 | Login y herramienta fija reales en TUI | 37b7f46 |
+| T06 | Configuración Zod | d80d789 |
+| T07 | Pool SQL y cuenta de lectura en Windows | cc7d01b |
+| T08 | Repositorios perfil/servicio | a9eb90e |
+
+T09 no está implementada en HEAD ni origin/main revisados; se integra en B02. Las verificaciones históricas de T05/T07/T08 no equivalen a ejecución nueva en otro equipo. [ESTADO.md](ESTADO.md) conserva resultados y límites.
+
+## Cómo trabajar más rápido sin perder defensa técnica
+
+- Una tarea entrega una capacidad verificable. Implementación, pruebas pertinentes y actualización breve de ESTADO.md van en el mismo commit; sin commits vacíos de seguimiento.
+- Leer contexto al retomar; luego releer secciones afectadas. Consultar docs de Eve/AI SDK al cambiar su integración, sin investigarlos de nuevo en cada SELECT.
+- npm ci solo cuando cambie el lockfile o falten dependencias, con servidor detenido. Reutilizar caché/volúmenes; no reinstalar y reconstruir sin motivo entre verificaciones.
+- Funciones puras para cálculos, SQL parametrizado para datos, servicios para permisos/transacciones y adaptadores pequeños para tools/API. Sin repositorio genérico, bus de eventos o framework propio.
+- Pruebas dirigidas de negocio/fallos. Tipos y check una vez al cerrar el bloque; repetir por cambios relevantes o fallos. Build cuando afecte empaquetado/configuración o al cerrar un hito de app.
+- Transacciones, pertenencia de evidencia, permisos, límites horarios y simulación/envío sí requieren comprobación. Estilos, textos y movimientos de archivos no necesitan tests que copien su implementación.
+- Integración destructiva siempre aislada; nunca 01/02 al arrancar. No ejecutar las 29 pruebas históricas por cada cambio documental; conservar los cinco HALLAZGO.
+- Llamadas reales de modelo explícitas y dirigidas, sin repetirlas por documentación/cálculos puros. Registrar bloqueos de login y avanzar solo tareas independientes.
+- Push normal cuando esté autorizado; preservar consultas personales y cambios del usuario. Sin Git forzado, nube contratada ni mensajes reales.
+
+Reglas completas y cinco huecos: CONTEXTO.md. MiniMax sigue sin confirmar como saldo API y no se consume. Sesiones, credenciales y trazas fuera de Git.

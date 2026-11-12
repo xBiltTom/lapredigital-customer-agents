@@ -46,6 +46,8 @@ No ejecutar `docker system prune` o borrados globales para limpiar este proyecto
 
 ## SQL Server existente
 
+R01 volvió a CachyOS y encendió sql-server-local: base ONLINE, 14 estudiantes, hora -05:00. No están provisionados aquí .env ni lapredigital_app; host.docker.internal da ENOTFOUND desde Docker. El backend responde salud, pero su conexión SQL requiere B01. Los resultados Windows siguientes no se trasladan automáticamente entre equipos; no ejecutar scripts de creación/población para resolver configuración.
+
 En el entorno histórico CachyOS, `sql-server-local` era un contenedor independiente que publicaba 1433. Compose de este proyecto no lo modifica ni lo reemplaza. `127.0.0.1` dentro de un contenedor apunta a ese contenedor, no al host ni a SQL Server.
 
 En el entorno Windows de T07, el motor es el servicio local **MSSQLSERVER**, no un contenedor; atiende en el puerto 1433 y mantiene hora peruana (-05:00). Docker lo alcanza por `host.docker.internal:1433`. Se creó una identidad SQL independiente con SELECT de lectura para perfil y servicio (T08) y contraseña local ignorada por Git; en `Pago` solo puede leer cuatro columnas. Ver [conexión y prueba](../apps/server/README.md). La cuenta administrativa Windows solo funciona desde el host por conexión local (`-S .`), no como credencial del backend. El servidor Eve arranca sin abrir conexiones SQL.
@@ -54,4 +56,4 @@ Los scripts 01/02 no se ejecutan al construir o iniciar la aplicación. La confi
 
 ## Empaquetado y VPS
 
-Este es el entorno de **desarrollo**, con código montado; no una imagen de producción terminada. T04 añade el servidor mínimo y T29 consolidará los targets de compilación/runtime, copias de artefactos, dependencias de producción y comandos para VPS. Salud y volumen de estado ya están configurados para desarrollo. Las imágenes finales no incluirán .env, .eve, tokens, .git, bases ni backups. La IA con suscripción de ChatGPT sigue limitada al acceso local documentado de Eve; una nube requiere revisar esa modalidad.
+Este es el entorno de **desarrollo**, con código montado; no una imagen de producción terminada. B01 corregirá EXDEV del build entre .eve y .output, reproducido también en Linux. B08 (antes T29) consolidará targets de compilación/runtime, artefactos, dependencias de producción y comandos para VPS. Salud y volumen de estado ya están configurados para desarrollo. Las imágenes finales no incluirán .env, .eve, tokens, .git, bases ni backups. La IA con suscripción de ChatGPT sigue limitada al acceso local documentado de Eve; una nube requiere revisar esa modalidad.

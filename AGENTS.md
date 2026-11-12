@@ -32,17 +32,17 @@ El modelo llama herramientas concretas, no SQL libre. SQL parametrizado en repos
 
 ## Trabajo y commits
 
-Una tarea del roadmap = un commit. Incluir en ese commit su implementación, pruebas pertinentes, estado de la tarea y ESTADO.md actualizado. No crear commits vacíos, de seguimiento redundante ni agrupar varias tareas inconexas. No hacer push forzado.
+Una tarea activa del roadmap = un commit. El usuario pidió compactar el trabajo: B01–B08 sustituyen la ejecución individual de T09–T32; conservar su correspondencia y las extensiones pospuestas. Incluir implementación, pruebas pertinentes y actualización breve de ESTADO.md en ese commit. No crear commits vacíos ni agrupar tareas inconexas. No hacer push forzado. Reutilizar node:test y las trazas nativas de Eve; no añadir infraestructura o migrar pruebas sin necesidad concreta. Reinstalar dependencias solo si cambió el lockfile o faltan; repetir comprobaciones si hubo cambios relevantes o fallos.
 
 Revisar git status antes de editar; las consultas personales del 04 y cualquier cambio del usuario se conservan. Las instrucciones actuales del usuario prevalecen sobre estos acuerdos si cambia el alcance.
 
 ## Entorno aislado
 
-Node/npm del proyecto se ejecutan en Docker: `./scripts/dev node --version` y `./scripts/dev npm run check`. No instalar dependencias con el npm global del host. Imagen oficial fijada por digest, usuario sin privilegios y volúmenes del workspace. El Compose de desarrollo no administra ni reconstruye SQL Server; no confundirlo con la imagen de producción que se completará en T29.
+Node/npm del proyecto se ejecutan en Docker: `./scripts/dev node --version` y `./scripts/dev npm run check`. No instalar dependencias con el npm global del host. Imagen oficial fijada por digest, usuario sin privilegios y volúmenes del workspace. El Compose de desarrollo no administra ni reconstruye SQL Server; no confundirlo con la imagen de producción que se completará en B08 (antes T29).
 
 ## Verificación y continuidad
 
-Hoy: `./scripts/dev npm run check` valida únicamente el workspace y `./scripts/dev npm run typecheck` verifica tipos. `build:server` falla con EXDEV en Docker Desktop/Windows al mover el resultado entre volúmenes. `docker compose up --build -d server` inicia salud en 127.0.0.1:3000; `localDev()` admite sesiones desde dentro del contenedor, pero desde Windows devuelve 401. T05 verificó el login de ChatGPT y una herramienta fija en la TUI lanzada con `scripts/eve-local`; el servidor estándar no desbloquea ese llavero. T08 añadió repositorios SQL de perfil y servicio, aún no expuestos como herramientas de negocio. Detener los procesos del servidor antes de reinstalar dependencias con npm ci. CLI y servidor comparten el volumen eve_state, excluido de Git; el llavero persistente está en keyring_state.
+Hoy: check valida estructura y typecheck verifica tipos; las 7 pruebas existentes pasan. build:server falla con EXDEV entre volúmenes en Linux y Windows. Salud del backend 200 en 127.0.0.1:3000 y SQL Server encendido en CachyOS, pero faltan .env, usuario SQL de aplicación y dirección de red válida en este equipo. T05 verificó login/herramienta solo en la TUI Windows con scripts/eve-local; el servidor estándar no desbloquea el llavero y el acceso desde Windows devolvió 401. T08 son repositorios, sin tools de negocio; su acceso familiar solo comprueba vínculo, pendiente de exigir prestación antes de exponerse. No hay contexto del dueño implementado ni T09 completada. Detener el servidor antes de npm ci. CLI/servidor comparten eve_state; llavero en keyring_state, fuera de Git. Continuar B01 y distinguir hechos de cada equipo según ESTADO.md.
 
 Separar resultados históricos, revisión estática y ejecución real. Los datos ficticios envejecen; no ocultar los cinco HALLAZGO conocidos cambiando las expectativas de prueba. Usar una base aislada para integración destructiva, no la base académica activa. No subir .env, .eve, tokens, volcados ni archivos de datos a Git.
 

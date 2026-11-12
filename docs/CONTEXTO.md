@@ -17,10 +17,11 @@ El [informe entregado](reference/documento_InteligenciaNegocios.pdf), identifica
 5. La aceptación de términos y condiciones al registro incluye las comunicaciones previstas del servicio. Es el evento de autorización inicial; no añadir otra aceptación manual por mensaje/canal. Conservar evidencia/versionado y respetar una solicitud posterior de no seguimiento proactivo. Aún no existe texto de términos ni flujo de alta implementado.
 6. Node debe aislarse con Docker; el usuario pidió un proyecto empaquetable para un VPS posterior. No instalar Node global ni confundir Compose de desarrollo con despliegue listo para producción.
 7. Cada tarea del roadmap corresponde a un commit, incluyendo la actualización de continuidad. El usuario pidió organizar el workspace e inicializar el remoto `git@github.com:xBiltTom/lapredigital-customer-agents.git`.
+8. Tras revisar T08, el usuario pidió menos sobreingeniería y tareas más compactas. El roadmap activo agrupa pendientes en B01–B08, un commit por capacidad, y pospone agenda automática, KPI completos, cambios de plan, referidos y portal familiar. Conservar node:test existente y trazas nativas; no crear capas/infraestructura sin necesidad. El alcance de negocio y los controles de escrituras se mantienen.
 
 ## Entorno y estado de datos
 
-- Entorno histórico: CachyOS, shell bash, contenedor sql-server-local. Entorno actual de T07: Windows con SQL Server local (servicio MSSQLSERVER), puerto 1433, Docker Desktop y Node 24 en contenedor. La base sigue siendo LaPreDigital_Customers.
+- Hay dos equipos: CachyOS con sql-server-local y Windows con servicio MSSQLSERVER/1433 y Docker Desktop, donde se verificó T07/T08. La revisión R01 vuelve a CachyOS: SQL está ONLINE, pero faltan .env/usuario SQL de aplicación y host.docker.internal no resuelve. No trasladar credenciales ni asumir configuración compartida. Node 24 sigue en contenedor y la base es LaPreDigital_Customers.
 - Hora de negocio en Perú y GETDATE; no usar sufijos Utc en las columnas actuales.
 - Intercalación Latin1_General_100_CI_AS_SC; código de rol N'DUEÑO'.
 - 40 tablas operativas y 14 de historial; carga de referencia: 501 registros operativos y 39 históricos, con 14 estudiantes (12 CUSTOMER, 1 LEAD, 1 TURNED).

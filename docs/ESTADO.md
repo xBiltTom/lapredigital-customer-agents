@@ -4,7 +4,19 @@ Actualizado: 12 de noviembre de 2026. Documento de traspaso para otra sesión o 
 
 ## Próxima tarea
 
-**T09 del [roadmap](ROADMAP.md): consultar progreso académico y revisiones.** T08 dejó repositorios de solo lectura para listado y ficha, con identidad activa validada en el backend y permisos SQL mínimos. T09 debe calcular cumplimiento por ruta y mejora por grupo comparable, exponer actividades, dificultades y revisiones, y no mezclar versiones de ruta. Leer el informe 7.1 y los cuatro scripts de `database/` antes de ampliar consultas; no cambiar de stack ni modificar el esquema sin evidencia.
+**B01 del [roadmap reorganizado](ROADMAP.md): acceso local, conexión y build utilizables.** El usuario pidió revisar el trabajo y reducir sobreingeniería. T00–T08 son nueve tareas hechas; T09 no está implementada en HEAD/origin revisados y ahora se integra en B02. La ejecución independiente de T09–T32 se sustituye por ocho bloques y cinco extensiones posteriores. Una tarea activa equivale a un commit.
+
+## R01: revisión y arranque en CachyOS
+
+Ver [revisión y hallazgos](REVISION_T08_Y_PLAN.md). No se implementaron correcciones del backend en esta revisión. Se encendió sql-server-local, se instalaron las dependencias del lockfile con el servidor detenido y se levantó server con Compose. Ambos servicios quedaron encendidos; no existe frontend todavía. GET http://127.0.0.1:3000/eve/v1/health devuelve 200 y ok: true.
+
+Ejecución actual: npm ci (103 instalados/105 auditados, cero vulnerabilidades reportadas), check, typecheck y las siete pruebas existentes correctos. build:server reproduce EXDEV también en Linux al mover entre .eve y .output: no es solo Windows. Consultas administrativas de lectura dentro del contenedor confirman base ONLINE, 14 estudiantes, hora -05:00, C001 en META_UNT y ausencia del usuario lapredigital_app.
+
+Este equipo no tiene .env; db:check falla por SQLSERVER_USER/SQLSERVER_PASSWORD ausentes y host.docker.internal da ENOTFOUND desde Docker. Se verificó disponibilidad de SQL Server, **no** integración SQL de la app. No se creó login ni se alteraron permisos/datos. db:t08 y una llamada real del modelo no se ejecutaron de nuevo. El volumen keyring_state se creó aquí al preparar Docker; no asumir que contiene el login realizado en Windows.
+
+B01 debe resolver conexión local y build, definir el contexto del dueño y comprobar el acceso al canal/llavero. La condición de T08 acepta apoderados por vínculo sin exigir Meta UNT Plus; no exponerla sin comprobar REPORTES_APODERADO vigente. No construir ahora un portal de apoderados o un sistema completo de usuarios. B06 hará seleccionable la base aislada de integración: el z.literal actual bloquea un nombre distinto del OLTP activo.
+
+Esta sección es el estado vigente. Las secciones T03–T08 siguientes conservan evidencia histórica de sus respectivos equipos; las frases «actual» dentro de ellas no describen necesariamente este CachyOS. Los SQL, incluidos los cambios personales del 04, se conservaron. Sin ejecución de 01/02/03/04, consumo MiniMax ni mensajes reales.
 
 ## T08: perfil, servicio y prestaciones
 
@@ -95,8 +107,8 @@ El host conserva Node v26.13.1 y npm 12.2.2. Node del proyecto se ejecuta en Doc
 
 ## Pendientes reales
 
-1. T09: calcular progreso académico comparable y exponer actividades, dificultades y revisiones; no mezclar versiones de ruta.
-2. Corregir el fallo EXDEV del build entre el volumen `.eve` y `.output` al abordar el empaquetado de desarrollo; no exponer Docker al agente para eliminar el aviso de sandbox. Verificar persistencia del login real tras reiniciar antes de depender de ella.
+1. B01: configurar usuario SQL/.env/red en este CachyOS sin reconstruir el OLTP; definir acceso local del dueño y no habilitar acceso familiar sin prestación.
+2. B01: corregir EXDEV (reproducido en Linux y Windows) y verificar el canal/llavero del proceso real; no montar Docker ni copiar tokens. B02 reúne después progreso, riesgo y políticas.
 3. Confirmar si los 2.000 créditos MiniMax son de API o de su aplicación; no consumirlos todavía.
 4. Implementar política de contacto con aceptación inicial de términos y revocación posterior; el texto de términos y el registro público de usuarios no están implementados.
 5. Cubrir en servicios los cinco huecos conocidos, manteniendo el esquema actual.

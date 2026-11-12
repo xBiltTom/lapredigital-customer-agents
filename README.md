@@ -8,7 +8,7 @@ Proyecto académico de Ingeniería de Sistemas de la Universidad Nacional de Tru
 2. Seguir [el roadmap de tareas y commits](docs/ROADMAP.md).
 3. Consultar [contexto y decisiones](docs/CONTEXTO.md) y [arquitectura](docs/ARQUITECTURA.md).
 
-**Siguiente tarea: T09, consultar progreso académico y revisiones.** Una tarea corresponde a un commit; el roadmap incluye dependencias y criterios para cerrarla.
+**Siguiente tarea: B01, resolver acceso local, conexión y build.** El roadmap se compactó en ocho bloques con entregables completos; los antiguos IDs se conservan como referencia. Ver [la revisión del trabajo](docs/REVISION_T08_Y_PLAN.md). Cada bloque activo corresponde a un commit.
 
 ## Estado actual
 
@@ -44,7 +44,9 @@ Node está aislado en Docker: imagen oficial fijada por digest, Node 24.22.3 y n
 
 La salud devuelve `ok: true`. No hay panel; el login funcionó en la TUI con `scripts/eve-local`. `localDev()` solo admitió peticiones desde dentro del contenedor, mientras que las peticiones desde Windows al puerto publicado recibieron 401. Antes de repetir `npm ci`, detener los procesos del servidor para evitar reemplazar sus dependencias. [Detalles y comando de login](apps/server/README.md).
 
-`npm run check` revisa únicamente estructura y enlaces; `typecheck` verifica el backend. `build:server` falla con EXDEV en Docker Desktop/Windows al mover la salida entre volúmenes; se documenta en [ESTADO.md](docs/ESTADO.md). Ninguno de esos comandos ejecuta SQL ni prueba una respuesta del modelo.
+`npm run check` revisa únicamente estructura y enlaces; `typecheck` verifica el backend. `build:server` falla con EXDEV tanto en Linux como en Docker Desktop/Windows al mover la salida entre volúmenes; se documenta en [ESTADO.md](docs/ESTADO.md). Ninguno de esos comandos ejecuta SQL ni prueba una respuesta del modelo.
+
+En la revisión actual de CachyOS quedaron encendidos el backend y sql-server-local; salud 200, tipos y 7 pruebas correctas. La integración SQL de la app sigue pendiente aquí: no existen .env ni lapredigital_app y host.docker.internal no resuelve. Las verificaciones SQL y de login en Windows descritas abajo son históricas, no configuración trasladada automáticamente entre equipos. No hay panel todavía.
 
 El archivo `.env.example` documenta la conexión SQL sin secretos. En Windows, `scripts/provision-sql-app.ps1` creó `lapredigital_app` y guardó la contraseña generada en `.env`, excluido de Git; `scripts/grant-sql-read.ps1` amplió después la lectura a las tablas de perfil y servicio. La conexión se prueba con `db:check` y el repositorio con `db:t08` mediante `docker compose run --rm --no-deps --workdir /workspace/apps/server server npm run <comando>`; SQL no se abre al iniciar Eve.
 

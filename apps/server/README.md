@@ -17,7 +17,7 @@ Detener el servidor antes de repetir npm ci. Si tu UID/GID difiere de 1000, expo
 
 `dev:server` ejecuta Eve sin UI ni extensiones predeterminadas. `build:server` compila con Eve y `start:server` inicia el resultado compilado; este último debe ejecutarse desde el mismo volumen de estado donde se hizo el build, con el servicio dev detenido. El servidor solo se publica en 127.0.0.1:3000. Todavía no existe frontend.
 
-`lib/config.ts` valida al cargar el agente `TZ=America/Lima` y `AI_PROVIDER=chatgpt`. Compose suministra ambos valores; `.env.example` es una referencia y no se carga automáticamente. Para comprobar la configuración sin invocar al modelo: `./scripts/dev npm test --workspace=@lapredigital/server`. En un host Windows con el volumen `.eve` separado, `build:server` puede fallar con EXDEV al mover el resultado a `.output`; el servidor de desarrollo sí pasó el chequeo de salud. El build correcto queda pendiente de resolver.
+`lib/config.ts` valida al cargar el agente `TZ=America/Lima` y `AI_PROVIDER=chatgpt`. Compose suministra ambos valores; `.env.example` es una referencia y no se carga automáticamente. Para comprobar la configuración sin invocar al modelo: `./scripts/dev npm test --workspace=@lapredigital/server`. Con el volumen `.eve` separado, `build:server` falla con EXDEV al mover el resultado a `.output`, reproducido en Windows y Linux; el servidor de desarrollo sí responde salud. B01 resolverá el build y la conexión local pendiente en CachyOS: todavía no tiene .env/usuario SQL y host.docker.internal no resuelve. Las secciones T05/T07/T08 describen verificaciones históricas de Windows.
 
 ## T07: SQL Server local
 
@@ -37,6 +37,8 @@ Comprueba C001 con SQL parametrizado, SELECT sobre `dbo.Estudiante`, ausencia de
 
 - `listarEstudiantes(identidad, { pagina, tamano })` pagina de 1 a 50 filas (20 por defecto) y devuelve `items`, `total` y `paginas`. La identidad es un `contactoId` validado por el backend: el estudiante ve su ficha y el apoderado solo las de sus estudiantes vinculados. Un apoderado compartido no duplica filas.
 - `obtenerFichaEstudiante(identidad, estudianteId)` devuelve perfil y contacto, apoderado, `servicioActual`, `historial` y prestaciones. El servicio actual exige suscripción `VIGENTE`, periodo que cubre `GETDATE()` y acceso `HABILITADO`/`CON_INCIDENCIA`. El historial conserva todos los periodos, sus cobros confirmados, operaciones correctivas y baja. Una ficha ajena devuelve `null`, sin revelar si el estudiante existe.
+
+R01 detectó que ese filtro familiar no verifica REPORTES_APODERADO ni hay contexto del dueño implementado: validar el número contactoId no autentica al usuario. Corregir antes de exponerlo por HTTP/tools; el portal familiar queda para después de la demo. Ver [revisión](../../docs/REVISION_T08_Y_PLAN.md).
 
 `scripts/grant-sql-read.ps1` concede SELECT sobre Estudiante, Contacto, Apoderado, Suscripcion, PeriodoServicio, ModalidadPlan, PlanServicio, Prestacion, PlanPrestacion y BajaServicio; en Pago solo `PeriodoServicioId`, `Tipo`, `Estado` e `ImportePEN`. No concede DML. `provision-sql-app.ps1` incluye el mismo conjunto para instalaciones nuevas. Verificación real:
 
