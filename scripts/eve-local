@@ -1,0 +1,34 @@
+#!/bin/sh
+set -eu
+
+if [ "${1:-}" != '--keyring-session' ]; then
+  XDG_RUNTIME_DIR=$(mktemp -d)
+  chmod 700 "$XDG_RUNTIME_DIR"
+  export XDG_RUNTIME_DIR
+  exec dbus-run-session -- sh "$0" --keyring-session "$@"
+fi
+shift
+
+if [ ! -t 0 ]; then
+  printf '%s\n' 'El llavero requiere una terminal interactiva.' >&2
+  exit 1
+fi
+
+printf '%s' 'Contraseña del llavero local (no la de ChatGPT): ' >&2
+stty -echo
+trap 'stty echo' EXIT INT TERM
+IFS= read -r keyring_password
+stty echo
+trap - EXIT INT TERM
+printf '\n' >&2
+
+if [ -z "$keyring_password" ]; then
+  printf '%s\n' 'La contraseña del llavero no puede estar vacía.' >&2
+  exit 1
+fi
+
+keyring_environment=$(printf '%s' "$keyring_password" | gnome-keyring-daemon --login --components=secrets)
+unset keyring_password
+eval "$keyring_environment"
+gnome-keyring-daemon --start --components=secrets >/dev/null
+exec "$@"

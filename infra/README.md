@@ -22,7 +22,6 @@ El servicio `tools` está bajo el perfil `tools`; se invoca explícitamente, no 
 ```bash
 ./scripts/dev npm ci
 ./scripts/dev npm run typecheck
-./scripts/dev npm run build:server
 docker compose up --build -d --wait server
 curl http://127.0.0.1:3000/eve/v1/health
 docker compose stop server
@@ -32,13 +31,14 @@ Si tu UID/GID difiere de 1000, antes de invocar Compose directamente ejecutar `e
 
 El servicio server hereda la toolchain, volúmenes y usuario de tools; usa el perfil app y se selecciona explícitamente con su nombre. Eve escucha en 0.0.0.0 dentro del contenedor y se publica exclusivamente en 127.0.0.1:3000 del host. Incluye init, chequeo de salud y 20 segundos de margen de parada. [Alcance y comandos](../apps/server/README.md).
 
-La salud está disponible; crear sesiones devuelve 401 hasta T05. No se cargan variables de .env automáticamente ni se inicia SQL al arrancar. El Compose desactiva la telemetría opcional de Eve con EVE_TELEMETRY_DISABLED=1.
+La salud está disponible; `localDev()` permite sesiones desde el contenedor en `eve dev`, pero desde Windows el puerto publicado devolvió 401. El login real se verificó con la TUI lanzada mediante `scripts/eve-local` (ver [receta](../apps/server/README.md)); el servicio server estándar no desbloquea el llavero. No se cargan variables de .env automáticamente ni se inicia SQL al arrancar. El Compose desactiva la telemetría opcional de Eve con EVE_TELEMETRY_DISABLED=1.
 
 ## Volúmenes y datos
 
 - `lapredigital-customers_node_modules`: dependencias Linux del workspace, separadas del host.
 - `lapredigital-customers_npm_cache`: caché npm; no es estado del negocio.
-- `lapredigital-customers_eve_state`: estado .eve compartido por servidor y CLI; persistencia de un marcador comprobada al recrear el contenedor. La persistencia y ubicación efectiva del login se verifican en T05.
+- `lapredigital-customers_eve_state`: estado .eve compartido por servidor y CLI; persistencia de un marcador comprobada al recrear el contenedor. La preferencia de proveedor no equivale a credenciales del modelo.
+- `lapredigital-customers_keyring_state`: llavero Linux cifrado utilizado por `/login` interactivo en T05; se desbloquea con la contraseña local al invocar `scripts/eve-local`. Se verificó persistencia con un valor ficticio, no del login real tras reiniciar. No borrar este volumen al reinstalar npm.
 - El código y lockfile se escriben en el bind mount con el UID/GID del usuario.
 - No se montan el socket de Docker, credenciales del host ni archivos .env como variables del contenedor de herramientas. El workspace de desarrollo sí es un montaje de código con escritura; no se presenta como sandbox de un modelo no confiable.
 

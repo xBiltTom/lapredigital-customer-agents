@@ -6,15 +6,15 @@ Actualizado: 12 de noviembre de 2026. Este archivo es el plan canónico de tarea
 
 1. Leer [AGENTS.md](../AGENTS.md), [contexto y acuerdos](CONTEXTO.md), [estado de continuidad](ESTADO.md) y [arquitectura](ARQUITECTURA.md).
 2. Revisar `git status`, `git log -5 --oneline` y `git remote -v`. No sobrescribir cambios del usuario.
-3. Continuar con **T05**, primer pendiente. Existe el backend mínimo y T06 valida su configuración; el login de ChatGPT requiere una terminal interactiva del usuario. T07 puede avanzar de manera independiente si el login sigue pendiente.
+3. Continuar con **T07**, primer pendiente. T05 probó el login local de ChatGPT y una llamada real a la herramienta fija; T06 valida la configuración. La conexión SQL y el usuario de aplicación siguen pendientes.
 4. Leer los scripts de [database/](../database/README.md) y el [informe 7.1](reference/documento_InteligenciaNegocios.pdf) antes de convertir consultas en herramientas. La base está congelada por decisión del usuario.
-5. No asumir autenticación de ChatGPT, créditos API de MiniMax ni permisos SQL: esas verificaciones tienen tareas explícitas.
+5. El login de ChatGPT está verificado solo en la TUI local; no asumir que funciona en despliegue o desde Windows por el puerto publicado. No asumir créditos API de MiniMax ni permisos SQL.
 
 ## Objetivo y decisiones aceptadas
 
 LaPreDigital prepara postulantes a la UNT, inicialmente de Trujillo/La Libertad. Se empieza con un Agente Académico de CUSTOMERS y un panel local para el dueño. El primer resultado útil es seleccionar a Carla, consultar datos reales de la demo, explicar su riesgo con evidencias y recomendar una acción. Luego se añade propuesta, aprobación y simulación de comunicación.
 
-Stack: TypeScript, Node 24, backend Eve/Nitro, React/Vite, SQL Server 2022 en Docker, `mssql`, Zod y Vitest. Se usan npm workspaces y un lockfile raíz. El modelo inicial es la integración local `chatgpt()` de Eve mediante `/login`, todavía sin probar. MiniMax es alternativo solo si sus créditos son válidos para API. No se presupuestan claves nuevas, AI Gateway, nube ni mensajes reales para este MVP.
+Stack: TypeScript, Node 24, backend Eve/Nitro, React/Vite, SQL Server 2022 en Docker, `mssql`, Zod y Vitest. Se usan npm workspaces y un lockfile raíz. La integración local `chatgpt()` de Eve mediante `/login` pasó una prueba real de modelo y herramienta fija en T05. MiniMax es alternativo solo si sus créditos son válidos para API. No se presupuestan claves nuevas, AI Gateway, nube ni mensajes reales para este MVP.
 
 Las reglas de cálculo y permisos se aplican en código. La IA interpreta narrativas, selecciona herramientas y explica recomendaciones. El modelo no recibe SQL arbitrario, credenciales, herramientas de shell ni permiso para autoaprobar acciones. Las tablas actuales se conservan y las escrituras se encapsulan en transacciones con validación y deduplicación.
 
@@ -49,7 +49,7 @@ Los IDs dan una secuencia sugerida, pero mandan las dependencias. T10 y otras ta
 | T02 | Hecha | Documentar roadmap y continuidad | T01 |
 | T03 | Hecha | Preparar Node 24 y el gestor de paquetes | T02 |
 | T04 | Hecha | Crear el backend mínimo de Eve | T03 |
-| T05 | Pendiente | Probar ChatGPT local con una herramienta inocua | T04 |
+| T05 | Hecha | Probar ChatGPT local con una herramienta inocua | T04 |
 | T06 | Hecha | Validar la configuración de la aplicación | T04 |
 | T07 | Pendiente | Conectar a SQL Server con un usuario de aplicación | T06 |
 | T08 | Pendiente | Consultar perfil, servicio y prestaciones | T07 |
@@ -127,12 +127,12 @@ Los IDs dan una secuencia sugerida, pero mandan las dependencias. T10 y otras ta
 
 ### T05 · Probar ChatGPT local con una herramienta inocua
 
-- [ ] Tarea completada.
+- [x] Tarea completada.
 - **Depende de:** T04.
 - **Commit:** `feat(T05): verificar autenticacion local del agente`.
 - **Entregable:** Configurar chatgpt() y /login según la versión instalada; el usuario realiza la autenticación. Probar una herramienta que devuelve datos fijos no sensibles y registrar resultado, modelo disponible y límites observados.
 - **Cierre verificable:** Una respuesta real y una llamada real a la herramienta se completan; un fallo de auth se muestra sin exponer tokens.
-- **Contexto o límite:** No guardar credenciales en Git. Si el login no funciona, informar y avanzar en tareas independientes; MiniMax solo si se confirma saldo API y autorización de uso.
+- **Contexto o límite:** El login local con código de dispositivo funcionó desde la TUI en Docker; traza con `gpt-6-luna-fast`, dos pasos y `execute_tool comprobar_conexion`. No se comprobó persistencia del login tras reinicio, acceso al chat desde Windows, ni despliegue. Credenciales en llavero Linux cifrado fuera de Git; MiniMax no se consumió.
 
 ### T06 · Validar la configuración de la aplicación
 
@@ -141,7 +141,7 @@ Los IDs dan una secuencia sugerida, pero mandan las dependencias. T10 y otras ta
 - **Commit:** `feat(T06): validar configuracion de entorno`.
 - **Entregable:** Implementar configuración Zod y .env.example coherente, puertos locales, zona horaria y proveedor; separar opciones públicas de secretos del servidor.
 - **Cierre verificable:** Una variable requerida ausente produce un error claro; ningún secreto llega al frontend o al log.
-- **Contexto o límite:** Configuración mínima de TZ y proveedor local; Compose fija el puerto 127.0.0.1:3000. Sin frontend ni conexión SQL, no hay secretos que transmitir. El login de ChatGPT sigue pendiente de T05; no se conecta ni reconstruye la base al importar el módulo.
+- **Contexto o límite:** Configuración mínima de TZ y proveedor local; Compose fija el puerto 127.0.0.1:3000. Sin frontend ni conexión SQL, no hay secretos que transmitir. El login se verificó después en T05; no se conecta ni reconstruye la base al importar el módulo.
 
 ### T07 · Conectar a SQL Server con un usuario de aplicación
 

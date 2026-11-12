@@ -4,7 +4,17 @@ Actualizado: 12 de noviembre de 2026. Documento de traspaso para otra sesión o 
 
 ## Próxima tarea
 
-**T05 del [roadmap](ROADMAP.md): verificar el login local de ChatGPT y una herramienta inocua.** T06 dejó lista la configuración mínima del servidor. El usuario debe efectuar `/login` en una terminal interactiva de Eve; T07 puede avanzar de manera independiente si el login sigue pendiente. No cambiar de stack ni modificar el esquema SQL.
+**T07 del [roadmap](ROADMAP.md): conectar a SQL Server con un usuario de aplicación.** T05 y T06 están terminadas. Comprobar el puerto y la disponibilidad del contenedor SQL existente, configurar credenciales y permisos mínimos sin usar `sa` en las herramientas. Antes de escribir SQL o reglas de negocio, leer el informe 7.1 y los cuatro scripts de `database/`. No cambiar de stack ni modificar el esquema sin evidencia.
+
+## T05: login local y herramienta inocua
+
+El usuario completó `/login` de **ChatGPT Subscription** en Eve 1.0.0-rc.10 desde Docker Desktop/Windows. La TUI llamó `comprobar_conexion` y devolvió `{ "estado": "ok", "fuente": "prueba_local" }`; después presentó una respuesta real. `eve traces show` confirmó `execute_tool comprobar_conexion` entre dos pasos reales del modelo `gpt-6-luna-fast` (389 tokens de entrada y 40 de salida registrados). Esta es una prueba del acceso local y de la herramienta fija, no de datos académicos, SQL ni despliegue.
+
+Se añadió solo la herramienta fija sin entradas ni servicios externos y `localDev()` para sesiones del servidor de desarrollo. `eve info --json` informó `ready`, cero diagnósticos y únicamente `comprobar_conexion`. GET /eve/v1/info desde dentro del contenedor devolvió 200; las peticiones al puerto publicado desde Windows devolvieron 401 con `localDev()`. `eve remote connect --print` antes del login falló sin invocar el modelo: `The model connection is unavailable. Run /login to reconnect.` No hubo tokens, códigos OAuth ni contraseñas en Git.
+
+El primer `/login` falló por ausencia de Secret Service. Se instaló D-Bus, GNOME Keyring y `libsecret-tools` en la imagen Node, y `scripts/eve-local` arranca una sesión interactiva con llavero cifrado en el volumen `keyring_state`, separado del workspace. El navegador de Windows no llega al callback OAuth `localhost:1455` del contenedor; `SSH_TTY=1` activa el flujo de dispositivo de la versión instalada. El usuario habilitó el inicio de dispositivo en ChatGPT y completó el login. Con un valor ficticio se comprobó almacenamiento/lectura y recuperación después de recrear el contenedor usando un volumen temporal que fue eliminado; **no se comprobó todavía la persistencia del login real después de reiniciar**. Ver [la receta](../apps/server/README.md).
+
+Límites: la TUI interactiva sigue en ejecución durante esta verificación; no detener el contenedor del usuario para ejecutar pruebas. El `server` estándar no arranca el llavero desbloqueado, por lo que un chat desde Windows o un proceso separado aún requiere integración y autenticación propias (T20). El build `EXDEV` documentado en T06 sigue pendiente; el login local no lo resuelve. SQL, el panel y las herramientas de negocio permanecen pendientes.
 
 ## Trabajo completado en esta inicialización
 
@@ -50,7 +60,7 @@ El `npm ci` de esta sesión instaló 29 paquetes y reportó cero vulnerabilidade
 
 ## Qué existe y qué falta
 
-Existe la base OLTP, sus scripts, la toolchain Docker y el backend mínimo apps/server con configuración Zod. No existen apps/web, mssql instalado, herramientas de negocio ni autenticación de modelo probada. Hay comandos de typecheck, build e inicio del servidor; el build actual tiene el fallo EXDEV descrito arriba en Windows. Las pruebas SQL siguen siendo históricas.
+Existe la base OLTP, sus scripts, la toolchain Docker y el backend mínimo apps/server con configuración Zod. El login local de ChatGPT y una herramienta fija funcionan en la TUI. No existen apps/web, mssql instalado ni herramientas de negocio. Hay comandos de typecheck, build e inicio del servidor; el build actual tiene el fallo EXDEV descrito arriba en Windows. Las pruebas SQL siguen siendo históricas.
 
 El host conserva Node v26.13.1 y npm 12.2.2. Node del proyecto se ejecuta en Docker: imagen oficial fijada por digest, Node 24.22.3 y npm 11.19.1. Usar `./scripts/dev npm run check`; el chequeo rechaza Node de otra versión. No se instaló ni cambió Node global.
 
@@ -65,12 +75,11 @@ El host conserva Node v26.13.1 y npm 12.2.2. Node del proyecto se ejecuta en Doc
 
 ## Pendientes reales
 
-1. Confirmar el plan de ChatGPT y probar /login con la versión instalada de Eve (T05). Mantener el login fuera de Git y probar una herramienta inocua. Verificar la persistencia del almacén de secretos en el contenedor antes de depender de ella.
-2. Corregir el fallo EXDEV del build entre el volumen `.eve` y `.output` al abordar el empaquetado de desarrollo; no exponer Docker al agente para eliminar el aviso de sandbox.
+1. T07: confirmar conectividad SQL, puerto publicado, usuario de aplicación y permisos mínimos. No inferir credenciales del informe ni ejecutar scripts de creación/población.
+2. Corregir el fallo EXDEV del build entre el volumen `.eve` y `.output` al abordar el empaquetado de desarrollo; no exponer Docker al agente para eliminar el aviso de sandbox. Verificar persistencia del login real tras reiniciar antes de depender de ella.
 3. Confirmar si los 2.000 créditos MiniMax son de API o de su aplicación; no consumirlos todavía.
-4. Comprobar el puerto SQL publicado y configurar el usuario de aplicación en T07. `.env.example` no contiene credenciales SQL ni una conexión provisionada.
-5. Implementar política de contacto con aceptación inicial de términos y revocación posterior; el texto de términos y el registro público de usuarios no están implementados.
-6. Cubrir en servicios los cinco huecos conocidos, manteniendo el esquema actual.
+4. Implementar política de contacto con aceptación inicial de términos y revocación posterior; el texto de términos y el registro público de usuarios no están implementados.
+5. Cubrir en servicios los cinco huecos conocidos, manteniendo el esquema actual.
 
 ## Cómo actualizar este archivo después de una tarea
 

@@ -8,13 +8,13 @@ Proyecto académico de Ingeniería de Sistemas de la Universidad Nacional de Tru
 2. Seguir [el roadmap de tareas y commits](docs/ROADMAP.md).
 3. Consultar [contexto y decisiones](docs/CONTEXTO.md) y [arquitectura](docs/ARQUITECTURA.md).
 
-**Siguiente tarea: T05, verificar el login local de ChatGPT.** Una tarea corresponde a un commit; el roadmap incluye dependencias y criterios para cerrarla.
+**Siguiente tarea: T07, conectar a SQL Server con usuario de aplicación.** Una tarea corresponde a un commit; el roadmap incluye dependencias y criterios para cerrarla.
 
 ## Estado actual
 
-La base OLTP y los escenarios ficticios ya existen. El backend mínimo de Eve arranca en Docker y tiene un endpoint de salud; todavía faltan el login del modelo, las herramientas de negocio y la interfaz. Por decisión del usuario se conserva el esquema actual mientras se desarrolla el prototipo local.
+La base OLTP y los escenarios ficticios ya existen. El backend mínimo de Eve arranca en Docker y tiene un endpoint de salud. El login local de ChatGPT y una llamada real a una herramienta fija se verificaron en la terminal de Eve; aún faltan la conexión SQL, las herramientas de negocio y la interfaz. Por decisión del usuario se conserva el esquema actual mientras se desarrolla el prototipo local.
 
-Stack acordado: TypeScript, Node.js 24, Eve/Nitro, React/Vite, SQL Server 2022 en Docker, `mssql`, Zod y Vitest. El acceso inicial al modelo será el login local de ChatGPT de Eve, pendiente de comprobar en esta cuenta. MiniMax queda como alternativa si sus créditos son utilizables por API.
+Stack acordado: TypeScript, Node.js 24, Eve/Nitro, React/Vite, SQL Server 2022 en Docker, `mssql`, Zod y Vitest. El acceso local al modelo se comprobó con la suscripción de ChatGPT en la TUI de Eve; no equivale a acceso API ni a despliegue. MiniMax queda como alternativa si sus créditos son utilizables por API.
 
 ## Organización
 
@@ -36,16 +36,15 @@ Stack acordado: TypeScript, Node.js 24, Eve/Nitro, React/Vite, SQL Server 2022 e
 ./scripts/dev npm ci
 ./scripts/dev npm run check
 ./scripts/dev npm run typecheck
-./scripts/dev npm run build:server
 docker compose up --build -d server
 curl http://127.0.0.1:3000/eve/v1/health
 ```
 
 Node está aislado en Docker: imagen oficial fijada por digest, Node 24.22.3 y npm 11.19.1. `scripts/dev` ejecuta cada comando en un contenedor temporal con tu UID/GID; dependencias, caché y estado de Eve quedan en volúmenes del proyecto. No es necesario instalar Node en el host. Ver [la guía de infraestructura](infra/README.md). Si tu UID/GID difiere de 1000, exporta `LOCAL_UID=$(id -u)` y `LOCAL_GID=$(id -g)` antes de usar Compose directamente.
 
-La salud devuelve `ok: true`. No hay panel ni chat habilitado todavía: crear una sesión devuelve 401 hasta configurar su acceso en T05. Para detener el backend: `docker compose stop server`. Antes de repetir `npm ci`, detenerlo para evitar reemplazar dependencias de un proceso activo. [Detalles del servidor](apps/server/README.md).
+La salud devuelve `ok: true`. No hay panel; el login funcionó en la TUI con `scripts/eve-local`. `localDev()` solo admitió peticiones desde dentro del contenedor, mientras que las peticiones desde Windows al puerto publicado recibieron 401. Antes de repetir `npm ci`, detener los procesos del servidor para evitar reemplazar sus dependencias. [Detalles y comando de login](apps/server/README.md).
 
-`npm run check` revisa únicamente estructura y enlaces; `typecheck` y `build:server` verifican el backend. Estos comandos no ejecutan SQL ni prueban una respuesta del modelo.
+`npm run check` revisa únicamente estructura y enlaces; `typecheck` verifica el backend. `build:server` falla con EXDEV en Docker Desktop/Windows al mover la salida entre volúmenes; se documenta en [ESTADO.md](docs/ESTADO.md). Ninguno de esos comandos ejecuta SQL ni prueba una respuesta del modelo.
 
 El archivo `.env.example` documenta la zona horaria y el proveedor local, sin secretos. Compose suministra ambos; la conexión SQL y el usuario de aplicación se configuran en T07.
 

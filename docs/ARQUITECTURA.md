@@ -15,7 +15,7 @@ Eve/Nitro sobre Node 24 (apps/server)
         |-- simulador de comunicación
         |
         +--> SQL Server existente: LaPreDigital_Customers
-        +--> ChatGPT mediante login local de Eve (pendiente de prueba)
+        +--> ChatGPT mediante login local de Eve (T05: TUI verificada)
         +--> persistencia local de sesiones/trazas fuera de Git
 ```
 
@@ -37,7 +37,7 @@ Por instrucción posterior del usuario, Node/npm se ejecutan en Docker mediante 
 
 Este empaquetado de desarrollo precede a las imágenes de runtime para VPS: los builds y artefactos se definirán con la aplicación real. SQL Server continúa en su contenedor existente y no se recrea desde Compose. Su conectividad se configura en T07. No montar el socket Docker ni credenciales del host en el agente de negocio.
 
-El servidor publica únicamente 127.0.0.1:3000. CLI y backend comparten el volumen eve_state en apps/server/.eve; la persistencia de un archivo se verificó al recrear el contenedor, pero aún no se comprobó el login. defaultTools: false deja el manifiesto sin herramientas. El canal usa auth: [] para denegar sesiones mientras T05 define y verifica el acceso local; la salud pública sigue disponible. No se montó el socket Docker para resolver el aviso de sandbox de Eve: actualmente no hay herramientas que lo necesiten.
+El servidor publica únicamente 127.0.0.1:3000. CLI y backend comparten el volumen eve_state en apps/server/.eve; para `/login` interactivo T05 añadió un llavero cifrado persistente y D-Bus iniciados por `scripts/eve-local`. El modelo llamó `comprobar_conexion`, la única herramienta fija, y respondió en la TUI. `defaultTools: false` excluye las herramientas generales. El canal usa `localDev()`; desde Windows a través del puerto publicado respondió 401 y desde el contenedor 200. La salud pública sigue disponible. El servidor estándar no inicia el llavero desbloqueado ni se ha probado login real tras reinicio. No se montó el socket Docker para resolver el aviso de sandbox de Eve: actualmente no hay herramientas que lo necesiten.
 
 ## Qué calcula el código y qué interpreta la IA
 
@@ -72,7 +72,7 @@ La trazabilidad técnica incluirá operación, corte, versiones, fuentes, acció
 
 ## Acceso al modelo y alcance económico
 
-La [documentación de Eve](https://eve.dev/docs/agent-config) contempla chatgpt() con login local y limita esa modalidad a desarrollo local. Hay que comprobar la cuenta real antes de prometer su funcionamiento, modelos o cupos. No copiar tokens de Codex/ChatGPT manualmente al repositorio ni implementar un proxy para eludir la modalidad admitida.
+La [documentación de Eve](https://eve.dev/docs/agent-config) contempla chatgpt() con login local y limita esa modalidad a desarrollo local. T05 verificó una llamada real con la suscripción del usuario y el modelo observado `gpt-6-luna-fast`; esto no establece cupos ni viabilidad de despliegue. No copiar tokens de Codex/ChatGPT manualmente al repositorio ni implementar un proxy para eludir la modalidad admitida.
 
 MiniMax puede ser alternativo mediante su API compatible si el saldo del usuario es utilizable por API y autoriza su consumo. La clave se guarda fuera de Git. No hay fallback automático a un proveedor de pago ni servicio de nube contratado.
 

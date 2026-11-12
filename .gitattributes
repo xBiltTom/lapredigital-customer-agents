@@ -4,6 +4,7 @@
 *.mjs text eol=lf
 *.ts text eol=lf
 *.tsx text eol=lf
+scripts/* text eol=lf
 # Conservar los bytes de los SQL importados, incluidos BOM y consultas del usuario.
 *.sql -text
 *.pdf binary

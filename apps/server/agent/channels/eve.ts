@@ -1,5 +1,5 @@
 import { eveChannel } from 'eve/channels/eve';
+import { localDev } from 'eve/channels/auth';
 
-// T04 solo expone salud. No aceptar sesiones antes de verificar T05.
-// La salud publica de Eve no dispara una llamada al modelo.
-export default eveChannel({ auth: [] });
+// Solo eve dev admite sesiones locales; eve start sigue rechazando accesos.
+export default eveChannel({ auth: [localDev()] });

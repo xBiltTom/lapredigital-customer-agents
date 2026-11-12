@@ -7,7 +7,6 @@ Desde la raíz del repositorio:
 ```bash
 ./scripts/dev npm ci
 ./scripts/dev npm run typecheck
-./scripts/dev npm run build:server
 docker compose up --build -d server
 curl http://127.0.0.1:3000/eve/v1/health
 docker compose logs --tail 40 server
@@ -23,12 +22,24 @@ Detener el servidor antes de repetir npm ci. Si tu UID/GID difiere de 1000, expo
 ## Alcance actual
 
 - GET /eve/v1/health responde 200 con ok: true.
-- POST /eve/v1/session devuelve 401: auth: [] cierra las sesiones hasta configurar el acceso local en T05.
+- Eve usa `localDev()` para permitir sesiones desde el contenedor durante `eve dev`; las peticiones desde Windows mediante el puerto publicado reciben 401 en esta instalación.
 - agent/agent.ts selecciona chatgpt(), pero no inicia login ni hace llamadas por arrancar o compilar. El modelo efectivo que muestra eve info es configuración; no demuestra acceso a ese modelo.
-- defaultTools: false y el manifiesto observado dejan la lista de herramientas vacía. No se ofrece bash, archivos ni SQL al modelo.
+- `defaultTools: false` deja solo la herramienta local `comprobar_conexion`. No se ofrece bash, archivos ni SQL al modelo.
 - No hay conexión SQL, tareas programadas ni comunicaciones reales. La lógica del Agente Académico está pendiente.
 
-El volumen eve_state conserva apps/server/.eve y es compartido por CLI y servidor. No copiar tokens desde el host ni borrar ese volumen como parte de reinstalar dependencias. Según la documentación instalada, `/login` guarda OAuth/credenciales en el almacén de secretos del sistema: la persistencia real de ese almacén dentro de Docker y la compatibilidad de la cuenta requieren prueba interactiva en T05. No se ha probado ninguna respuesta ni herramienta con el modelo.
+El volumen eve_state conserva apps/server/.eve y es compartido por CLI y servidor. Para el `/login` interactivo, `scripts/eve-local` inicia D-Bus y un llavero Linux desbloqueado con una contraseña local; sus archivos cifrados residen en el volumen `keyring_state`. Recuerda esa contraseña para sesiones posteriores. No copiar tokens desde el host ni borrar estos volúmenes al reinstalar dependencias. El login real y una llamada real al modelo funcionaron; solo se comprobó la persistencia del llavero con un valor ficticio, no la del login real tras reiniciar.
+
+## T05: login local verificado
+
+`comprobar_conexion` devuelve `{ estado: 'ok', fuente: 'prueba_local' }` sin entradas ni acceso a SQL. El usuario completó `/login` y la TUI llamó la herramienta y respondió con su resultado; `eve traces show` confirmó `execute_tool comprobar_conexion` y dos pasos del modelo `gpt-6-luna-fast`. `localDev()` permite sesiones desde el contenedor durante el desarrollo: en Docker Desktop/Windows, una petición al puerto publicado desde Windows recibió 401, mientras que una petición local dentro del contenedor obtuvo 200. Antes de iniciar sesión, `eve remote connect --print` dentro del contenedor falló con `The model connection is unavailable`.
+
+Con el servidor detenido y cualquier sesión anterior de Eve cerrada con `/exit`, abrir una terminal interactiva en el host (CMD o PowerShell) y ejecutar:
+
+```text
+docker compose run --build --rm --no-deps --service-ports --env SSH_TTY=1 --workdir /workspace/apps/server server sh /workspace/scripts/eve-local /workspace/node_modules/.bin/eve dev --host 0.0.0.0 --port 3000 --no-default-extensions
+```
+
+Primero, introducir la contraseña del llavero local, distinta de la de ChatGPT; la terminal oculta lo escrito. Luego, en Eve, escribir `/login` y elegir **ChatGPT Subscription** si no está conectada. `SSH_TTY=1` activa el inicio con código de dispositivo de esta versión de Eve: abrir en el navegador la dirección que indique Eve e introducir allí el código, sin compartirlo. Este modo evita el callback `localhost:1455` que Eve abre dentro del contenedor y al que el navegador de Windows no puede acceder. Puede requerir habilitar device code authorization en ChatGPT Settings > Security. Para repetir la prueba, pedir: «Comprueba la conexión con la herramienta y dime qué devuelve». Detener la terminal con `/exit` al terminar. El servicio `server` estándar no inicia este llavero interactivo: esta receta es para la prueba local de T05.
 
 Eve puede advertir que no tiene proveedor de sandbox al compilar. No existen herramientas que requieran ese proveedor; el fallo EXDEV descrito arriba es independiente del aviso. No montar el socket Docker para eliminarlo.
 

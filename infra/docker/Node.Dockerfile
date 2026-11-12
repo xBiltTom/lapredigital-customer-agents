@@ -4,13 +4,17 @@ FROM node:24-bookworm-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00
 ARG LOCAL_UID=1000
 ARG LOCAL_GID=1000
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    dbus-bin gnome-keyring libsecret-tools \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN set -eu; \
     test "$LOCAL_UID" -gt 0; \
     test "$LOCAL_GID" -gt 0; \
     if [ "$LOCAL_GID" != "1000" ]; then groupmod -g "$LOCAL_GID" node; fi; \
     usermod -u "$LOCAL_UID" -g "$LOCAL_GID" node; \
-    mkdir -p /workspace/node_modules /workspace/apps/server/.eve /home/node/.npm; \
-    chown -R node:node /workspace /home/node/.npm
+    mkdir -p /workspace/node_modules /workspace/apps/server/.eve /home/node/.npm /home/node/.local/share/keyrings; \
+    chown -R node:node /workspace /home/node/.npm /home/node/.local
 
 ENV TZ=America/Lima
 WORKDIR /workspace
