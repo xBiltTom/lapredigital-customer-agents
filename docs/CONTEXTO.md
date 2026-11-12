@@ -8,6 +8,10 @@ Proyecto académico de Ingeniería de Sistemas: plataforma virtual de preparaci�
 
 El [informe entregado](reference/documento_InteligenciaNegocios.pdf), identificado por el usuario como versión 7.1, es la fuente de verdad de las reglas. Las decisiones posteriores explícitas del usuario se registran aquí y prevalecen para trabajar. La [revisión SQL](database/REVISION_CUSTOMERS.md) conserva lo comprobado anteriormente.
 
+## Extensión posterior autorizada
+
+El 12/11/2026, después de M06, el dueño autorizó en 30 minutos el temario UNT 2027 en SQL, un dashboard/chat global y un portal local separado con academia/mensajería y escalamiento. M07–M09 constituyen esa extensión. Esta decisión permite ampliar el esquema sin recrear el OLTP activo y ejecutar comunicación por el nuevo canal local preautorizado. No autoriza integraciones externas de WhatsApp/Instagram, cobros o descuentos autónomos. Se conserva el estado real de cada operación y el alcance por identidad. Las cifras de tablas/carga del contexto original son antecedentes previos a esta extensión.
+
 ## Acuerdos recientes que cambian cómo continuar
 
 Decisión más reciente (12/11/2026): el deadline se adelantó. El usuario autorizó finalizar el MVP funcional en una sola pasada de máximo una hora. M01–M03 sustituyen B02–B08; prioridad a diagnóstico → chat real → propuesta → aprobación → simulación. Extensiones y streaming de tokens se posponen. El esquema sigue congelado y los envíos siguen simulados.

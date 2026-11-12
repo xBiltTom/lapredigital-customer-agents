@@ -11,7 +11,7 @@ Si la terminal de Eve sigue abierta:
 ./scripts/open-panel
 ~~~
 
-Panel: **http://localhost:5173**. open-panel toma el acceso local de .env sin imprimirlo, lo pasa por fragmento y el panel lo elimina del URL. El token solo permanece en sessionStorage.
+Panel y dashboard: **http://localhost:5173**. Portal academia/mensajería, servicio Docker separado: **http://localhost:5180**. open-panel toma el acceso local de .env sin imprimirlo, lo pasa por fragmento y el panel lo elimina del URL. El token solo permanece en sessionStorage.
 
 Si apagaste todo, primero en una terminal:
 
@@ -36,6 +36,22 @@ El chat necesita el llavero abierto; sin él las consultas SQL y la bandeja sigu
 Guion sugerido: **Carla C003** (riesgo alto y -25 pp), **Gabriela C007** (pendiente, no aplicable), **Inés C009** (no contacto), **Fabio C006** (beca sin pago) y **Lucía C011** (reactivación). Las fechas de la demo envejecen.
 
 Toda comunicación es simulada: no se llama a WhatsApp/correo ni se crean mensajes ENVIADO/ENTREGADO. Una simulación no acredita C-4. El modelo propone; solo el dueño aprueba y simula. Las rutas y los pagos no se modifican.
+
+## Demostración con estudiantes y apoderados
+
+1. Ejecutar `./scripts/start` y `./scripts/open-panel`; mantener Eve desbloqueado.
+2. En el dashboard preguntar por el panorama general o pedir: «Envía un mensaje a Ana para preguntarle cómo va con Álgebra por MENSAJERIA». El agente consulta evidencias y autorizaciones antes de actuar.
+3. Abrir **http://localhost:5180**. En «Control de participantes» introducir el acceso del dueño (OWNER_ACCESS_TOKEN de .env), elegir estudiante y rol y pulsar «Abrir su sesión». El participante recibe un token propio firmado. Ana sirve para estudiante; Elena C005 sirve para apoderado con Plus.
+4. Alternar Academia/Mensajería. En Academia filtrar curso y cambiar un tema a En curso/Completado; el avance se refleja en la ficha y el dashboard. Los subtemas del JSON se muestran bajo cada tema. No se generan notas ni dominio académico por marcar completado.
+5. En Mensajería responder al agente. Para demostrar escalamiento solicitar una condición económica especial. Aparecerá una consulta en el dashboard; responder desde su tarjeta o indicar al chat «Para la consulta #N, mi decisión es ...; comunícala al interesado». El agente lleva la decisión al mismo hilo.
+
+El canal es local y bidireccional; su apariencia de mensajería no realiza envíos por proveedores externos. El envío y la recepción de bandeja tienen registros propios, sin reinterpretar simulaciones antiguas como mensajes entregados. La regla anterior de propuestas/aprobación se mantiene para esas intervenciones; los mensajes locales solicitados por el dueño usan las validaciones de su herramienta específica.
+
+## Temario y base existente
+
+El JSON original está en [docs/courses/temario_preuniversitario_UNT_2027.json](docs/courses/temario_preuniversitario_UNT_2027.json): 18 cursos, 162 temas y subtemas, con fuentes y alcance metodológico. No se presenta como malla certificada de CEPUNT. El documento completo se conserva en SQL y el catálogo se organiza por edición.
+
+01/02 incluyen el nuevo esquema y población. Sobre una base ya existente, `./scripts/import-temario` aplica solo el bloque nuevo derivado de esos archivos, sin borrar estudiantes, rutas, pagos o historiales; no se ejecuta al arrancar. La carga inicial de avance de los 14 alumnos se identifica CARGA_DEMO; las acciones del portal usan PORTAL_LOCAL y conservan historial. No ejecutar 01/02 completos sobre la base activa.
 
 ## Primera instalación
 

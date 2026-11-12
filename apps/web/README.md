@@ -9,3 +9,6 @@ App.tsx gestiona selección, carga, errores y conversación separada por alumno;
 Build: ./scripts/dev npm run build:web. Resultado .dist, fuera de Git y copiado a la imagen compilada. El backend sirve esos assets sin Vite en 3010.
 
 scripts/test-browser dirige escrituras a SQL aislado. Las pruebas del modelo real son explícitas y separadas; no se ejecutan automáticamente.
+
+
+El arranque abre ahora Dashboard (chat global) y conserva Acompañamiento individual. Portal.tsx se sirve en un proceso Docker separado en 5180 (o con ?portal en el mismo bundle compilado). Cuenta con vistas academia/mensajería y selector de identidades controlado por el dueño. Consultar el README principal para el circuito completo.

@@ -4,6 +4,10 @@
 
 Leer [README.md](README.md), [docs/ESTADO.md](docs/ESTADO.md), [docs/CONTEXTO.md](docs/CONTEXTO.md), [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md) y [docs/ROADMAP.md](docs/ROADMAP.md). Antes de escribir SQL o reglas del negocio, contrastar con [el informe](docs/reference/documento_InteligenciaNegocios.pdf) y los cuatro scripts en database/.
 
+## Extensión más reciente
+
+M07–M09 añadieron temario SQL, dashboard global y portal Docker 5180 con mensajería local bidireccional/escalamiento. Leer ESTADO.md y README para la demo. Mantener separación global/individual/participante; no devolver herramientas privadas al participante ni enviar a proveedores reales. El esquema se amplió con autorización explícita, conservando datos existentes. No ampliar automáticamente tras esta entrega.
+
 ## Alcance autorizado
 
 - Instrucción más reciente: terminar el MVP en una pasada de una hora. Seguir M01–M03 del roadmap; ya no esperar una reestructuración ni ejecutar B02–B08 individualmente. Priorizar diagnóstico, chat real, propuesta/aprobación/simulación y arranque local. Extensiones fuera de alcance.

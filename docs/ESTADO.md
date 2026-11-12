@@ -2,7 +2,17 @@
 
 Actualizado: 12/11/2026. Instrucción vigente: terminar un MVP local en una sola pasada de máximo una hora; reemplaza el plan individual B02–B08.
 
-## Último cambio: M08 — dashboard, portal y agente que actúa
+## Último cambio: M09 — entrega del circuito local
+
+Servicios: dashboard/acompañamiento 5173; portal Docker separado 5180, con su propio proceso Vite y proxy al mismo Eve desbloqueado; paquete compilado 3010. scripts/start arranca web y portal y conserva el proceso del modelo. README contiene el guion de demostración y la carga idempotente. La imagen se reconstruyó con backend y frontend actualizados; el modelo compilado sigue requiriendo el desbloqueo documentado, sin promesa de VPS con suscripción.
+
+Cierre: tipos backend y build frontend correctos; navegador real en escritorio/móvil y circuito de consulta/decisión con modelo real comprobados en M08. Se revisaron las capturas y se ajustó el scroll de mensajes. Las consultas pendientes aparecen fuera del área desplazable del historial. Una última validación impide comunicar una decisión si cambió el contacto o el acceso Plus de su destinatario. La lectura del agente no acredita entrega de bandeja. Sin proveedores externos ni cambio de los pagos o etapas originales.
+
+Límites: portal de demostración local con selector controlado por el dueño; no es alta/login multiusuario de producción. Estados por tema, sin evaluación de dominio ni notas generadas. Mensajes entrantes tienen respuesta por turno; el dashboard conserva streaming. Actualización de bandeja cada 2.5 s y resumen cada 12 s. No hay programación autónoma, colas distribuidas, garantía de envío único ante reintentos concurrentes ni atribución automática al KPI C-4. El catálogo incluye el alcance metodológico del JSON, no una malla certificada CEPUNT.
+
+No continuar con extensiones automáticamente: el usuario revisa el circuito y pide ajustes concretos. Conservar la terminal de Eve abierta y los datos actuales. M07–M09 son los tres commits de esta entrega.
+
+## M08 — dashboard, portal y agente que actúa
 
 Dashboard global del dueño con 14 estudiantes, 12 CUSTOMERS, riesgo, avance del temario, casos abiertos y chat global persistente. Acompañamiento conserva sesiones individuales y añade el temario. Las definiciones diferencian temas completados de cumplimiento de actividades de ruta: no son cifras contradictorias.
 

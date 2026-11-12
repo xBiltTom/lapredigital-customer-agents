@@ -2,6 +2,16 @@
 
 React/Vite en 5173 usa /api mediante proxy hacia Eve/Nitro en 3000. Una imagen compilada sirve el mismo frontend/API en 3010 sin bind mounts de código. SQL Server existente conserva los hechos; el modelo ChatGPT usa el llavero local desbloqueado.
 
+## Dashboard, portal y transporte local
+
+Un solo Eve sirve tres contextos: dueño global, dueño con alumno fijado y participante. El dashboard conserva la dirección dueno:<id>:global en el canal panel. El canal portal mantiene participante:<alumno>:<rol>:<canal>; no comparte su historial con el chat interno del dueño.
+
+El servicio Docker portal reutiliza el frontend React/Vite en 5180 y proxy al mismo backend, con vistas academia/mensajería. Su control local autentica al dueño para emitir acceso firmado de ocho horas ligado a alumno/contacto/rol. Las rutas participantes revalidan vínculo y plan; el agente no dispone del token del dueño como dato de herramientas. Acceso de apoderado exige REPORTES_APODERADO vigente.
+
+TemarioUNT guarda documento y edición; ContenidoUNT guarda los temas con curso/subtemas; ProgresoTemaUNT registra estado/origen e historial anterior. El avance no reemplaza ActividadRuta ni IntentoEvaluacion. El portal genera EventoUso de estudio y el dashboard distingue sus métricas.
+
+MensajeCanalLocal separa el transporte del ledger de proveedores externos. La herramienta valida permisos de PLATAFORMA y finalidad, plan, narrativas y no contacto. La bandeja confirma entrega al leer; el contexto del agente no confirma entrega. ConsultaDueno conecta una duda del participante con el dashboard. Responder por tarjeta o herramienta comunica una decisión autorizada en la conversación del participante.
+
 ## Identidad
 
 Bearer local del dueño resuelto a PersonalInterno con Rol N'DUEÑO' y Activo=1. El token no incorpora un contactoId elegido por el cliente y permanece solo en sessionStorage del navegador. Salud pública; datos/acciones protegidos.
