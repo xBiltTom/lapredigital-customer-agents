@@ -27,3 +27,6 @@ GRANT SELECT, INSERT, UPDATE ON dbo.ConsultaDueno TO lapredigital_app;
 GRANT INSERT ON dbo.EventoUso TO lapredigital_app;
 -- Lectura del ledger para las consultas autenticadas del agente; sin escrituras de pagos.
 GRANT SELECT (PagoId,PeriodoServicioId,PagadorContactoId,Tipo,Estado,ImportePEN,Moneda,Canal,FechaOperacion,FechaConfirmacion,PagoOriginalId) ON dbo.Pago TO lapredigital_app;
+
+-- Cohorte mensual de propuestas para C-6.1; lectura sin aplicar cambios de plan.
+GRANT SELECT (FechaPresentacion,Estado,FechaRespuesta) ON dbo.PropuestaCambioPlan TO lapredigital_app;

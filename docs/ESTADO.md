@@ -2,7 +2,17 @@
 
 Actualizado: 12/11/2026. Instrucción vigente: terminar un MVP local en una sola pasada de máximo una hora; reemplaza el plan individual B02–B08.
 
-## Último cambio: M13 — exploración de registros de negocio por el agente
+## Último cambio: M14 — KPI calculables de CUSTOMERS
+
+Dashboard incorpora C-2.1 satisfacción, C-2.2 respuesta a valoraciones, C-2.3 resolución de incidencias de servicio/acceso y C-6.1 aceptación de cambios de plan. Tarjetas con valor, semáforo del informe, numerador/denominador, periodo/corte peruano y detalle de fórmula/fuentes. Es avance provisional del mes actual; no hay selector de meses cerrados ni snapshots históricos. Denominador cero devuelve null y No aplicable, sin convertirlo en favorable o cero.
+
+Una sola función indicadoresCustomers alimenta el dashboard y consultar_indicadores, herramienta reservada al dueño en modo global. C-2.1 usa cada calificación válida respondida en el mes con igual peso; C-2.2 usa la cohorte de solicitudes emitidas en el mes (incluye respuesta recibida al corte sin exigir que la valoración sea válida); C-2.3 usa incidencias abiertas originalmente en el mes, excluye consultas/economía y no cuenta reabiertas como resueltas; C-6.1 usa propuestas presentadas en el mes con aceptación confirmada al corte (ACEPTADA/APLICADA). Aceptación no implica aplicación. No se añadió C-4 ni se cuentan mensajes locales como seguimiento formal.
+
+Permiso adicional SELECT de FechaPresentacion/Estado/FechaRespuesta de PropuestaCambioPlan; no hay cambio de esquema, población ni escrituras de negocio. Se corrigió el contador «Servicio activo» para comprobar servicio vigente además de etapa CUSTOMER.
+
+Verificación ejecutada: tipos backend y build frontend correctos; SQL/API dieron C-2.1 44/10=4.40 estrellas, C-2.2 9/11=81.82 %, C-2.3 1/4=25 %, C-6.1 1/3=33.33 %. Chat real del dashboard llamó consultar_indicadores y devolvió los mismos valores, identificando C-2.3 como Requiere atención y el periodo como provisional. Los valores cambian con los registros y el tiempo. Imagen reconstruida; sin suites históricas ni pruebas destructivas. Siguiente paso: recargar dashboard y consultar al agente por estos indicadores.
+
+## M13 — exploración de registros de negocio por el agente
 
 Nueva herramienta consultar_base: recursos PAGOS, SERVICIO, ACTIVIDADES, EVALUACIONES, INCIDENCIAS y VALORACIONES; filtros por estado/tipo/texto/rango de fechas, orden reciente/antiguo/importe y paginación hasta 50 filas. Las proyecciones/relaciones son vistas de negocio definidas en el servidor; los valores se parametrizan. No hay SQL libre, DDL, escrituras económicas, credenciales o configuración técnica como herramientas.
 

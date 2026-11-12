@@ -28,6 +28,7 @@ El chat necesita el llavero abierto; sin él las consultas SQL y la bandeja sigu
 
 - Seleccionar estudiantes y consultar plan, vigencia, beca, reactivación, historial y prestaciones.
 - Revisar cumplimiento de ruta, resultados comparables, uso, valoración e incidencias.
+- Consultar KPI CUSTOMERS C-2.1, C-2.2, C-2.3 y C-6.1 en el dashboard y mediante el agente: mes en curso, semáforos, fórmulas y cifras de respaldo; no son cierres mensuales congelados.
 - Explicar el riesgo con datos y referencias; sin datos suficientes queda pendiente.
 - Conversar con el agente con Markdown y respuesta progresiva; recuperar su conversación al volver al estudiante o recargar, con herramientas y referencia de sesión.
 - Registrar una propuesta, aprobar/rechazar y **simular** el seguimiento.
