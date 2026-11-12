@@ -8,11 +8,11 @@ Proyecto académico de Ingeniería de Sistemas de la Universidad Nacional de Tru
 2. Seguir [el roadmap de tareas y commits](docs/ROADMAP.md).
 3. Consultar [contexto y decisiones](docs/CONTEXTO.md) y [arquitectura](docs/ARQUITECTURA.md).
 
-**Siguiente tarea: T04, crear el servidor mínimo de Eve.** Una tarea corresponde a un commit; el roadmap incluye dependencias y criterios para cerrarla.
+**Siguiente tarea: T05, verificar el login local de ChatGPT.** Una tarea corresponde a un commit; el roadmap incluye dependencias y criterios para cerrarla.
 
 ## Estado actual
 
-La base OLTP y los escenarios ficticios ya existen. La aplicación, el agente y la interfaz todavía no están implementados. Por decisión del usuario se conserva el esquema actual mientras se desarrolla el prototipo local.
+La base OLTP y los escenarios ficticios ya existen. El backend mínimo de Eve arranca en Docker y tiene un endpoint de salud; todavía faltan el login del modelo, las herramientas de negocio y la interfaz. Por decisión del usuario se conserva el esquema actual mientras se desarrolla el prototipo local.
 
 Stack acordado: TypeScript, Node.js 24, Eve/Nitro, React/Vite, SQL Server 2022 en Docker, `mssql`, Zod y Vitest. El acceso inicial al modelo será el login local de ChatGPT de Eve, pendiente de comprobar en esta cuenta. MiniMax queda como alternativa si sus créditos son utilizables por API.
 
@@ -23,20 +23,29 @@ Stack acordado: TypeScript, Node.js 24, Eve/Nitro, React/Vite, SQL Server 2022 e
 | [database/](database/README.md) | Creación, población, pruebas y consultas del OLTP |
 | [docs/reference/](docs/reference/documento_InteligenciaNegocios.pdf) | Informe del negocio, identificado por el usuario como versión 7.1 |
 | [docs/database/](docs/database/REVISION_CUSTOMERS.md) | Revisión y verificaciones previas de la base |
-| [apps/](apps/README.md) | Ubicación prevista de backend y frontend |
+| [apps/](apps/README.md) | Backend mínimo y ubicación prevista del frontend |
 | [packages/](packages/README.md) | Ubicación prevista de contratos compartidos |
-| [infra/](infra/README.md) | Alcance de la configuración local pendiente |
+| [infra/](infra/README.md) | Docker, persistencia y comandos locales |
 | scripts/ | Comprobaciones del workspace |
 
-## Comprobación disponible
+## Arranque local
 
 ```bash
 ./scripts/dev node --version
 ./scripts/dev npm --version
+./scripts/dev npm ci
 ./scripts/dev npm run check
+./scripts/dev npm run typecheck
+./scripts/dev npm run build:server
+docker compose up --build -d server
+curl http://127.0.0.1:3000/eve/v1/health
 ```
 
-Node está aislado en Docker: imagen oficial fijada por digest, Node 24.22.3 y npm 11.19.1. `scripts/dev` ejecuta cada comando en un contenedor temporal con tu UID/GID; dependencias y caché quedan en volúmenes del proyecto. No es necesario instalar Node en el host. Ver [la guía de infraestructura](infra/README.md). Todavía no hay dependencias de aplicación ni comandos `dev` o `build` de las apps. `npm run check` solo revisa la estructura, los enlaces y las reglas básicas del repositorio; no ejecuta SQL ni llama a modelos.
+Node está aislado en Docker: imagen oficial fijada por digest, Node 24.22.3 y npm 11.19.1. `scripts/dev` ejecuta cada comando en un contenedor temporal con tu UID/GID; dependencias, caché y estado de Eve quedan en volúmenes del proyecto. No es necesario instalar Node en el host. Ver [la guía de infraestructura](infra/README.md). Si tu UID/GID difiere de 1000, exporta `LOCAL_UID=$(id -u)` y `LOCAL_GID=$(id -g)` antes de usar Compose directamente.
+
+La salud devuelve `ok: true`. No hay panel ni chat habilitado todavía: crear una sesión devuelve 401 hasta configurar su acceso en T05. Para detener el backend: `docker compose stop server`. Antes de repetir `npm ci`, detenerlo para evitar reemplazar dependencias de un proceso activo. [Detalles del servidor](apps/server/README.md).
+
+`npm run check` revisa únicamente estructura y enlaces; `typecheck` y `build:server` verifican el backend. Estos comandos no ejecutan SQL ni prueban una respuesta del modelo.
 
 El archivo `.env.example` es una plantilla sin secretos. No contiene una conexión lista para usar: el puerto publicado y el usuario de aplicación requieren verificación y configuración posterior.
 

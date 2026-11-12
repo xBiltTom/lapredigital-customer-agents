@@ -19,7 +19,7 @@ Eve/Nitro sobre Node 24 (apps/server)
         +--> persistencia local de sesiones/trazas fuera de Git
 ```
 
-Eve es la arquitectura elegida, no una implementación ya instalada. Su servidor se basa en Nitro; Node ejecuta el programa y TypeScript es el lenguaje. No se acordó Next.js ni NestJS. Una sola instancia local es suficiente para el MVP; no se añaden Redis, colas distribuidas, vector DB ni un segundo motor de negocio sin una necesidad demostrada.
+T04 instaló Eve 1.0.0-rc.10, AI SDK 7.0.137 y Zod 4.6.7, fijados en el lockfile raíz. Existe únicamente el servidor mínimo y su salud; el recorrido de negocio mostrado arriba sigue pendiente. Eve es una versión candidata: revisar sus docs instaladas antes de ampliar la integración. Su servidor se basa en Nitro; Node ejecuta el programa y TypeScript es el lenguaje. No se acordó Next.js ni NestJS. Una sola instancia local es suficiente para el MVP; no se añaden Redis, colas distribuidas, vector DB ni un segundo motor de negocio sin una necesidad demostrada.
 
 ## Organización prevista del código
 
@@ -36,6 +36,8 @@ No fijar todavía rutas internas de Nitro ni APIs de Eve desde memoria. Leer doc
 Por instrucción posterior del usuario, Node/npm se ejecutan en Docker mediante scripts/dev. El host no necesita el runtime del proyecto. Compose conserva dependencias Linux y caché en volúmenes y monta código para desarrollo; el usuario del contenedor coincide con UID/GID del host. La imagen base se fija por digest y conserva America/Lima.
 
 Este empaquetado de desarrollo precede a las imágenes de runtime para VPS: los builds y artefactos se definirán con la aplicación real. SQL Server continúa en su contenedor existente y no se recrea desde Compose. Su conectividad se configura en T07. No montar el socket Docker ni credenciales del host en el agente de negocio.
+
+El servidor publica únicamente 127.0.0.1:3000. CLI y backend comparten el volumen eve_state en apps/server/.eve; la persistencia de un archivo se verificó al recrear el contenedor, pero aún no se comprobó el login. defaultTools: false deja el manifiesto sin herramientas. El canal usa auth: [] para denegar sesiones mientras T05 define y verifica el acceso local; la salud pública sigue disponible. No se montó el socket Docker para resolver el aviso de sandbox de Eve: actualmente no hay herramientas que lo necesiten.
 
 ## Qué calcula el código y qué interpreta la IA
 

@@ -18,6 +18,9 @@ const required = [
   'docs/database/REVISION_CUSTOMERS.md', 'apps/README.md',
   'packages/README.md', 'infra/README.md',
   'compose.yaml', 'infra/docker/Node.Dockerfile', 'scripts/dev', '.dockerignore',
+  'package-lock.json', 'apps/server/package.json', 'apps/server/tsconfig.json',
+  'apps/server/README.md', 'apps/server/agent/agent.ts',
+  'apps/server/agent/instructions.md', 'apps/server/agent/channels/eve.ts',
 ];
 for (const name of required) await access(path.join(root, name));
 const pkg = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));

@@ -9,7 +9,7 @@ RUN set -eu; \
     test "$LOCAL_GID" -gt 0; \
     if [ "$LOCAL_GID" != "1000" ]; then groupmod -g "$LOCAL_GID" node; fi; \
     usermod -u "$LOCAL_UID" -g "$LOCAL_GID" node; \
-    mkdir -p /workspace/node_modules /home/node/.npm; \
+    mkdir -p /workspace/node_modules /workspace/apps/server/.eve /home/node/.npm; \
     chown -R node:node /workspace /home/node/.npm
 
 ENV TZ=America/Lima

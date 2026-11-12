@@ -15,11 +15,34 @@ services:
     environment:
       TZ: America/Lima
       NPM_CONFIG_CACHE: /home/node/.npm
+      EVE_TELEMETRY_DISABLED: "1"
     volumes:
       - .:/workspace
       - node_modules:/workspace/node_modules
       - npm_cache:/home/node/.npm
+      - eve_state:/workspace/apps/server/.eve
+
+  server:
+    profiles: [app]
+    extends:
+      service: tools
+    command: [npm, run, dev:server]
+    ports:
+      - "127.0.0.1:3000:3000"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - --input-type=module
+        - -e
+        - "const r = await fetch('http://127.0.0.1:3000/eve/v1/health'); if (!r.ok) process.exit(1);"
+      interval: 5s
+      timeout: 3s
+      start_period: 30s
+      retries: 12
+    stop_grace_period: 20s
 
 volumes:
   node_modules:
   npm_cache:
+  eve_state:

@@ -15,7 +15,7 @@ Leer [README.md](README.md), [docs/ESTADO.md](docs/ESTADO.md), [docs/CONTEXTO.md
 
 ## Stack y código
 
-TypeScript + Node 24; npm workspaces; Eve/Nitro en apps/server; React/Vite en apps/web; mssql; Zod; Vitest. Las apps aún no están creadas. No introducir Next.js/NestJS, Python u otro framework de agentes sin una decisión nueva del usuario.
+TypeScript + Node 24; npm workspaces; Eve/Nitro en apps/server; React/Vite en apps/web; mssql; Zod; Vitest. Existe el backend mínimo; frontend, herramientas del negocio y conexión SQL siguen pendientes. No introducir Next.js/NestJS, Python u otro framework de agentes sin una decisión nueva del usuario.
 
 Verificar login local ChatGPT temprano. No asumir que una suscripción es una API key ni que sirve para un despliegue. Leer docs de la versión instalada de Eve/AI SDK antes de programar su integración.
 
@@ -42,7 +42,7 @@ Node/npm del proyecto se ejecutan en Docker: `./scripts/dev node --version` y `.
 
 ## Verificación y continuidad
 
-Hoy: `./scripts/dev npm run check` valida únicamente el workspace. No hay agente funcionando, dependencias instaladas ni comandos dev/build de las apps.
+Hoy: `./scripts/dev npm run check` valida únicamente el workspace. `./scripts/dev npm run typecheck` y `./scripts/dev npm run build:server` verifican el backend mínimo. `docker compose up --build -d server` inicia salud en 127.0.0.1:3000; las sesiones están cerradas con auth: [] hasta T05. No hay login de ChatGPT ni herramientas de negocio probados. Detener server antes de reinstalar dependencias con npm ci. CLI y servidor comparten el volumen eve_state, excluido de Git.
 
 Separar resultados históricos, revisión estática y ejecución real. Los datos ficticios envejecen; no ocultar los cinco HALLAZGO conocidos cambiando las expectativas de prueba. Usar una base aislada para integración destructiva, no la base académica activa. No subir .env, .eve, tokens, volcados ni archivos de datos a Git.
 
