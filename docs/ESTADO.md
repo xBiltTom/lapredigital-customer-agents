@@ -2,7 +2,19 @@
 
 Actualizado: 12/11/2026. Instrucción vigente: terminar un MVP local en una sola pasada de máximo una hora; reemplaza el plan individual B02–B08.
 
-## Último cambio: M12 — perspectiva de la bandeja del participante
+## Último cambio: M13 — exploración de registros de negocio por el agente
+
+Nueva herramienta consultar_base: recursos PAGOS, SERVICIO, ACTIVIDADES, EVALUACIONES, INCIDENCIAS y VALORACIONES; filtros por estado/tipo/texto/rango de fechas, orden reciente/antiguo/importe y paginación hasta 50 filas. Las proyecciones/relaciones son vistas de negocio definidas en el servidor; los valores se parametrizan. No hay SQL libre, DDL, escrituras económicas, credenciales o configuración técnica como herramientas.
+
+En portal/acompañamiento el estudiante se resuelve desde la sesión, rechazando un ID ajeno. Solo el dashboard del dueño puede elegir otro estudiante o consultar el conjunto. Se comprueba dueño activo, existencia del alumno y acceso Plus de apoderado. El alcance de sus consultas es el estudiante vinculado, no pagos ni datos de otros alumnos. El catálogo de información es independiente del canal; la diferencia estudio/seguimiento no impide responder una consulta informativa de cuenta.
+
+Pagos devuelve cobros, estados, importes brutos, fechas, plan y operaciones correctivas separadas. Último cobro: COBRO + CONFIRMADO + reciente + límite 1, ordenado por confirmación/operación; no se confunde importe exigible con cobrado ni se atribuye un pagador sin evidencia. La falta de cobros exige revisar beca/servicio antes de inferir deuda. Se ampliaron únicamente permisos SELECT de columnas de Pago en mvp-permissions.sql; el esquema y la población no cambian.
+
+Las solicitudes de descuentos/devoluciones, contradicciones o falta de evidencia se derivan con CONSULTAR_DUENO, describiendo la consulta y hechos verificados. La respuesta del dashboard sigue pasando por el agente del destinatario en el flujo RESPONDER_CONSULTA existente; nunca aplica automáticamente cambios económicos.
+
+Verificación: tipos backend correctos; lectura SQL de los seis recursos; un ID de otro alumno fue rechazado. El primer intento detectó permisos insuficientes de Pago y se corrigió la concesión de lectura. Después, chat real de Ana respondió último cobro S/ 79.90, Meta UNT, confirmado el 23/10/2026, sin atribuir falsamente el pagador. Build de la imagen realizado. No se reejecutaron suites SQL ni de navegador. Siguiente paso: el usuario prueba consultas naturales en su sesión; no ampliar alcance automáticamente.
+
+## M12 — perspectiva de la bandeja del participante
 
 La cabecera y la conversación seleccionada de Mensajería muestran Seguimiento LaPreDigital, que es la contraparte del estudiante/apoderado. La identidad propia se mantiene en «Tu cuenta», con nombre y rol/vínculo. Corrección visual sin cambios de sesiones, mensajes, permisos ni lógica del agente. Verificación: compilación web; sin pruebas adicionales.
 

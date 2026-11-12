@@ -67,3 +67,4 @@ Reutilizar node:test y trazas de Eve. Tipos y pruebas dirigidas por funcionalida
 | M10 | Hecha | Pulido visual del dashboard y navegación común con Acompañamiento, verificación por compilación. |
 | M11 | Hecha | Portal diferenciado, nombres reales de destinatarios, asistente de estudio y asistente de seguimiento con alcances separados. |
 | M12 | Hecha | Cabecera de mensajería desde la perspectiva del participante: bot como contacto e identidad propia en Tu cuenta. |
+| M13 | Hecha | Herramienta de lectura flexible de registros de negocio, filtros/paginación y consultas de pagos con alcance por sesión. |

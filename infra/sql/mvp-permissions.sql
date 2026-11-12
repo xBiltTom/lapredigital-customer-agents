@@ -25,3 +25,5 @@ GRANT SELECT ON dbo.ContenidoUNT TO lapredigital_app;
 GRANT SELECT, INSERT, UPDATE ON dbo.MensajeCanalLocal TO lapredigital_app;
 GRANT SELECT, INSERT, UPDATE ON dbo.ConsultaDueno TO lapredigital_app;
 GRANT INSERT ON dbo.EventoUso TO lapredigital_app;
+-- Lectura del ledger para las consultas autenticadas del agente; sin escrituras de pagos.
+GRANT SELECT (PagoId,PeriodoServicioId,PagadorContactoId,Tipo,Estado,ImportePEN,Moneda,Canal,FechaOperacion,FechaConfirmacion,PagoOriginalId) ON dbo.Pago TO lapredigital_app;
