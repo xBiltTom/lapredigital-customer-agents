@@ -883,3 +883,11 @@ WHERE (er.Estado = 'CLASIFICADA' AND (x.MaxNivelSenales IS NULL OR
    OR (er.Estado = 'PENDIENTE' AND er.Nivel IS NOT NULL)
 ORDER BY e.Codigo, er.FechaEvaluacion;
 GO
+
+-- M07. Avance del temario UNT 2027, separado del rendimiento en pruebas.
+SELECT e.Codigo,c.Curso,COUNT(*) Temas,COUNT(CASE WHEN p.Estado='COMPLETADA' THEN 1 END) Completados
+FROM dbo.ProgresoTemaUNT p JOIN dbo.ContenidoUNT c ON c.ContenidoId=p.ContenidoId
+JOIN dbo.Estudiante e ON e.EstudianteId=p.EstudianteId GROUP BY e.Codigo,c.Curso;
+GO
+SELECT ConsultaId,EstudianteId,Rol,Canal,Pregunta,Estado FROM dbo.ConsultaDueno WHERE Estado='PENDIENTE';
+GO

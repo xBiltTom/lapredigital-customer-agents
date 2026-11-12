@@ -56,3 +56,11 @@ Leer AGENTS.md, ESTADO.md y CONTEXTO.md. Reglas del informe 7.1; esquema SQL con
 La aplicación puede escribir evaluaciones/propuestas/eventos con permisos acotados; no recibe sa, DDL ni permisos para cambiar alumnos, pagos o rutas. Los scripts 01/02 solo se reutilizan contra la base aislada de pruebas, nunca al arrancar ni sobre el OLTP activo.
 
 Reutilizar node:test y trazas de Eve. Tipos y pruebas dirigidas por funcionalidad; no reinstalar dependencias sin cambios. Cada commit incluye su implementación y estado. Push normal; preservar cambios del usuario.
+
+## Extensión autorizada en 30 minutos (12/11/2026)
+
+| ID | Estado | Entregable |
+| --- | --- | --- |
+| M07 | Hecha | Temario UNT 2027 versionado, progreso por tema con historial, mensajería local y consultas al dueño; SQL canónico e importación no destructiva. |
+| M08 | En cierre | Dashboard global, herramientas por rol, acompañamiento individual y portal academia/mensajería con escalamiento. |
+| M09 | En cierre | Servicio Docker separado, compilación, verificación del circuito y documentación de demostración. |

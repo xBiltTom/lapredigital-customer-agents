@@ -2,7 +2,17 @@
 
 Actualizado: 12/11/2026. Instrucción vigente: terminar un MVP local en una sola pasada de máximo una hora; reemplaza el plan individual B02–B08.
 
-## Último cambio: M06 — contexto de LaPreDigital e identidad del agente
+## Último cambio: M07 — temario, avance y canal local
+
+Autorización: extensión de 30 minutos iniciada el 12/11/2026 a las 21:54 UTC. Temario JSON aportado por el dueño incorporado sin cambiar su contenido: 18 cursos, 162 temas; subtemas y documento completo conservados. ContenidoUNT es catálogo versionado separado de los recursos/rutas existentes para no alterar sus FK ni comparabilidad. ProgresoTemaUNT identifica estado de estudio y origen; no es una nota ni acredita dominio. Carga de demostración: 2.268 registros (14 alumnos × 162 temas), origen CARGA_DEMO; LEAD/TURNED empiezan pendientes. El portal registra PORTAL_LOCAL y eventos de estudio. Historial multirregistro conserva las filas anteriores U/D.
+
+Se añadieron MensajeCanalLocal y ConsultaDueno: el transporte local tiene identidad y entrega comprobable propias, no se confunde con Mensaje WHATSAPP externo ni acredita automáticamente C-4. Se conservan los registros originales. Dos autorizaciones ficticias iniciales de REPORTES/PLATAFORMA se incorporaron para los apoderados de la carga; no se sobrescriben decisiones existentes.
+
+01/02 son fuente canónica; 03/04 añaden lecturas sin cambiar casos personales ni expectativas históricas. scripts/import-temario deriva el bloque nuevo directamente de 01/02 y aplica solo creación faltante/carga idempotente/permisos a la base existente. Reejecutado: cero duplicados. El primer intento mezcló salida de build con SQL y falló al parsear; se corrigió para usar tools sin --build y se repitió correctamente. No hubo reconstrucción del OLTP activo.
+
+Siguiente tarea: M08/M09, integrar y cerrar las pantallas/acciones ya desarrolladas en esta pasada.
+
+## M06 — contexto de LaPreDigital e identidad del agente
 
 Instrucciones principales reescritas para hablar como Agente Académico de LaPreDigital, con Markdown y respuestas centradas en el negocio. Se retiró la afirmación global «Toda comunicación del MVP es SIMULADA». Se conserva la obligación de describir el resultado real de cada acción, incluidas las simulaciones explícitas, sin afirmar envíos o C-4 inexistentes. No se ocultaron resultados ni se cambiaron proveedores, permisos, interfaz o SQL.
 

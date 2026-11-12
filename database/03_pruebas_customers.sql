@@ -128,3 +128,8 @@ SELECT Id,Caso,Resultado,ErrorObtenido,Detalle FROM @Resultados ORDER BY Id;
 SELECT Resultado,COUNT(*) AS Casos FROM @Resultados GROUP BY Resultado;
 IF EXISTS(SELECT 1 FROM @Resultados WHERE Resultado='FALLO') THROW 51902,'Hay resultados distintos de lo esperado; revisar detalle.',1;
 GO
+
+-- M07: controles de lectura del catálogo importado (sin alterar expectativas históricas).
+SELECT COUNT(DISTINCT Curso) CursosUNT,COUNT(*) TemasUNT FROM dbo.ContenidoUNT WHERE TemarioId=2027;
+SELECT COUNT(*) ProgresosHuerfanos FROM dbo.ProgresoTemaUNT p LEFT JOIN dbo.ContenidoUNT c ON c.ContenidoId=p.ContenidoId WHERE c.ContenidoId IS NULL;
+GO

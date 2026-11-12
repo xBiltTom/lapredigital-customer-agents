@@ -1398,3 +1398,20 @@ ORDER BY HistorialId DESC;
 
 -- No se necesita FOR SYSTEM_TIME: basta SELECT sobre la tabla de historial.
 */
+
+
+-- M07: temario versionado, avance e intercambio por canal LOCAL.
+CREATE TABLE dbo.TemarioUNT(TemarioId INT NOT NULL PRIMARY KEY, Edicion VARCHAR(30) NOT NULL, Documento NVARCHAR(MAX) NOT NULL CHECK(ISJSON(Documento)=1));
+CREATE TABLE dbo.ContenidoUNT(ContenidoId INT IDENTITY PRIMARY KEY, TemarioId INT NOT NULL REFERENCES dbo.TemarioUNT(TemarioId), Codigo VARCHAR(100) NOT NULL UNIQUE, Curso VARCHAR(100) NOT NULL, Tema VARCHAR(250) NOT NULL, Subtemas NVARCHAR(MAX) NOT NULL CHECK(ISJSON(Subtemas)=1));
+CREATE TABLE dbo.ProgresoTemaUNT(EstudianteId INT NOT NULL REFERENCES dbo.Estudiante(EstudianteId), ContenidoId INT NOT NULL REFERENCES dbo.ContenidoUNT(ContenidoId), Estado VARCHAR(12) NOT NULL DEFAULT 'PENDIENTE' CHECK(Estado IN('PENDIENTE','EN_CURSO','COMPLETADA')), FechaCambio DATETIME2(0) NOT NULL DEFAULT GETDATE(), Origen VARCHAR(20) NOT NULL DEFAULT 'PORTAL_LOCAL' CHECK(Origen IN('CARGA_DEMO','PORTAL_LOCAL')), PRIMARY KEY(EstudianteId,ContenidoId));
+CREATE TABLE dbo.MensajeCanalLocal(MensajeLocalId INT IDENTITY PRIMARY KEY, EstudianteId INT NOT NULL REFERENCES dbo.Estudiante(EstudianteId), ContactoId INT NOT NULL REFERENCES dbo.Contacto(ContactoId), Rol VARCHAR(10) NOT NULL CHECK(Rol IN('ESTUDIANTE','APODERADO')), Canal VARCHAR(12) NOT NULL CHECK(Canal IN('ACADEMIA','MENSAJERIA')), Direccion VARCHAR(10) NOT NULL CHECK(Direccion IN('ENTRANTE','SALIENTE')), Contenido NVARCHAR(2000) NOT NULL, Fecha DATETIME2(0) NOT NULL DEFAULT GETDATE(), FechaEntrega DATETIME2(0) NULL, ConsultaId INT NULL);
+CREATE INDEX IX_MensajeLocal_Hilo ON dbo.MensajeCanalLocal(EstudianteId,ContactoId,Canal,MensajeLocalId);
+CREATE TABLE dbo.ConsultaDueno(ConsultaId INT IDENTITY PRIMARY KEY, EstudianteId INT NOT NULL REFERENCES dbo.Estudiante(EstudianteId), ContactoId INT NOT NULL REFERENCES dbo.Contacto(ContactoId), Rol VARCHAR(10) NOT NULL CHECK(Rol IN('ESTUDIANTE','APODERADO')), Canal VARCHAR(12) NOT NULL CHECK(Canal IN('ACADEMIA','MENSAJERIA')), Pregunta NVARCHAR(2000) NOT NULL, Respuesta NVARCHAR(2000) NULL, Estado VARCHAR(12) NOT NULL DEFAULT 'PENDIENTE' CHECK(Estado IN('PENDIENTE','RESPONDIDA')), Fecha DATETIME2(0) NOT NULL DEFAULT GETDATE());
+
+GO
+
+CREATE TABLE dbo.ProgresoTemaUNTHistorial(HistorialId INT IDENTITY PRIMARY KEY,EstudianteId INT NOT NULL,ContenidoId INT NOT NULL,Estado VARCHAR(12) NOT NULL,FechaCambio DATETIME2(0) NOT NULL,Origen VARCHAR(20) NOT NULL,FechaHistorial DATETIME2(7) NOT NULL DEFAULT GETDATE(),Operacion CHAR(1) NOT NULL CHECK(Operacion IN('U','D')));
+GO
+CREATE TRIGGER dbo.TR_ProgresoTemaUNT_Historial ON dbo.ProgresoTemaUNT AFTER UPDATE,DELETE AS
+BEGIN SET NOCOUNT ON; INSERT dbo.ProgresoTemaUNTHistorial(EstudianteId,ContenidoId,Estado,FechaCambio,Origen,Operacion) SELECT d.EstudianteId,d.ContenidoId,d.Estado,d.FechaCambio,d.Origen,CASE WHEN i.EstudianteId IS NULL THEN 'D' ELSE 'U' END FROM deleted d LEFT JOIN inserted i ON i.EstudianteId=d.EstudianteId AND i.ContenidoId=d.ContenidoId; END;
+GO

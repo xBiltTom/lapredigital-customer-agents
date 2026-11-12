@@ -1821,3 +1821,1602 @@ SELECT e.Codigo,r.VersionNumero,r.Objetivo,r.Vigente
 FROM dbo.RutaEstudio r JOIN dbo.Estudiante e ON e.EstudianteId=r.EstudianteId
 WHERE e.Codigo='C001' ORDER BY r.VersionNumero;
 GO
+
+-- M07: catálogo del JSON y avance inicial identificado como CARGA_DEMO.
+DECLARE @DocumentoUNT NVARCHAR(MAX)=N'{
+  "institucion": "Universidad Nacional de Trujillo (UNT)",
+  "pais": "Perú",
+  "fecha_consulta": "2026-11-12",
+  "edicion_prioritaria": "Admisión 2027",
+  "alcance": "Temario de preparación preuniversitaria basado en los ejes oficiales de admisión UNT y un desglose de cursos habituales de academia; no es una malla de asignaturas certificada por CEPUNT.",
+  "fuentes": [
+    {
+      "id": "guia_2027",
+      "tipo": "oficial",
+      "nombre": "Guía de Admisión 2027",
+      "url": "https://www.admisionunt.info/docs/GUIA-2027.pdf",
+      "paginas_impresas_temario": [
+        27,
+        28,
+        29,
+        30,
+        31
+      ],
+      "pagina_impresa_distribucion_preguntas": 20
+    },
+    {
+      "id": "ejes_2026_ii",
+      "tipo": "oficial",
+      "nombre": "Esquema axial y ejes fundamentales 2026-II",
+      "url": "https://www.admisionunt.info/docs/EJES__2026-II.pdf",
+      "paginas_pdf_temario": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "uso": "Contraste y análisis del discurso ausente como bloque separado en 2027"
+    },
+    {
+      "id": "portal_temas",
+      "tipo": "oficial",
+      "nombre": "Temas por asignaturas de la Dirección de Admisión",
+      "url": "https://www.admisionunt.info/temas"
+    },
+    {
+      "id": "cepunt_2026",
+      "tipo": "oficial",
+      "nombre": "Ciclo académico regular CEPUNT septiembre-diciembre 2026",
+      "url": "https://cepunt.edu.pe/ciclo-academico-regular-2026/"
+    }
+  ],
+  "areas_postulacion_2027": [
+    {
+      "codigo": "A",
+      "nombre": "Ciencias de la Vida y de la Salud",
+      "total_preguntas": 100,
+      "preguntas_por_bloque": {
+        "Ciencias Sociales": 6,
+        "Comunicación": 26,
+        "Matemática": 28,
+        "Ciencias y Tecnología": 40
+      }
+    },
+    {
+      "codigo": "B",
+      "nombre": "Ciencias Básicas y Tecnológicas",
+      "total_preguntas": 100,
+      "preguntas_por_bloque": {
+        "Ciencias Sociales": 6,
+        "Comunicación": 26,
+        "Matemática": 34,
+        "Ciencias y Tecnología": 34
+      }
+    },
+    {
+      "codigo": "C",
+      "nombre": "Ciencias de la Persona",
+      "total_preguntas": 100,
+      "preguntas_por_bloque": {
+        "Desarrollo Personal, Ciudadanía y Cívica": 10,
+        "Ciencias Sociales": 15,
+        "Comunicación": 18,
+        "Matemática": 35,
+        "Ciencias y Tecnología": 22
+      }
+    },
+    {
+      "codigo": "D",
+      "nombre": "Ciencias Económicas",
+      "total_preguntas": 100,
+      "preguntas_por_bloque": {
+        "Desarrollo Personal, Ciudadanía y Cívica": 15,
+        "Ciencias Sociales": 24,
+        "Comunicación": 35,
+        "Matemática": 26
+      }
+    }
+  ],
+  "relacion_agrupaciones_de_examen": {
+    "Ciencias Sociales": [
+      "Historia",
+      "Geografía",
+      "Economía"
+    ],
+    "Comunicación": [
+      "Comunicología",
+      "Literatura"
+    ],
+    "Matemática": [
+      "Matemática"
+    ],
+    "Ciencias y Tecnología": [
+      "Biología",
+      "Física",
+      "Química"
+    ],
+    "Desarrollo Personal, Ciudadanía y Cívica": [
+      "Desarrollo Personal",
+      "Ciudadanía y Cívica"
+    ]
+  },
+  "asignaturas_oficiales_2027": [
+    {
+      "nombre": "Desarrollo Personal",
+      "pagina_impresa_2027": 27,
+      "resumen_ejes": [
+        "Desarrollo humano y adolescencia",
+        "Socialización e identidad",
+        "Emociones e inteligencia emocional",
+        "Proyecto de vida",
+        "Sexualidad y salud reproductiva",
+        "Ética y dignidad humana"
+      ]
+    },
+    {
+      "nombre": "Ciudadanía y Cívica",
+      "pagina_impresa_2027": 27,
+      "resumen_ejes": [
+        "Saber filosófico, teoría del conocimiento y epistemología",
+        "Axiología, ética y antropología filosófica",
+        "Derechos humanos y políticos",
+        "Familia y matrimonio",
+        "Estado, Constitución y organismos",
+        "Seguridad y defensa nacional, SINAGERD, convivencia democrática"
+      ]
+    },
+    {
+      "nombre": "Historia",
+      "pagina_impresa_2027": 27,
+      "resumen_ejes": [
+        "Historia y prehistoria",
+        "Culturas occidentales y Perú prehispánico",
+        "Incas y Edad Media",
+        "Exploración y colonización de América",
+        "Virreinato e independencia del Perú",
+        "Revoluciones del siglo XVIII",
+        "Historia peruana y mundial XIX-XX",
+        "Segunda Guerra Mundial y Guerra Fría",
+        "Gobiernos del Perú 1948-2001"
+      ]
+    },
+    {
+      "nombre": "Geografía",
+      "pagina_impresa_2027": 28,
+      "resumen_ejes": [
+        "Tierra y representación",
+        "Geología, relieve y clima",
+        "Geografía física del Perú",
+        "Población y organización territorial",
+        "Ocho regiones naturales",
+        "Ecología y sostenibilidad",
+        "Geografía económica y de La Libertad",
+        "Continentes y geopolítica"
+      ]
+    },
+    {
+      "nombre": "Economía",
+      "pagina_impresa_2027": 28,
+      "resumen_ejes": [
+        "Fundamentos, necesidades y factores productivos",
+        "Oferta, demanda y elasticidad",
+        "Empresas, producción y costos",
+        "Modelos de mercado",
+        "Mercado monetario y sistema financiero",
+        "Estado, tributación y sector externo",
+        "Crecimiento, ciclos y perturbaciones económicas"
+      ]
+    },
+    {
+      "nombre": "Comunicología",
+      "pagina_impresa_2027": 28,
+      "resumen_ejes": [
+        "Proceso comunicativo y comunicación oral",
+        "Signos y códigos",
+        "Gramática y oración",
+        "Semántica",
+        "Ortografía y puntuación",
+        "Producción textual"
+      ]
+    },
+    {
+      "nombre": "Literatura",
+      "pagina_impresa_2027": 29,
+      "resumen_ejes": [
+        "Teoría y recursos literarios",
+        "Literatura universal",
+        "Literatura española",
+        "Literatura latinoamericana",
+        "Literatura peruana",
+        "Literatura regional"
+      ]
+    },
+    {
+      "nombre": "Matemática",
+      "pagina_impresa_2027": 30,
+      "resumen_ejes": [
+        "Conjuntos, numeración, lógica y números reales",
+        "Divisibilidad, proporcionalidad e interés",
+        "Álgebra, ecuaciones e inecuaciones",
+        "Funciones y sucesiones",
+        "Geometría plana",
+        "Trigonometría",
+        "Geometría analítica",
+        "Combinatoria, probabilidad y estadística"
+      ]
+    },
+    {
+      "nombre": "Biología",
+      "pagina_impresa_2027": 30,
+      "resumen_ejes": [
+        "Método científico",
+        "Célula y tejidos",
+        "Sistemas de relación",
+        "Sistemas de nutrición",
+        "Reproducción",
+        "Herencia",
+        "Ecología y biodiversidad"
+      ]
+    },
+    {
+      "nombre": "Física",
+      "pagina_impresa_2027": 31,
+      "resumen_ejes": [
+        "Magnitudes, análisis dimensional y vectores",
+        "Cinemática y dinámica",
+        "Trabajo, potencia y energía",
+        "Mecánica de fluidos",
+        "Temperatura y teoría cinética",
+        "Electricidad y magnetismo",
+        "Óptica"
+      ]
+    },
+    {
+      "nombre": "Química",
+      "pagina_impresa_2027": 31,
+      "resumen_ejes": [
+        "Materia, átomo y estructura electrónica",
+        "Química nuclear",
+        "Tabla periódica y enlaces",
+        "Química inorgánica y reacciones",
+        "Estequiometría y soluciones",
+        "Electroquímica, cinética y equilibrio",
+        "Ácidos, bases y química orgánica"
+      ]
+    }
+  ],
+  "cursos_preuniversitarios_desglosados": [
+    {
+      "id": "historia_peru",
+      "nombre": "Historia del Perú",
+      "bloques_oficiales_relacionados": [
+        "Historia"
+      ],
+      "temas": [
+        {
+          "tema": "Perú prehispánico",
+          "subtemas": [
+            "Primeras sociedades del Perú",
+            "Culturas y procesos anteriores al Tahuantinsuyo"
+          ]
+        },
+        {
+          "tema": "Los incas",
+          "subtemas": [
+            "Organización y expansión del Tahuantinsuyo"
+          ]
+        },
+        {
+          "tema": "Virreinato del Perú",
+          "subtemas": [
+            "Organización y sociedad colonial"
+          ]
+        },
+        {
+          "tema": "Emancipación del Perú",
+          "subtemas": [
+            "Proceso de independencia"
+          ]
+        },
+        {
+          "tema": "Prosperidad falaz",
+          "subtemas": [
+            "Etapa del guano"
+          ]
+        },
+        {
+          "tema": "Guerra del guano y del salitre",
+          "subtemas": [
+            "Guerra del Pacífico"
+          ]
+        },
+        {
+          "tema": "Perú republicano de los siglos XIX y XX",
+          "subtemas": [
+            "Procesos políticos, sociales y económicos"
+          ]
+        },
+        {
+          "tema": "Gobiernos del Perú entre 1948 y 1980",
+          "subtemas": []
+        },
+        {
+          "tema": "Gobiernos del Perú entre 1980 y 2001",
+          "subtemas": []
+        }
+      ],
+      "fuentes": [
+        "guia_2027"
+      ]
+    },
+    {
+      "id": "historia_universal",
+      "nombre": "Historia Universal",
+      "bloques_oficiales_relacionados": [
+        "Historia"
+      ],
+      "temas": [
+        {
+          "tema": "Historia y prehistoria",
+          "subtemas": [
+            "Conceptos y periodización histórica"
+          ]
+        },
+        {
+          "tema": "Altas culturas de Occidente",
+          "subtemas": []
+        },
+        {
+          "tema": "Edad Media",
+          "subtemas": []
+        },
+        {
+          "tema": "Viajes europeos y colonización de América",
+          "subtemas": []
+        },
+        {
+          "tema": "Grandes revoluciones del siglo XVIII",
+          "subtemas": []
+        },
+        {
+          "tema": "El mundo entre los siglos XIX y XX",
+          "subtemas": []
+        },
+        {
+          "tema": "Segunda Guerra Mundial",
+          "subtemas": []
+        },
+        {
+          "tema": "Guerra Fría",
+          "subtemas": []
+        }
+      ],
+      "fuentes": [
+        "guia_2027"
+      ]
+    },
+    {
+      "id": "geografia",
+      "nombre": "Geografía",
+      "bloques_oficiales_relacionados": [
+        "Geografía"
+      ],
+      "temas": [
+        {
+          "tema": "Espacio geográfico y la Tierra",
+          "subtemas": [
+            "La Tierra como morada humana",
+            "Localización y representación de la Tierra"
+          ]
+        },
+        {
+          "tema": "Geología y relieve",
+          "subtemas": [
+            "Geología",
+            "Modelado del paisaje"
+          ]
+        },
+        {
+          "tema": "Medioambiente y sociedad",
+          "subtemas": [
+            "Relación del ser humano con el medioambiente"
+          ]
+        },
+        {
+          "tema": "Climatología",
+          "subtemas": [
+            "Estudio del clima"
+          ]
+        },
+        {
+          "tema": "Geografía física del Perú",
+          "subtemas": [
+            "Ubicación y geoformas del relieve",
+            "Hidrografía"
+          ]
+        },
+        {
+          "tema": "Organización territorial y población del Perú",
+          "subtemas": [
+            "Organización político-administrativa",
+            "Población humana"
+          ]
+        },
+        {
+          "tema": "Ocho regiones naturales del Perú",
+          "subtemas": []
+        },
+        {
+          "tema": "Sostenibilidad y ecología",
+          "subtemas": [
+            "Desarrollo sostenible",
+            "Equilibrio ecológico"
+          ]
+        },
+        {
+          "tema": "Geografía económica del Perú",
+          "subtemas": []
+        },
+        {
+          "tema": "Geografía de La Libertad",
+          "subtemas": [
+            "Naturaleza, cultura y desarrollo regional"
+          ]
+        },
+        {
+          "tema": "Geografía continental",
+          "subtemas": [
+            "América",
+            "Europa",
+            "Asia",
+            "África",
+            "Oceanía"
+          ]
+        },
+        {
+          "tema": "Geopolítica",
+          "subtemas": [
+            "Juego del poder mundial"
+          ]
+        }
+      ],
+      "fuentes": [
+        "guia_2027"
+      ]
+    },
+    {
+      "id": "economia",
+      "nombre": "Economía",
+      "bloques_oficiales_relacionados": [
+        "Economía"
+      ],
+      "temas": [
+        {
+          "tema": "Fundamentos de economía",
+          "subtemas": [
+            "Manifestaciones económicas y su evolución"
+          ]
+        },
+        {
+          "tema": "Necesidades, bienes y recursos",
+          "subtemas": [
+            "Necesidades sociales",
+            "Bienes económicos",
+            "Recursos"
+          ]
+        },
+        {
+          "tema": "Factores productivos",
+          "subtemas": [
+            "Tierra",
+            "Trabajo",
+            "Capital"
+          ]
+        },
+        {
+          "tema": "Oferta y demanda",
+          "subtemas": [
+            "Demanda",
+            "Oferta",
+            "Elasticidades del mercado"
+          ]
+        },
+        {
+          "tema": "Organizaciones empresariales",
+          "subtemas": [
+            "Tipos de empresa"
+          ]
+        },
+        {
+          "tema": "Producción y costos",
+          "subtemas": [
+            "Producción",
+            "Costos de corto plazo",
+            "Costos de largo plazo"
+          ]
+        },
+        {
+          "tema": "Modelos y estructuras de mercado",
+          "subtemas": []
+        },
+        {
+          "tema": "Dinero y sistema monetario",
+          "subtemas": [
+            "Mercado monetario"
+          ]
+        },
+        {
+          "tema": "Sistema financiero",
+          "subtemas": [
+            "Operaciones crediticias",
+            "Instrumentos del crédito"
+          ]
+        },
+        {
+          "tema": "Estado y economía",
+          "subtemas": [
+            "Intervención del Estado",
+            "Tributación en el Perú"
+          ]
+        },
+        {
+          "tema": "Economía internacional",
+          "subtemas": [
+            "Comercio exterior",
+            "Finanzas del sector externo"
+          ]
+        },
+        {
+          "tema": "Macroeconomía",
+          "subtemas": [
+            "Crecimiento económico",
+            "Ciclo económico",
+            "Perturbaciones económicas"
+          ]
+        }
+      ],
+      "fuentes": [
+        "guia_2027"
+      ]
+    },
+    {
+      "id": "lenguaje",
+      "nombre": "Lenguaje y Comunicología",
+      "bloques_oficiales_relacionados": [
+        "Comunicología"
+      ],
+      "temas": [
+        {
+          "tema": "Comunicación humana",
+          "subtemas": [
+            "Proceso comunicativo",
+            "Elementos",
+            "Fines",
+            "Formas"
+          ]
+        },
+        {
+          "tema": "Comunicación oral",
+          "subtemas": [
+            "Estrategias y técnicas",
+            "Comunicación efectiva"
+          ]
+        },
+        {
+          "tema": "Signos y códigos",
+          "subtemas": [
+            "Signos de la comunicación humana",
+            "Códigos"
+          ]
+        },
+        {
+          "tema": "Gramática",
+          "subtemas": [
+            "Elementos gramaticales"
+          ]
+        },
+        {
+          "tema": "Oración",
+          "subtemas": [
+            "Estructura de la oración",
+            "Tipos de oración"
+          ]
+        },
+        {
+          "tema": "Semántica",
+          "subtemas": [
+            "Significado",
+            "Significación",
+            "Sentido"
+          ]
+        },
+        {
+          "tema": "Relaciones léxico-semánticas",
+          "subtemas": []
+        },
+        {
+          "tema": "Normativa del español",
+          "subtemas": [
+            "Ortografía",
+            "Puntuación"
+          ]
+        },
+        {
+          "tema": "Producción textual",
+          "subtemas": [
+            "Fundamentos",
+            "Elementos",
+            "Recursos y requisitos",
+            "Estrategias y técnicas de redacción"
+          ]
+        }
+      ],
+      "fuentes": [
+        "guia_2027"
+      ]
+    },
+    {
+      "id": "razonamiento_verbal",
+      "nombre": "Razonamiento Verbal y Comprensión Lectora",
+      "bloques_oficiales_relacionados": [
+        "Comunicología"
+      ],
+      "temas": [
+        {
+          "tema": "Significado y relaciones semánticas",
+          "subtemas": [
+            "Sentido contextual",
+            "Relaciones léxico-semánticas"
+          ]
+        },
+        {
+          "tema": "Textos y tipologías",
+          "subtemas": [
+            "Texto narrativo",
+            "Texto expositivo",
+            "Texto argumentativo",
+            "Texto descriptivo",
+            "Texto instructivo",
+            "Texto transaccional"
+          ]
+        },
+        {
+          "tema": "Organización del discurso",
+          "subtemas": [
+            "Estructura textual",
+            "Intertextualidad"
+          ]
+        },
+        {
+          "tema": "Propiedades del texto",
+          "subtemas": [
+            "Cohesión",
+            "Coherencia",
+            "Adecuación"
+          ]
+        },
+        {
+          "tema": "Conectores textuales",
+          "subtemas": [
+            "Marcadores textuales",
+            "Conectores lógico-textuales"
+          ]
+        },
+        {
+          "tema": "Comprensión de lectura",
+          "subtemas": [
+            "Nivel literal",
+            "Nivel inferencial",
+            "Nivel crítico"
+          ]
+        },
+        {
+          "tema": "Estrategias de lectura",
+          "subtemas": [
+            "Técnicas de lectura y comprensión"
+          ]
+        }
+      ],
+      "fuentes": [
+        "guia_2027",
+        "ejes_2026_ii"
+      ],
+      "nota": "El detalle de análisis del discurso y los niveles de comprensión lectora figura expresamente en el PDF oficial 2026-II, pero no como bloque separado en las páginas de ejes de la Guía 2027."
+    },
+    {
+      "id": "literatura",
+      "nombre": "Literatura",
+      "bloques_oficiales_relacionados": [
+        "Literatura"
+      ],
+      "temas": [
+        {
+          "tema": "Teoría literaria",
+          "subtemas": [
+            "Naturaleza y características del texto literario",
+            "Tipos de texto literario",
+            "Técnicas y recursos de construcción literaria"
+          ]
+        },
+        {
+          "tema": "Literatura universal",
+          "subtemas": [
+            "Edipo rey",
+            "La divina comedia",
+            "Hamlet",
+            "Ensayo sobre la ceguera"
+          ]
+        },
+        {
+          "tema": "Literatura española",
+          "subtemas": [
+            "El ingenioso hidalgo don Quijote de la Mancha",
+            "Fuenteovejuna"
+          ]
+        },
+        {
+          "tema": "Literatura latinoamericana",
+          "subtemas": [
+            "Cien años de soledad",
+            "Veinte poemas de amor y una canción desesperada",
+            "El túnel"
+          ]
+        },
+        {
+          "tema": "Literatura peruana",
+          "subtemas": [
+            "El mundo es ancho y ajeno",
+            "Trilce",
+            "La ciudad y los perros"
+          ]
+        },
+        {
+          "tema": "Literatura regional",
+          "subtemas": [
+            "El huso de la palabra"
+          ]
+        }
+      ],
+      "fuentes": [
+        "guia_2027"
+      ]
+    },
+    {
+      "id": "aritmetica",
+      "nombre": "Aritmética",
+      "bloques_oficiales_relacionados": [
+        "Matemática"
+      ],
+      "temas": [
+        {
+          "tema": "Conjuntos",
+          "subtemas": [
+            "Teoría de conjuntos"
+          ]
+        },
+        {
+          "tema": "Sistemas de numeración",
+          "subtemas": []
+        },
+        {
+          "tema": "Números reales",
+          "subtemas": [
+            "Propiedades y operaciones"
+          ]
+        },
+        {
+          "tema": "Divisibilidad",
+          "subtemas": []
+        },
+        {
+          "tema": "Magnitudes proporcionales",
+          "subtemas": [
+            "Proporcionalidad"
+          ]
+        },
+        {
+          "tema": "Matemática financiera básica",
+          "subtemas": [
+            "Regla de interés"
+          ]
+        }
+      ],
+      "fuentes": [
+        "guia_2027"
+      ]
+    },
+    {
+      "id": "algebra",
+      "nombre": "Álgebra",
+      "bloques_oficiales_relacionados": [
+        "Matemática"
+      ],
+      "temas": [
+        {
+          "tema": "Expresiones algebraicas",
+          "subtemas": [
+            "Operaciones con expresiones algebraicas"
+          ]
+        },
+        {
+          "tema": "Productos y cocientes notables",
+          "subtemas": []
+        },
+        {
+          "tema": "Factorización y binomio de Newton",
+          "subtemas": []
+        },
+        {
+          "tema": "Ecuaciones",
+          "subtemas": [
+            "Lineales",
+            "Cuadráticas",
+            "Polinómicas",
+            "Con valor absoluto",
+            "Exponenciales",
+            "Logarítmicas"
+          ]
+        },
+        {
+          "tema": "Inecuaciones",
+          "subtemas": [
+            "Lineales",
+            "Cuadráticas",
+            "Polinómicas",
+            "Con valor absoluto",
+            "Exponenciales"
+          ]
+        },
+        {
+          "tema": "Intervalos",
+          "subtemas": []
+        },
+        {
+          "tema": "Relaciones y conjuntos cartesianos",
+          "subtemas": [
+            "Relaciones binarias",
+            "Producto cartesiano"
+          ]
+        },
+        {
+          "tema": "Funciones",
+          "subtemas": [
+            "Definición y elementos",
+            "Dominio y rango",
+            "Constante",
+            "Lineal",
+            "Cuadrática",
+            "Racional",
+            "Raíz cuadrada",
+            "Valor absoluto",
+            "Exponencial",
+            "Logarítmica"
+          ]
+        },
+        {
+          "tema": "Operaciones entre funciones",
+          "subtemas": [
+            "Adición",
+            "Sustracción",
+            "Multiplicación",
+            "División",
+            "Composición"
+          ]
+        },
+        {
+          "tema": "Sucesiones y series",
+          "subtemas": [
+            "Sucesiones",
+            "Series",
+            "Sumatorias"
+          ]
+        }
+      ],
+      "fuentes": [
+        "guia_2027"
+      ]
+    },
+    {
+      "id": "geometria",
+      "nombre": "Geometría",
+      "bloques_oficiales_relacionados": [
+        "Matemática"
+      ],
+      "temas": [
+        {
+          "tema": "Geometría plana",
+          "subtemas": [
+            "Segmentos",
+            "Ángulos",
+            "Triángulos"
+          ]
+        },
+        {
+          "tema": "Polígonos y cuadriláteros",
+          "subtemas": []
+        },
+        {
+          "tema": "Circunferencia y círculo",
+          "subtemas": []
+        },
+        {
+          "tema": "Medición de regiones planas",
+          "subtemas": [
+            "Áreas",
+            "Perímetros"
+          ]
+        },
+        {
+          "tema": "Geometría analítica",
+          "subtemas": [
+            "Introducción y plano cartesiano"
+          ]
+        },
+        {
+          "tema": "La recta en el plano",
+          "subtemas": [
+            "Ecuación cartesiana",
+            "Pendiente",
+            "Ángulo entre dos rectas",
+            "Paralelismo",
+            "Perpendicularidad"
+          ]
+        },
+        {
+          "tema": "Regiones poligonales",
+          "subtemas": [
+            "Áreas en el plano cartesiano"
+          ]
+        },
+        {
+          "tema": "Cónicas",
+          "subtemas": [
+            "Circunferencia",
+            "Parábola",
+            "Elipse",
+            "Hipérbola"
+          ]
+        }
+      ],
+      "fuentes": [
+        "guia_2027"
+      ]
+    },
+    {
+      "id": "trigonometria",
+      "nombre": "Trigonometría",
+      "bloques_oficiales_relacionados": [
+        "Matemática"
+      ],
+      "temas": [
+        {
+          "tema": "Medición angular",
+          "subtemas": [
+            "Sistemas de medidas angulares"
+          ]
+        },
+        {
+          "tema": "Razones trigonométricas",
+          "subtemas": []
+        },
+        {
+          "tema": "Identidades trigonométricas",
+          "subtemas": []
+        },
+        {
+          "tema": "Funciones trigonométricas",
+          "subtemas": []
+        },
+        {
+          "tema": "Transformaciones trigonométricas",
+          "subtemas": []
+        },
+        {
+          "tema": "Resolución de triángulos oblicuángulos",
+          "subtemas": []
+        }
+      ],
+      "fuentes": [
+        "guia_2027"
+      ]
+    },
+    {
+      "id": "razonamiento_matematico",
+      "nombre": "Razonamiento Matemático y Lógico",
+      "bloques_oficiales_relacionados": [
+        "Matemática"
+      ],
+      "temas": [
+        {
+          "tema": "Lógica",
+          "subtemas": [
+            "Naturaleza",
+            "Características",
+            "Importancia"
+          ]
+        },
+        {
+          "tema": "Proposiciones lógicas",
+          "subtemas": [
+            "Principios",
+            "Leyes",
+            "Componentes",
+            "Tipos"
+          ]
+        },
+        {
+          "tema": "Argumentación",
+          "subtemas": [
+            "Conceptos",
+            "Definiciones",
+            "Argumentos",
+            "Falacias",
+            "Silogismos"
+          ]
+        },
+        {
+          "tema": "Conjuntos y relaciones",
+          "subtemas": [
+            "Teoría de conjuntos",
+            "Relaciones binarias",
+            "Producto cartesiano"
+          ]
+        },
+        {
+          "tema": "Patrones numéricos",
+          "subtemas": [
+            "Sucesiones",
+            "Series",
+            "Sumatorias"
+          ]
+        },
+        {
+          "tema": "Análisis combinatorio",
+          "subtemas": []
+        },
+        {
+          "tema": "Probabilidades",
+          "subtemas": []
+        },
+        {
+          "tema": "Estadística introductoria",
+          "subtemas": [
+            "Medidas de tendencia central"
+          ]
+        }
+      ],
+      "fuentes": [
+        "guia_2027"
+      ],
+      "nota": "Curso de preparación organizado a partir de contenidos del eje Matemática; la guía no le asigna preguntas independientes."
+    },
+    {
+      "id": "biologia",
+      "nombre": "Biología",
+      "bloques_oficiales_relacionados": [
+        "Biología"
+      ],
+      "temas": [
+        {
+          "tema": "Biología y ciencia de la vida",
+          "subtemas": []
+        },
+        {
+          "tema": "Método científico",
+          "subtemas": []
+        },
+        {
+          "tema": "Biología celular",
+          "subtemas": [
+            "Estructura celular",
+            "Funcionamiento celular"
+          ]
+        },
+        {
+          "tema": "Organización de la materia viva",
+          "subtemas": [
+            "Tejidos"
+          ]
+        },
+        {
+          "tema": "Funciones de relación",
+          "subtemas": [
+            "Sistema óseo",
+            "Sistema muscular",
+            "Sistema nervioso",
+            "Sistema sensorial",
+            "Sistema endocrino"
+          ]
+        },
+        {
+          "tema": "Funciones de nutrición",
+          "subtemas": [
+            "Sistema circulatorio",
+            "Sistema respiratorio",
+            "Sistema digestivo",
+            "Sistema excretor"
+          ]
+        },
+        {
+          "tema": "Reproducción de los seres vivos",
+          "subtemas": []
+        },
+        {
+          "tema": "Herencia biológica",
+          "subtemas": []
+        },
+        {
+          "tema": "Ecología y biodiversidad",
+          "subtemas": [
+            "Ecosistemas",
+            "Equilibrio ecológico",
+            "Desequilibrio ecológico"
+          ]
+        }
+      ],
+      "fuentes": [
+        "guia_2027"
+      ]
+    },
+    {
+      "id": "fisica",
+      "nombre": "Física",
+      "bloques_oficiales_relacionados": [
+        "Física"
+      ],
+      "temas": [
+        {
+          "tema": "Magnitudes físicas",
+          "subtemas": [
+            "Fundamentales y derivadas",
+            "Magnitudes escalares y vectoriales"
+          ]
+        },
+        {
+          "tema": "Análisis dimensional",
+          "subtemas": [
+            "Ecuaciones dimensionales",
+            "Principio de homogeneidad"
+          ]
+        },
+        {
+          "tema": "Vectores",
+          "subtemas": [
+            "Operaciones por métodos geométricos",
+            "Operaciones por métodos analíticos"
+          ]
+        },
+        {
+          "tema": "Cinemática",
+          "subtemas": [
+            "Posición y desplazamiento",
+            "Velocidad media e instantánea",
+            "Aceleración media e instantánea",
+            "Gráficas del movimiento"
+          ]
+        },
+        {
+          "tema": "Movimiento rectilíneo",
+          "subtemas": [
+            "MRU",
+            "MRUV",
+            "Movimiento vertical de caída libre"
+          ]
+        },
+        {
+          "tema": "Movimiento en dos dimensiones",
+          "subtemas": [
+            "Proyectiles",
+            "Movimiento circular uniforme",
+            "Movimiento circular uniformemente variado"
+          ]
+        },
+        {
+          "tema": "Dinámica",
+          "subtemas": [
+            "Primera ley de Newton",
+            "Segunda ley de Newton"
+          ]
+        },
+        {
+          "tema": "Trabajo, energía y potencia",
+          "subtemas": [
+            "Trabajo con fuerzas constantes y variables",
+            "Energía cinética",
+            "Teorema trabajo-energía",
+            "Energía potencial gravitatoria y elástica",
+            "Conservación de energía mecánica"
+          ]
+        },
+        {
+          "tema": "Mecánica de fluidos",
+          "subtemas": [
+            "Densidad",
+            "Presión atmosférica, hidrostática y manométrica",
+            "Hidrostática",
+            "Principio de Pascal",
+            "Principio de Arquímedes",
+            "Flotación",
+            "Hidrodinámica",
+            "Principio de Bernoulli"
+          ]
+        },
+        {
+          "tema": "Termodinámica",
+          "subtemas": [
+            "Temperatura",
+            "Teoría cinética molecular",
+            "Conservación y transformación de la energía"
+          ]
+        },
+        {
+          "tema": "Electrostática",
+          "subtemas": [
+            "Carga",
+            "Fuerza y campo eléctricos",
+            "Ley de Coulomb",
+            "Líneas de campo",
+            "Potencial eléctrico",
+            "Energía potencial eléctrica",
+            "Superficies equipotenciales"
+          ]
+        },
+        {
+          "tema": "Electricidad",
+          "subtemas": [
+            "Corriente eléctrica",
+            "Resistencias",
+            "Ley de Ohm",
+            "Circuitos",
+            "Asociación de resistencias",
+            "Leyes de Kirchhoff",
+            "Potencia y energía eléctrica",
+            "Mediciones eléctricas"
+          ]
+        },
+        {
+          "tema": "Magnetismo e inducción",
+          "subtemas": [
+            "Campo y fuerzas magnéticas",
+            "Ley de Biot-Savart",
+            "Ley de inducción de Faraday",
+            "Ley de Lenz",
+            "Transformadores"
+          ]
+        },
+        {
+          "tema": "Óptica",
+          "subtemas": [
+            "Propagación de la luz",
+            "Reflexión",
+            "Espejos",
+            "Lentes"
+          ]
+        }
+      ],
+      "fuentes": [
+        "guia_2027"
+      ]
+    },
+    {
+      "id": "quimica",
+      "nombre": "Química",
+      "bloques_oficiales_relacionados": [
+        "Química"
+      ],
+      "temas": [
+        {
+          "tema": "Materia y energía",
+          "subtemas": [
+            "Principios generales de la materia"
+          ]
+        },
+        {
+          "tema": "Estructura atómica",
+          "subtemas": [
+            "El átomo",
+            "Estructura atómica",
+            "Números cuánticos",
+            "Configuración electrónica"
+          ]
+        },
+        {
+          "tema": "Fundamentos físico-químicos",
+          "subtemas": [
+            "Ondas electromagnéticas",
+            "Química nuclear"
+          ]
+        },
+        {
+          "tema": "Sistema periódico",
+          "subtemas": [
+            "Tabla periódica"
+          ]
+        },
+        {
+          "tema": "Enlace químico",
+          "subtemas": [
+            "Enlaces químicos"
+          ]
+        },
+        {
+          "tema": "Química inorgánica",
+          "subtemas": [
+            "Funciones químicas inorgánicas"
+          ]
+        },
+        {
+          "tema": "Reacciones químicas",
+          "subtemas": []
+        },
+        {
+          "tema": "Cálculos químicos",
+          "subtemas": [
+            "Unidades químicas de masa",
+            "Estequiometría"
+          ]
+        },
+        {
+          "tema": "Disoluciones",
+          "subtemas": [
+            "Soluciones"
+          ]
+        },
+        {
+          "tema": "Electroquímica",
+          "subtemas": []
+        },
+        {
+          "tema": "Cinética y equilibrio",
+          "subtemas": [
+            "Cinética química",
+            "Equilibrio químico"
+          ]
+        },
+        {
+          "tema": "Ácidos y bases",
+          "subtemas": []
+        },
+        {
+          "tema": "Química orgánica",
+          "subtemas": [
+            "Fundamentos",
+            "Funciones oxigenadas",
+            "Funciones nitrogenadas"
+          ]
+        }
+      ],
+      "fuentes": [
+        "guia_2027"
+      ]
+    },
+    {
+      "id": "psicologia",
+      "nombre": "Psicología y Desarrollo Personal",
+      "bloques_oficiales_relacionados": [
+        "Desarrollo Personal"
+      ],
+      "temas": [
+        {
+          "tema": "Desarrollo humano",
+          "subtemas": []
+        },
+        {
+          "tema": "Adolescencia",
+          "subtemas": [
+            "Cambios biológicos",
+            "Cambios cognitivos",
+            "Cambios emocionales",
+            "Cambios socioculturales"
+          ]
+        },
+        {
+          "tema": "Socialización",
+          "subtemas": [
+            "Agentes sociales",
+            "Factores de riesgo"
+          ]
+        },
+        {
+          "tema": "Identidad personal",
+          "subtemas": [
+            "Formación de la identidad"
+          ]
+        },
+        {
+          "tema": "Emociones",
+          "subtemas": [
+            "Tipos de emociones"
+          ]
+        },
+        {
+          "tema": "Inteligencia emocional",
+          "subtemas": [
+            "Componentes intrapersonales",
+            "Componentes interpersonales",
+            "Habilidades sociales"
+          ]
+        },
+        {
+          "tema": "Proyecto de vida",
+          "subtemas": [
+            "Sentido de vida",
+            "Proyecto de vida"
+          ]
+        },
+        {
+          "tema": "Identidad sexual y de género",
+          "subtemas": []
+        },
+        {
+          "tema": "Vinculación afectiva",
+          "subtemas": []
+        },
+        {
+          "tema": "Salud sexual y reproductiva",
+          "subtemas": []
+        },
+        {
+          "tema": "Desarrollo moral",
+          "subtemas": [
+            "Conducta moral",
+            "Principios éticos",
+            "Dilemas morales",
+            "Dignidad humana"
+          ]
+        }
+      ],
+      "fuentes": [
+        "guia_2027"
+      ]
+    },
+    {
+      "id": "filosofia",
+      "nombre": "Filosofía",
+      "bloques_oficiales_relacionados": [
+        "Ciudadanía y Cívica"
+      ],
+      "temas": [
+        {
+          "tema": "Introducción a la filosofía",
+          "subtemas": [
+            "El saber filosófico"
+          ]
+        },
+        {
+          "tema": "Teoría del conocimiento",
+          "subtemas": []
+        },
+        {
+          "tema": "Epistemología",
+          "subtemas": []
+        },
+        {
+          "tema": "Axiología y ética",
+          "subtemas": []
+        },
+        {
+          "tema": "Antropología filosófica",
+          "subtemas": []
+        }
+      ],
+      "fuentes": [
+        "guia_2027"
+      ]
+    },
+    {
+      "id": "educacion_civica",
+      "nombre": "Educación Cívica",
+      "bloques_oficiales_relacionados": [
+        "Ciudadanía y Cívica"
+      ],
+      "temas": [
+        {
+          "tema": "Derechos humanos",
+          "subtemas": [
+            "El ser humano y sus derechos",
+            "Dignidad de la persona"
+          ]
+        },
+        {
+          "tema": "Ciudadanía en el Perú",
+          "subtemas": [
+            "Derechos políticos del ciudadano peruano"
+          ]
+        },
+        {
+          "tema": "Familia y matrimonio",
+          "subtemas": []
+        },
+        {
+          "tema": "Estado y Constitución",
+          "subtemas": [
+            "Constitución Política del Perú",
+            "Poderes del Estado"
+          ]
+        },
+        {
+          "tema": "Organismos constitucionales",
+          "subtemas": []
+        },
+        {
+          "tema": "Organismos internacionales",
+          "subtemas": []
+        },
+        {
+          "tema": "Seguridad y defensa nacional",
+          "subtemas": [
+            "Servicio militar voluntario"
+          ]
+        },
+        {
+          "tema": "Gestión del riesgo de desastres",
+          "subtemas": [
+            "SINAGERD"
+          ]
+        },
+        {
+          "tema": "Convivencia democrática",
+          "subtemas": [
+            "Cultura de paz"
+          ]
+        }
+      ],
+      "fuentes": [
+        "guia_2027"
+      ]
+    }
+  ],
+  "temas_complementarios_del_documento_2026_ii": {
+    "asignatura": "Análisis del discurso",
+    "documento": "ejes_2026_ii",
+    "pagina_pdf": 2,
+    "temas": [
+      "Naturaleza y tipos de texto: narrativo, expositivo, argumentativo, descriptivo, instructivo y transaccional",
+      "Intertextualidad",
+      "Estructura textual",
+      "Cohesión, coherencia y adecuación",
+      "Marcadores y conectores lógico-textuales",
+      "Estrategias y técnicas de lectura",
+      "Comprensión lectora literal, inferencial y crítica"
+    ],
+    "estado_en_2027": "No figura con encabezado independiente en el cuadro de ejes de la Guía 2027; se presenta como referencia complementaria sin asegurar su eliminación o permanencia en el examen."
+  },
+  "cepunt": {
+    "ciclo_de_referencia": "septiembre-diciembre de 2026",
+    "modalidad": "presencial y/o virtual según CEPUNT",
+    "examenes_sumativos": 3,
+    "ponderaciones_segun_reglamento_2027": [
+      2,
+      3,
+      5
+    ],
+    "semanas_evaluadas": [
+      "1-5",
+      "6-10",
+      "11-16"
+    ],
+    "nota": "El reglamento indica evaluaciones progresivas de las asignaturas desarrolladas; no confirma que los cursos de este JSON sean la distribución horaria exacta de CEPUNT."
+  },
+  "notas_metodologicas": [
+    "La Guía 2027 publica once bloques oficiales temáticos de evaluación; la organización en dieciocho cursos preuniversitarios es una clasificación pedagógica, no una lista oficial de cursos de CEPUNT.",
+    "Los desgloses y subtemas de los cursos pueden hacer explícitos ejemplos didácticos contenidos en ejes generales; no se debe interpretar cada subtema como pregunta garantizada.",
+    "La cantidad de preguntas se asigna a bloques grandes por área, nunca a cada curso del desglose.",
+    "La tabla 2027 del área C presenta 10/15/18/35/22, diferente de la tabla 2026-II que presenta 15/18/35/22/10; se preservaron los datos de 2027 en áreas_postulacion_2027.",
+    "El PDF 2026-II incluye Análisis del discurso como bloque separado; el cuadro de contenidos de la Guía 2027 no lo muestra de esa manera."
+  ]
+}
+';
+IF NOT EXISTS(SELECT 1 FROM dbo.TemarioUNT WHERE TemarioId=2027) INSERT dbo.TemarioUNT VALUES(2027,'Admisión 2027',@DocumentoUNT);
+DECLARE @ContenidosUNT NVARCHAR(MAX)=N'[{"codigo": "historia_peru:1", "curso": "Historia del Perú", "tema": "Perú prehispánico", "subtemas": ["Primeras sociedades del Perú", "Culturas y procesos anteriores al Tahuantinsuyo"]}, {"codigo": "historia_peru:2", "curso": "Historia del Perú", "tema": "Los incas", "subtemas": ["Organización y expansión del Tahuantinsuyo"]}, {"codigo": "historia_peru:3", "curso": "Historia del Perú", "tema": "Virreinato del Perú", "subtemas": ["Organización y sociedad colonial"]}, {"codigo": "historia_peru:4", "curso": "Historia del Perú", "tema": "Emancipación del Perú", "subtemas": ["Proceso de independencia"]}, {"codigo": "historia_peru:5", "curso": "Historia del Perú", "tema": "Prosperidad falaz", "subtemas": ["Etapa del guano"]}, {"codigo": "historia_peru:6", "curso": "Historia del Perú", "tema": "Guerra del guano y del salitre", "subtemas": ["Guerra del Pacífico"]}, {"codigo": "historia_peru:7", "curso": "Historia del Perú", "tema": "Perú republicano de los siglos XIX y XX", "subtemas": ["Procesos políticos, sociales y económicos"]}, {"codigo": "historia_peru:8", "curso": "Historia del Perú", "tema": "Gobiernos del Perú entre 1948 y 1980", "subtemas": []}, {"codigo": "historia_peru:9", "curso": "Historia del Perú", "tema": "Gobiernos del Perú entre 1980 y 2001", "subtemas": []}, {"codigo": "historia_universal:1", "curso": "Historia Universal", "tema": "Historia y prehistoria", "subtemas": ["Conceptos y periodización histórica"]}, {"codigo": "historia_universal:2", "curso": "Historia Universal", "tema": "Altas culturas de Occidente", "subtemas": []}, {"codigo": "historia_universal:3", "curso": "Historia Universal", "tema": "Edad Media", "subtemas": []}, {"codigo": "historia_universal:4", "curso": "Historia Universal", "tema": "Viajes europeos y colonización de América", "subtemas": []}, {"codigo": "historia_universal:5", "curso": "Historia Universal", "tema": "Grandes revoluciones del siglo XVIII", "subtemas": []}, {"codigo": "historia_universal:6", "curso": "Historia Universal", "tema": "El mundo entre los siglos XIX y XX", "subtemas": []}, {"codigo": "historia_universal:7", "curso": "Historia Universal", "tema": "Segunda Guerra Mundial", "subtemas": []}, {"codigo": "historia_universal:8", "curso": "Historia Universal", "tema": "Guerra Fría", "subtemas": []}, {"codigo": "geografia:1", "curso": "Geografía", "tema": "Espacio geográfico y la Tierra", "subtemas": ["La Tierra como morada humana", "Localización y representación de la Tierra"]}, {"codigo": "geografia:2", "curso": "Geografía", "tema": "Geología y relieve", "subtemas": ["Geología", "Modelado del paisaje"]}, {"codigo": "geografia:3", "curso": "Geografía", "tema": "Medioambiente y sociedad", "subtemas": ["Relación del ser humano con el medioambiente"]}, {"codigo": "geografia:4", "curso": "Geografía", "tema": "Climatología", "subtemas": ["Estudio del clima"]}, {"codigo": "geografia:5", "curso": "Geografía", "tema": "Geografía física del Perú", "subtemas": ["Ubicación y geoformas del relieve", "Hidrografía"]}, {"codigo": "geografia:6", "curso": "Geografía", "tema": "Organización territorial y población del Perú", "subtemas": ["Organización político-administrativa", "Población humana"]}, {"codigo": "geografia:7", "curso": "Geografía", "tema": "Ocho regiones naturales del Perú", "subtemas": []}, {"codigo": "geografia:8", "curso": "Geografía", "tema": "Sostenibilidad y ecología", "subtemas": ["Desarrollo sostenible", "Equilibrio ecológico"]}, {"codigo": "geografia:9", "curso": "Geografía", "tema": "Geografía económica del Perú", "subtemas": []}, {"codigo": "geografia:10", "curso": "Geografía", "tema": "Geografía de La Libertad", "subtemas": ["Naturaleza, cultura y desarrollo regional"]}, {"codigo": "geografia:11", "curso": "Geografía", "tema": "Geografía continental", "subtemas": ["América", "Europa", "Asia", "África", "Oceanía"]}, {"codigo": "geografia:12", "curso": "Geografía", "tema": "Geopolítica", "subtemas": ["Juego del poder mundial"]}, {"codigo": "economia:1", "curso": "Economía", "tema": "Fundamentos de economía", "subtemas": ["Manifestaciones económicas y su evolución"]}, {"codigo": "economia:2", "curso": "Economía", "tema": "Necesidades, bienes y recursos", "subtemas": ["Necesidades sociales", "Bienes económicos", "Recursos"]}, {"codigo": "economia:3", "curso": "Economía", "tema": "Factores productivos", "subtemas": ["Tierra", "Trabajo", "Capital"]}, {"codigo": "economia:4", "curso": "Economía", "tema": "Oferta y demanda", "subtemas": ["Demanda", "Oferta", "Elasticidades del mercado"]}, {"codigo": "economia:5", "curso": "Economía", "tema": "Organizaciones empresariales", "subtemas": ["Tipos de empresa"]}, {"codigo": "economia:6", "curso": "Economía", "tema": "Producción y costos", "subtemas": ["Producción", "Costos de corto plazo", "Costos de largo plazo"]}, {"codigo": "economia:7", "curso": "Economía", "tema": "Modelos y estructuras de mercado", "subtemas": []}, {"codigo": "economia:8", "curso": "Economía", "tema": "Dinero y sistema monetario", "subtemas": ["Mercado monetario"]}, {"codigo": "economia:9", "curso": "Economía", "tema": "Sistema financiero", "subtemas": ["Operaciones crediticias", "Instrumentos del crédito"]}, {"codigo": "economia:10", "curso": "Economía", "tema": "Estado y economía", "subtemas": ["Intervención del Estado", "Tributación en el Perú"]}, {"codigo": "economia:11", "curso": "Economía", "tema": "Economía internacional", "subtemas": ["Comercio exterior", "Finanzas del sector externo"]}, {"codigo": "economia:12", "curso": "Economía", "tema": "Macroeconomía", "subtemas": ["Crecimiento económico", "Ciclo económico", "Perturbaciones económicas"]}, {"codigo": "lenguaje:1", "curso": "Lenguaje y Comunicología", "tema": "Comunicación humana", "subtemas": ["Proceso comunicativo", "Elementos", "Fines", "Formas"]}, {"codigo": "lenguaje:2", "curso": "Lenguaje y Comunicología", "tema": "Comunicación oral", "subtemas": ["Estrategias y técnicas", "Comunicación efectiva"]}, {"codigo": "lenguaje:3", "curso": "Lenguaje y Comunicología", "tema": "Signos y códigos", "subtemas": ["Signos de la comunicación humana", "Códigos"]}, {"codigo": "lenguaje:4", "curso": "Lenguaje y Comunicología", "tema": "Gramática", "subtemas": ["Elementos gramaticales"]}, {"codigo": "lenguaje:5", "curso": "Lenguaje y Comunicología", "tema": "Oración", "subtemas": ["Estructura de la oración", "Tipos de oración"]}, {"codigo": "lenguaje:6", "curso": "Lenguaje y Comunicología", "tema": "Semántica", "subtemas": ["Significado", "Significación", "Sentido"]}, {"codigo": "lenguaje:7", "curso": "Lenguaje y Comunicología", "tema": "Relaciones léxico-semánticas", "subtemas": []}, {"codigo": "lenguaje:8", "curso": "Lenguaje y Comunicología", "tema": "Normativa del español", "subtemas": ["Ortografía", "Puntuación"]}, {"codigo": "lenguaje:9", "curso": "Lenguaje y Comunicología", "tema": "Producción textual", "subtemas": ["Fundamentos", "Elementos", "Recursos y requisitos", "Estrategias y técnicas de redacción"]}, {"codigo": "razonamiento_verbal:1", "curso": "Razonamiento Verbal y Comprensión Lectora", "tema": "Significado y relaciones semánticas", "subtemas": ["Sentido contextual", "Relaciones léxico-semánticas"]}, {"codigo": "razonamiento_verbal:2", "curso": "Razonamiento Verbal y Comprensión Lectora", "tema": "Textos y tipologías", "subtemas": ["Texto narrativo", "Texto expositivo", "Texto argumentativo", "Texto descriptivo", "Texto instructivo", "Texto transaccional"]}, {"codigo": "razonamiento_verbal:3", "curso": "Razonamiento Verbal y Comprensión Lectora", "tema": "Organización del discurso", "subtemas": ["Estructura textual", "Intertextualidad"]}, {"codigo": "razonamiento_verbal:4", "curso": "Razonamiento Verbal y Comprensión Lectora", "tema": "Propiedades del texto", "subtemas": ["Cohesión", "Coherencia", "Adecuación"]}, {"codigo": "razonamiento_verbal:5", "curso": "Razonamiento Verbal y Comprensión Lectora", "tema": "Conectores textuales", "subtemas": ["Marcadores textuales", "Conectores lógico-textuales"]}, {"codigo": "razonamiento_verbal:6", "curso": "Razonamiento Verbal y Comprensión Lectora", "tema": "Comprensión de lectura", "subtemas": ["Nivel literal", "Nivel inferencial", "Nivel crítico"]}, {"codigo": "razonamiento_verbal:7", "curso": "Razonamiento Verbal y Comprensión Lectora", "tema": "Estrategias de lectura", "subtemas": ["Técnicas de lectura y comprensión"]}, {"codigo": "literatura:1", "curso": "Literatura", "tema": "Teoría literaria", "subtemas": ["Naturaleza y características del texto literario", "Tipos de texto literario", "Técnicas y recursos de construcción literaria"]}, {"codigo": "literatura:2", "curso": "Literatura", "tema": "Literatura universal", "subtemas": ["Edipo rey", "La divina comedia", "Hamlet", "Ensayo sobre la ceguera"]}, {"codigo": "literatura:3", "curso": "Literatura", "tema": "Literatura española", "subtemas": ["El ingenioso hidalgo don Quijote de la Mancha", "Fuenteovejuna"]}, {"codigo": "literatura:4", "curso": "Literatura", "tema": "Literatura latinoamericana", "subtemas": ["Cien años de soledad", "Veinte poemas de amor y una canción desesperada", "El túnel"]}, {"codigo": "literatura:5", "curso": "Literatura", "tema": "Literatura peruana", "subtemas": ["El mundo es ancho y ajeno", "Trilce", "La ciudad y los perros"]}, {"codigo": "literatura:6", "curso": "Literatura", "tema": "Literatura regional", "subtemas": ["El huso de la palabra"]}, {"codigo": "aritmetica:1", "curso": "Aritmética", "tema": "Conjuntos", "subtemas": ["Teoría de conjuntos"]}, {"codigo": "aritmetica:2", "curso": "Aritmética", "tema": "Sistemas de numeración", "subtemas": []}, {"codigo": "aritmetica:3", "curso": "Aritmética", "tema": "Números reales", "subtemas": ["Propiedades y operaciones"]}, {"codigo": "aritmetica:4", "curso": "Aritmética", "tema": "Divisibilidad", "subtemas": []}, {"codigo": "aritmetica:5", "curso": "Aritmética", "tema": "Magnitudes proporcionales", "subtemas": ["Proporcionalidad"]}, {"codigo": "aritmetica:6", "curso": "Aritmética", "tema": "Matemática financiera básica", "subtemas": ["Regla de interés"]}, {"codigo": "algebra:1", "curso": "Álgebra", "tema": "Expresiones algebraicas", "subtemas": ["Operaciones con expresiones algebraicas"]}, {"codigo": "algebra:2", "curso": "Álgebra", "tema": "Productos y cocientes notables", "subtemas": []}, {"codigo": "algebra:3", "curso": "Álgebra", "tema": "Factorización y binomio de Newton", "subtemas": []}, {"codigo": "algebra:4", "curso": "Álgebra", "tema": "Ecuaciones", "subtemas": ["Lineales", "Cuadráticas", "Polinómicas", "Con valor absoluto", "Exponenciales", "Logarítmicas"]}, {"codigo": "algebra:5", "curso": "Álgebra", "tema": "Inecuaciones", "subtemas": ["Lineales", "Cuadráticas", "Polinómicas", "Con valor absoluto", "Exponenciales"]}, {"codigo": "algebra:6", "curso": "Álgebra", "tema": "Intervalos", "subtemas": []}, {"codigo": "algebra:7", "curso": "Álgebra", "tema": "Relaciones y conjuntos cartesianos", "subtemas": ["Relaciones binarias", "Producto cartesiano"]}, {"codigo": "algebra:8", "curso": "Álgebra", "tema": "Funciones", "subtemas": ["Definición y elementos", "Dominio y rango", "Constante", "Lineal", "Cuadrática", "Racional", "Raíz cuadrada", "Valor absoluto", "Exponencial", "Logarítmica"]}, {"codigo": "algebra:9", "curso": "Álgebra", "tema": "Operaciones entre funciones", "subtemas": ["Adición", "Sustracción", "Multiplicación", "División", "Composición"]}, {"codigo": "algebra:10", "curso": "Álgebra", "tema": "Sucesiones y series", "subtemas": ["Sucesiones", "Series", "Sumatorias"]}, {"codigo": "geometria:1", "curso": "Geometría", "tema": "Geometría plana", "subtemas": ["Segmentos", "Ángulos", "Triángulos"]}, {"codigo": "geometria:2", "curso": "Geometría", "tema": "Polígonos y cuadriláteros", "subtemas": []}, {"codigo": "geometria:3", "curso": "Geometría", "tema": "Circunferencia y círculo", "subtemas": []}, {"codigo": "geometria:4", "curso": "Geometría", "tema": "Medición de regiones planas", "subtemas": ["Áreas", "Perímetros"]}, {"codigo": "geometria:5", "curso": "Geometría", "tema": "Geometría analítica", "subtemas": ["Introducción y plano cartesiano"]}, {"codigo": "geometria:6", "curso": "Geometría", "tema": "La recta en el plano", "subtemas": ["Ecuación cartesiana", "Pendiente", "Ángulo entre dos rectas", "Paralelismo", "Perpendicularidad"]}, {"codigo": "geometria:7", "curso": "Geometría", "tema": "Regiones poligonales", "subtemas": ["Áreas en el plano cartesiano"]}, {"codigo": "geometria:8", "curso": "Geometría", "tema": "Cónicas", "subtemas": ["Circunferencia", "Parábola", "Elipse", "Hipérbola"]}, {"codigo": "trigonometria:1", "curso": "Trigonometría", "tema": "Medición angular", "subtemas": ["Sistemas de medidas angulares"]}, {"codigo": "trigonometria:2", "curso": "Trigonometría", "tema": "Razones trigonométricas", "subtemas": []}, {"codigo": "trigonometria:3", "curso": "Trigonometría", "tema": "Identidades trigonométricas", "subtemas": []}, {"codigo": "trigonometria:4", "curso": "Trigonometría", "tema": "Funciones trigonométricas", "subtemas": []}, {"codigo": "trigonometria:5", "curso": "Trigonometría", "tema": "Transformaciones trigonométricas", "subtemas": []}, {"codigo": "trigonometria:6", "curso": "Trigonometría", "tema": "Resolución de triángulos oblicuángulos", "subtemas": []}, {"codigo": "razonamiento_matematico:1", "curso": "Razonamiento Matemático y Lógico", "tema": "Lógica", "subtemas": ["Naturaleza", "Características", "Importancia"]}, {"codigo": "razonamiento_matematico:2", "curso": "Razonamiento Matemático y Lógico", "tema": "Proposiciones lógicas", "subtemas": ["Principios", "Leyes", "Componentes", "Tipos"]}, {"codigo": "razonamiento_matematico:3", "curso": "Razonamiento Matemático y Lógico", "tema": "Argumentación", "subtemas": ["Conceptos", "Definiciones", "Argumentos", "Falacias", "Silogismos"]}, {"codigo": "razonamiento_matematico:4", "curso": "Razonamiento Matemático y Lógico", "tema": "Conjuntos y relaciones", "subtemas": ["Teoría de conjuntos", "Relaciones binarias", "Producto cartesiano"]}, {"codigo": "razonamiento_matematico:5", "curso": "Razonamiento Matemático y Lógico", "tema": "Patrones numéricos", "subtemas": ["Sucesiones", "Series", "Sumatorias"]}, {"codigo": "razonamiento_matematico:6", "curso": "Razonamiento Matemático y Lógico", "tema": "Análisis combinatorio", "subtemas": []}, {"codigo": "razonamiento_matematico:7", "curso": "Razonamiento Matemático y Lógico", "tema": "Probabilidades", "subtemas": []}, {"codigo": "razonamiento_matematico:8", "curso": "Razonamiento Matemático y Lógico", "tema": "Estadística introductoria", "subtemas": ["Medidas de tendencia central"]}, {"codigo": "biologia:1", "curso": "Biología", "tema": "Biología y ciencia de la vida", "subtemas": []}, {"codigo": "biologia:2", "curso": "Biología", "tema": "Método científico", "subtemas": []}, {"codigo": "biologia:3", "curso": "Biología", "tema": "Biología celular", "subtemas": ["Estructura celular", "Funcionamiento celular"]}, {"codigo": "biologia:4", "curso": "Biología", "tema": "Organización de la materia viva", "subtemas": ["Tejidos"]}, {"codigo": "biologia:5", "curso": "Biología", "tema": "Funciones de relación", "subtemas": ["Sistema óseo", "Sistema muscular", "Sistema nervioso", "Sistema sensorial", "Sistema endocrino"]}, {"codigo": "biologia:6", "curso": "Biología", "tema": "Funciones de nutrición", "subtemas": ["Sistema circulatorio", "Sistema respiratorio", "Sistema digestivo", "Sistema excretor"]}, {"codigo": "biologia:7", "curso": "Biología", "tema": "Reproducción de los seres vivos", "subtemas": []}, {"codigo": "biologia:8", "curso": "Biología", "tema": "Herencia biológica", "subtemas": []}, {"codigo": "biologia:9", "curso": "Biología", "tema": "Ecología y biodiversidad", "subtemas": ["Ecosistemas", "Equilibrio ecológico", "Desequilibrio ecológico"]}, {"codigo": "fisica:1", "curso": "Física", "tema": "Magnitudes físicas", "subtemas": ["Fundamentales y derivadas", "Magnitudes escalares y vectoriales"]}, {"codigo": "fisica:2", "curso": "Física", "tema": "Análisis dimensional", "subtemas": ["Ecuaciones dimensionales", "Principio de homogeneidad"]}, {"codigo": "fisica:3", "curso": "Física", "tema": "Vectores", "subtemas": ["Operaciones por métodos geométricos", "Operaciones por métodos analíticos"]}, {"codigo": "fisica:4", "curso": "Física", "tema": "Cinemática", "subtemas": ["Posición y desplazamiento", "Velocidad media e instantánea", "Aceleración media e instantánea", "Gráficas del movimiento"]}, {"codigo": "fisica:5", "curso": "Física", "tema": "Movimiento rectilíneo", "subtemas": ["MRU", "MRUV", "Movimiento vertical de caída libre"]}, {"codigo": "fisica:6", "curso": "Física", "tema": "Movimiento en dos dimensiones", "subtemas": ["Proyectiles", "Movimiento circular uniforme", "Movimiento circular uniformemente variado"]}, {"codigo": "fisica:7", "curso": "Física", "tema": "Dinámica", "subtemas": ["Primera ley de Newton", "Segunda ley de Newton"]}, {"codigo": "fisica:8", "curso": "Física", "tema": "Trabajo, energía y potencia", "subtemas": ["Trabajo con fuerzas constantes y variables", "Energía cinética", "Teorema trabajo-energía", "Energía potencial gravitatoria y elástica", "Conservación de energía mecánica"]}, {"codigo": "fisica:9", "curso": "Física", "tema": "Mecánica de fluidos", "subtemas": ["Densidad", "Presión atmosférica, hidrostática y manométrica", "Hidrostática", "Principio de Pascal", "Principio de Arquímedes", "Flotación", "Hidrodinámica", "Principio de Bernoulli"]}, {"codigo": "fisica:10", "curso": "Física", "tema": "Termodinámica", "subtemas": ["Temperatura", "Teoría cinética molecular", "Conservación y transformación de la energía"]}, {"codigo": "fisica:11", "curso": "Física", "tema": "Electrostática", "subtemas": ["Carga", "Fuerza y campo eléctricos", "Ley de Coulomb", "Líneas de campo", "Potencial eléctrico", "Energía potencial eléctrica", "Superficies equipotenciales"]}, {"codigo": "fisica:12", "curso": "Física", "tema": "Electricidad", "subtemas": ["Corriente eléctrica", "Resistencias", "Ley de Ohm", "Circuitos", "Asociación de resistencias", "Leyes de Kirchhoff", "Potencia y energía eléctrica", "Mediciones eléctricas"]}, {"codigo": "fisica:13", "curso": "Física", "tema": "Magnetismo e inducción", "subtemas": ["Campo y fuerzas magnéticas", "Ley de Biot-Savart", "Ley de inducción de Faraday", "Ley de Lenz", "Transformadores"]}, {"codigo": "fisica:14", "curso": "Física", "tema": "Óptica", "subtemas": ["Propagación de la luz", "Reflexión", "Espejos", "Lentes"]}, {"codigo": "quimica:1", "curso": "Química", "tema": "Materia y energía", "subtemas": ["Principios generales de la materia"]}, {"codigo": "quimica:2", "curso": "Química", "tema": "Estructura atómica", "subtemas": ["El átomo", "Estructura atómica", "Números cuánticos", "Configuración electrónica"]}, {"codigo": "quimica:3", "curso": "Química", "tema": "Fundamentos físico-químicos", "subtemas": ["Ondas electromagnéticas", "Química nuclear"]}, {"codigo": "quimica:4", "curso": "Química", "tema": "Sistema periódico", "subtemas": ["Tabla periódica"]}, {"codigo": "quimica:5", "curso": "Química", "tema": "Enlace químico", "subtemas": ["Enlaces químicos"]}, {"codigo": "quimica:6", "curso": "Química", "tema": "Química inorgánica", "subtemas": ["Funciones químicas inorgánicas"]}, {"codigo": "quimica:7", "curso": "Química", "tema": "Reacciones químicas", "subtemas": []}, {"codigo": "quimica:8", "curso": "Química", "tema": "Cálculos químicos", "subtemas": ["Unidades químicas de masa", "Estequiometría"]}, {"codigo": "quimica:9", "curso": "Química", "tema": "Disoluciones", "subtemas": ["Soluciones"]}, {"codigo": "quimica:10", "curso": "Química", "tema": "Electroquímica", "subtemas": []}, {"codigo": "quimica:11", "curso": "Química", "tema": "Cinética y equilibrio", "subtemas": ["Cinética química", "Equilibrio químico"]}, {"codigo": "quimica:12", "curso": "Química", "tema": "Ácidos y bases", "subtemas": []}, {"codigo": "quimica:13", "curso": "Química", "tema": "Química orgánica", "subtemas": ["Fundamentos", "Funciones oxigenadas", "Funciones nitrogenadas"]}, {"codigo": "psicologia:1", "curso": "Psicología y Desarrollo Personal", "tema": "Desarrollo humano", "subtemas": []}, {"codigo": "psicologia:2", "curso": "Psicología y Desarrollo Personal", "tema": "Adolescencia", "subtemas": ["Cambios biológicos", "Cambios cognitivos", "Cambios emocionales", "Cambios socioculturales"]}, {"codigo": "psicologia:3", "curso": "Psicología y Desarrollo Personal", "tema": "Socialización", "subtemas": ["Agentes sociales", "Factores de riesgo"]}, {"codigo": "psicologia:4", "curso": "Psicología y Desarrollo Personal", "tema": "Identidad personal", "subtemas": ["Formación de la identidad"]}, {"codigo": "psicologia:5", "curso": "Psicología y Desarrollo Personal", "tema": "Emociones", "subtemas": ["Tipos de emociones"]}, {"codigo": "psicologia:6", "curso": "Psicología y Desarrollo Personal", "tema": "Inteligencia emocional", "subtemas": ["Componentes intrapersonales", "Componentes interpersonales", "Habilidades sociales"]}, {"codigo": "psicologia:7", "curso": "Psicología y Desarrollo Personal", "tema": "Proyecto de vida", "subtemas": ["Sentido de vida", "Proyecto de vida"]}, {"codigo": "psicologia:8", "curso": "Psicología y Desarrollo Personal", "tema": "Identidad sexual y de género", "subtemas": []}, {"codigo": "psicologia:9", "curso": "Psicología y Desarrollo Personal", "tema": "Vinculación afectiva", "subtemas": []}, {"codigo": "psicologia:10", "curso": "Psicología y Desarrollo Personal", "tema": "Salud sexual y reproductiva", "subtemas": []}, {"codigo": "psicologia:11", "curso": "Psicología y Desarrollo Personal", "tema": "Desarrollo moral", "subtemas": ["Conducta moral", "Principios éticos", "Dilemas morales", "Dignidad humana"]}, {"codigo": "filosofia:1", "curso": "Filosofía", "tema": "Introducción a la filosofía", "subtemas": ["El saber filosófico"]}, {"codigo": "filosofia:2", "curso": "Filosofía", "tema": "Teoría del conocimiento", "subtemas": []}, {"codigo": "filosofia:3", "curso": "Filosofía", "tema": "Epistemología", "subtemas": []}, {"codigo": "filosofia:4", "curso": "Filosofía", "tema": "Axiología y ética", "subtemas": []}, {"codigo": "filosofia:5", "curso": "Filosofía", "tema": "Antropología filosófica", "subtemas": []}, {"codigo": "educacion_civica:1", "curso": "Educación Cívica", "tema": "Derechos humanos", "subtemas": ["El ser humano y sus derechos", "Dignidad de la persona"]}, {"codigo": "educacion_civica:2", "curso": "Educación Cívica", "tema": "Ciudadanía en el Perú", "subtemas": ["Derechos políticos del ciudadano peruano"]}, {"codigo": "educacion_civica:3", "curso": "Educación Cívica", "tema": "Familia y matrimonio", "subtemas": []}, {"codigo": "educacion_civica:4", "curso": "Educación Cívica", "tema": "Estado y Constitución", "subtemas": ["Constitución Política del Perú", "Poderes del Estado"]}, {"codigo": "educacion_civica:5", "curso": "Educación Cívica", "tema": "Organismos constitucionales", "subtemas": []}, {"codigo": "educacion_civica:6", "curso": "Educación Cívica", "tema": "Organismos internacionales", "subtemas": []}, {"codigo": "educacion_civica:7", "curso": "Educación Cívica", "tema": "Seguridad y defensa nacional", "subtemas": ["Servicio militar voluntario"]}, {"codigo": "educacion_civica:8", "curso": "Educación Cívica", "tema": "Gestión del riesgo de desastres", "subtemas": ["SINAGERD"]}, {"codigo": "educacion_civica:9", "curso": "Educación Cívica", "tema": "Convivencia democrática", "subtemas": ["Cultura de paz"]}]';
+INSERT dbo.ContenidoUNT(TemarioId,Codigo,Curso,Tema,Subtemas) SELECT 2027,j.codigo,j.curso,j.tema,j.subtemas FROM OPENJSON(@ContenidosUNT) WITH(codigo VARCHAR(100),curso VARCHAR(100),tema VARCHAR(250),subtemas NVARCHAR(MAX) AS JSON) j WHERE NOT EXISTS(SELECT 1 FROM dbo.ContenidoUNT c WHERE c.Codigo=j.codigo);
+INSERT dbo.ProgresoTemaUNT(EstudianteId,ContenidoId,Estado,Origen) SELECT e.EstudianteId,c.ContenidoId,CASE WHEN e.EtapaActual<>'CUSTOMER' THEN 'PENDIENTE' WHEN c.ContenidoId%13<e.EstudianteId%5 THEN 'COMPLETADA' WHEN c.ContenidoId%13=e.EstudianteId%5 THEN 'EN_CURSO' ELSE 'PENDIENTE' END,'CARGA_DEMO' FROM dbo.Estudiante e CROSS JOIN dbo.ContenidoUNT c WHERE NOT EXISTS(SELECT 1 FROM dbo.ProgresoTemaUNT p WHERE p.EstudianteId=e.EstudianteId AND p.ContenidoId=c.ContenidoId);
+GO
+
+-- Autorización ficticia inicial de reportes por el portal local; no revoca decisiones existentes.
+INSERT dbo.AutorizacionContacto(ContactoId,Canal,Finalidad,Autorizado,FechaDecision,Evidencia)
+SELECT DISTINCT ap.ContactoId,'PLATAFORMA','REPORTES',1,GETDATE(),N'Aceptación inicial de reportes internos del portal local en el registro de demostración'
+FROM dbo.Apoderado ap WHERE EXISTS(SELECT 1 FROM dbo.AutorizacionContacto a WHERE a.ContactoId=ap.ContactoId AND a.Finalidad='REPORTES' AND a.Autorizado=1)
+AND NOT EXISTS(SELECT 1 FROM dbo.AutorizacionContacto a WHERE a.ContactoId=ap.ContactoId AND a.Canal='PLATAFORMA' AND a.Finalidad='REPORTES');
+GO
