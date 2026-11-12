@@ -6,6 +6,8 @@ Leer [README.md](README.md), [docs/ESTADO.md](docs/ESTADO.md), [docs/CONTEXTO.md
 
 ## Alcance autorizado
 
+- Instrucción más reciente: terminar el MVP en una pasada de una hora. Seguir M01–M03 del roadmap; ya no esperar una reestructuración ni ejecutar B02–B08 individualmente. Priorizar diagnóstico, chat real, propuesta/aprobación/simulación y arranque local. Extensiones fuera de alcance.
+
 - Construir primero un prototipo local del Agente Académico de CUSTOMERS. Los demás agentes del embudo y la nube son posteriores.
 - Conservar el esquema actual por la decisión más reciente del usuario. Si hace falta cambiarlo para un caso real, mostrar la evidencia y discutirlo; no reconstruir la base ni lanzar scripts de creación/población al iniciar la app.
 - Si se acuerdan cambios de modelo, editar directamente 01, sincronizar 02, historiales, triggers, pruebas y consultas. No inventar una migración como fuente principal del esquema.

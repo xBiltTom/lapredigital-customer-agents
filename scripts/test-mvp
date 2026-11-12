@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+cd "$(dirname "$0")/.."
+# Solo crea/recrea LaPreDigital_Customers_MvpTest. Nunca cambia el OLTP activo.
+docker compose run --rm --no-deps tools node scripts/test-db-source.mjs | docker exec -i sql-server-local sh -c 'export SQLCMDPASSWORD="$MSSQL_SA_PASSWORD"; exec /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -b -i /dev/stdin' > /tmp/lapredigital-mvp-test-setup.log
+docker compose run --rm --no-deps --workdir /workspace/apps/server -e SQLSERVER_DATABASE=LaPreDigital_Customers_MvpTest server node scripts/test-mvp.mjs

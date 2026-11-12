@@ -17,7 +17,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
 const sqlSchema = z.object({
   SQLSERVER_HOST: z.string().trim().min(1),
   SQLSERVER_PORT: z.coerce.number().int().min(1).max(65535),
-  SQLSERVER_DATABASE: z.literal('LaPreDigital_Customers'),
+  SQLSERVER_DATABASE: z.enum(['LaPreDigital_Customers','LaPreDigital_Customers_MvpTest']),
   SQLSERVER_USER: z.literal('lapredigital_app'),
   SQLSERVER_PASSWORD: z.string().min(1),
   SQLSERVER_ENCRYPT: z.enum(['true', 'false']).transform((value) => value === 'true'),

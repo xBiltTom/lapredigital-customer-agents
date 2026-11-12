@@ -4,7 +4,21 @@ Actualizado: 12 de noviembre de 2026. Documento de traspaso para otra sesión o 
 
 ## Próxima tarea
 
-**B01 finalizada. El usuario pidió detenerse aquí para una reestructuración rápida antes de continuar.** No iniciar B02 ni otros bloques hasta incorporar esa nueva dirección. Se retiró el inicio no publicado de B02; no se aplicaron sus permisos ni hubo cambios SQL de negocio. B01 quedó verificada tras el login en CachyOS: modelo y herramienta reales por el canal autenticado. La terminal interactiva se cerró después; comprobar servicios al retomar y usar scripts/chat-local cuando haga falta desbloquear el llavero.
+**Entrega urgente del MVP autorizada: máximo una hora desde 20:16:59 UTC del 12/11/2026.** El usuario sustituyó la reestructuración por finalizar la demo. M01 completa; M02 en pruebas y M03 pendiente según ROADMAP.md. Eve está abierto por el usuario; no detener el llavero ni reiniciar dependencias sin necesidad.
+
+## M01: núcleo funcional del MVP
+
+lib/domain.ts calcula umbrales, vigencia, cumplimiento y mejora comparable. lib/diagnostico.ts lee fuentes SQL del alumno con corte GETDATE, respeta acceso del dueño y conserva interpretaciones narrativas con huella en .eve/contextos/<base>. Una huella diferente invalida el contexto; no se mezclan bases de prueba y activa. Pendiente nunca se presenta como bajo. Inés no puede recibir seguimiento mientras quede contexto sin revisar o exista no contacto.
+
+El canal panel expone /api/status, /api/estudiantes, ficha, chat y operaciones de propuesta. Autentica al dueño, construye una dirección de conversación ligada a dueño/alumno y pasa esa identidad a las herramientas. El modelo consulta datos, interpreta narrativas con IDs existentes y propone; no tiene herramientas de aprobación ni ejecución.
+
+lib/propuestas.ts guarda evaluación/señales/intervención/evento en transacción; revalida fuentes, dueño, servicio/plan/autorizaciones, bloquea por alumno y evita duplicados. El dueño aprueba/rechaza; simular requiere aprobación y registra resultado SIMULACION LOCAL sin crear mensajes. scripts/grant-mvp concede SELECT de fuentes e INSERT/UPDATE acotados; no modifica el esquema ni datos previos.
+
+Verificación: tipos, 14 pruebas unitarias y build del servidor correctos. Lecturas reales C001 +15 pp, C003 -25 pp/ALTO, C004 pruebas no comparables/ALTO, C007 sin cumplimiento ni riesgo clasificado, C008 evaluación vencida. scripts/test-mvp crea únicamente LaPreDigital_Customers_MvpTest y reutiliza 01/02 sin cambiar sus archivos: prueba rollback, evidencia ajena, bloqueo de Inés, deduplicación, aprobación obligatoria y simulación sin Mensaje. Todas esas pruebas pasaron.
+
+Chat real a través de /api/chat desde el proxy web sobre C003: respuesta completed, sesión wrun_01M78QHM0MNTD5V2154X6Q51QP; herramientas consultar_diagnostico e interpretar_contexto. Se interpretó la valoración de 2 estrellas y se explicó -25 pp con IDs. No se registró propuesta en la base activa para esa prueba. No se envían comunicaciones reales.
+
+El resto de este documento conserva antecedentes históricos. La nueva instrucción de MVP prevalece sobre los antiguos puntos de continuación Bxx/R01.
 
 ## B01: implementación y pruebas actuales
 

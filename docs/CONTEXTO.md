@@ -10,6 +10,8 @@ El [informe entregado](reference/documento_InteligenciaNegocios.pdf), identifica
 
 ## Acuerdos recientes que cambian cómo continuar
 
+Decisión más reciente (12/11/2026): el deadline se adelantó. El usuario autorizó finalizar el MVP funcional en una sola pasada de máximo una hora. M01–M03 sustituyen B02–B08; prioridad a diagnóstico → chat real → propuesta → aprobación → simulación. Extensiones y streaming de tokens se posponen. El esquema sigue congelado y los envíos siguen simulados.
+
 1. La base se conserva como está por tiempo. Solo se vuelve a evaluar el esquema si una prueba del agente demuestra una necesidad concreta.
 2. Desarrollo local; no hay presupuesto para contratar APIs nuevas ni servidores cloud. El usuario tiene una suscripción de ChatGPT y 2.000 créditos MiniMax, pero se desconoce el plan exacto y si el saldo es utilizable por API.
 3. Stack acordado: TypeScript, Node 24, Eve/Nitro, React/Vite, SQL Server 2022 Docker, mssql, Zod y Vitest. Una única aplicación de agentes académicos con herramientas; multiagentes de otras fases después.

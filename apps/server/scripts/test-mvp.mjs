@@ -1,0 +1,35 @@
+import assert from 'node:assert/strict';
+import {diagnostico,guardarContexto} from '../lib/diagnostico.ts';
+import {proponer,decidir} from '../lib/propuestas.ts';
+import {getPool,closePool} from '../lib/database/pool.ts';
+import {contextoVacio} from '../lib/domain.ts';
+assert.equal(process.env.SQLSERVER_DATABASE,'LaPreDigital_Customers_MvpTest','Prueba destructiva solo en base aislada.');
+try {
+ const pool=await getPool(),owner=Number(process.env.OWNER_PERSONAL_ID);
+ const rows=(await pool.request().query('SELECT Codigo,EstudianteId FROM dbo.Estudiante')).recordset;
+ const id=c=>rows.find(r=>r.Codigo===c).EstudianteId;
+ const ana=await diagnostico(owner,id('C001'));assert.ok(Math.abs(ana.mejoras[0].mejoraPP-15)<1e-8);assert.equal(ana.cumplimiento.planificadas,2);
+ const carla=await diagnostico(owner,id('C003'));assert.equal(carla.mejoras[0].mejoraPP,-25);assert.equal(carla.riesgo.nivel,'ALTO');
+ const diego=await diagnostico(owner,id('C004'));assert.ok(diego.mejoras.every(m=>m.mejoraPP===null));assert.equal(diego.riesgo.nivel,'ALTO');
+ const gabriela=await diagnostico(owner,id('C007'));assert.equal(gabriela.riesgo.nivel,null);assert.equal(gabriela.cumplimiento.porcentaje,null);
+ assert.equal((await diagnostico(owner,id('C008'))).evaluacionGuardada.vigente,false);
+ const ines=await diagnostico(owner,id('C009'));assert.equal(ines.seguimiento.permitido,false);
+ await assert.rejects(()=>guardarContexto(owner,id('C003'),carla.huella,{...contextoVacio(),revisados:[999999]}),/ajeno|inexistente/);
+ await assert.rejects(()=>proponer(owner,id('C009'),'SEGUIMIENTO','Seguimiento que debe bloquearse por política.'),/Revisar|contacto|canal/i);
+ const cantidad=async tabla=>(await pool.request().query(`SELECT COUNT(*) n FROM dbo.${tabla}`)).recordset[0].n;
+ const antes=await cantidad('EvaluacionRiesgo');
+ await assert.rejects(()=>proponer(owner,id('C006'),'TIPO_INVALIDO','Debe provocar rollback de la evaluación y sus señales.'));
+ assert.equal(await cantidad('EvaluacionRiesgo'),antes,'Rollback completo ante fallo de intervención.');
+ const propuesta=await proponer(owner,id('C006'),'DERIVACION_HUMANA','Solicitar al dueño revisión del acompañamiento de la beca.');
+ const repetida=await proponer(owner,id('C006'),'DERIVACION_HUMANA','Reintento de la misma operación de negocio.');assert.equal(repetida.id,propuesta.id);
+ await assert.rejects(()=>decidir(owner,id('C003'),propuesta.id,'aprobar'),/ajena|inexistente/);
+ await assert.rejects(()=>decidir(owner,id('C006'),propuesta.id,'simular'),/aprobar/);
+ assert.equal((await decidir(owner,id('C006'),propuesta.id,'aprobar')).estado,'PROGRAMADA');
+ const mensajes=await cantidad('Mensaje');
+ assert.equal((await decidir(owner,id('C006'),propuesta.id,'simular')).estado,'COMPLETADA');
+ assert.equal((await pool.request().input('id',propuesta.id).query('SELECT MensajeSeguimientoId FROM dbo.Intervencion WHERE IntervencionId=@id')).recordset[0].MensajeSeguimientoId,null);
+ const eventos=await cantidad('EventoIntervencion');
+ assert.equal((await decidir(owner,id('C006'),propuesta.id,'simular')).reutilizada,true);
+ assert.equal(await cantidad('EventoIntervencion'),eventos);assert.equal(await cantidad('Mensaje'),mensajes);
+ console.log('MVP SQL OK: progreso, riesgo, permisos, evidencia ajena, rollback, deduplicación, aprobación y simulación sin envíos.');
+}finally{await closePool();}
