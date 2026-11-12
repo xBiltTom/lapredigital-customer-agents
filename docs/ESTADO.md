@@ -2,7 +2,15 @@
 
 Actualizado: 12/11/2026. Instrucción vigente: terminar un MVP local en una sola pasada de máximo una hora; reemplaza el plan individual B02–B08.
 
-## Último cambio: M10 — diseño y navegación unificados
+## Último cambio: M11 — identidad de destinatarios y dos asistentes del portal
+
+Academia y Mensajería tienen diseños diferenciados. Mensajería presenta cabecera con el nombre real del contacto autenticado, teléfono, rol ESTUDIANTE/APODERADO y, para apoderados, estudiante vinculado; el nombre del estudiante nunca sustituye al del apoderado. Las burbujas identifican al interlocutor y al asistente correspondiente. La ficha expone solo el contacto de esa identidad, resuelta en servidor.
+
+Academia usa Asistente de estudio para temario, conceptos/ejercicios, progreso y uso de la plataforma. Mensajería usa Asistente de seguimiento para recordatorios, actividades pendientes, satisfacción/incidencias y acompañamiento CUSTOMERS. Son sesiones e historiales distintos por canal, con instrucciones específicas. Los envíos proactivos de la herramienta se restringen a MENSAJERIA; Academia atiende las consultas dentro del portal. Cambiar de vista limpia el borrador y se bloquea durante una respuesta.
+
+Verificación: tipos backend y build frontend correctos; ficha API contrastada para estudiante y apoderado Plus con sus respectivos nombres. Sin suites adicionales ni cambios de SQL. Imagen reconstruida y entrega local actualizada. Siguiente paso: recargar 5180 y revisar ambas identidades/vistas.
+
+## M10 — diseño y navegación unificados
 
 Dashboard y Acompañamiento comparten WorkspaceNav en una barra lateral con selección activa y descripción de cada modo. Se bloquea el cambio mientras hay una operación de chat activa. Dashboard conserva el marco visual del workspace: cabecera, tarjetas con iconos, avance por tema con barras, avatares y panel de dirección. Ajustes responsive sin cambios de datos ni negocio.
 
