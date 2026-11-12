@@ -1,0 +1,16 @@
+{
+  "name": "lapredigital-customer-agents",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Agente Academico de CUSTOMERS para LaPreDigital; proyecto academico local",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "check": "node scripts/check-workspace.mjs"
+  }
+}

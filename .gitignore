@@ -1,0 +1,40 @@
+# Dependencias y resultados de compilacion
+node_modules/
+dist/
+build/
+.output/
+.nitro/
+.vite/
+coverage/
+.cache/
+*.tsbuildinfo
+
+# Entorno, credenciales, sesiones y datos del runtime
+.env
+.env.*
+!.env.example
+!**/.env.example
+.eve/
+.workflow-data/
+.codex/
+*.pem
+*.key
+*.pfx
+*.p12
+
+# Bases y copias locales; versionar los SQL fuente, no datos del servidor
+*.mdf
+*.ndf
+*.ldf
+*.bak
+*.trn
+*.bacpac
+backups/
+data/
+
+# Salidas locales
+*.log
+logs/
+tmp/
+.DS_Store
+Thumbs.db
