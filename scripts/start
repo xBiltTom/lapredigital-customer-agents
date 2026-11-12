@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eu
+cd "$(dirname "$0")/.."
+api_container=$(docker ps --filter label=com.docker.compose.project=lapredigital-customers --filter label=com.docker.compose.service=server --format '{{.Names}}' | awk '!/-test-/ {print;exit}')
+if [ -z "$api_container" ]; then
+  docker compose up -d --wait server
+  api_container=$(docker compose ps -q server)
+  api_container=$(docker inspect --format '{{.Name}}' "$api_container" | cut -c2-)
+fi
+API_TARGET="http://$api_container:3000"
+export API_TARGET
+docker compose up -d web
+printf '%s\n' 'Panel: http://localhost:5173 · Para abrir con el acceso local: ./scripts/open-panel'

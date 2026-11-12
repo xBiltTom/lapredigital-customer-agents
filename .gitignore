@@ -1,6 +1,7 @@
 # Dependencias y resultados de compilacion
 node_modules/
 dist/
+.dist/
 build/
 .output/
 .nitro/

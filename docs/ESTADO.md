@@ -4,7 +4,17 @@ Actualizado: 12 de noviembre de 2026. Documento de traspaso para otra sesión o 
 
 ## Próxima tarea
 
-**Entrega urgente del MVP autorizada: máximo una hora desde 20:16:59 UTC del 12/11/2026.** El usuario sustituyó la reestructuración por finalizar la demo. M01 completa; M02 en pruebas y M03 pendiente según ROADMAP.md. Eve está abierto por el usuario; no detener el llavero ni reiniciar dependencias sin necesidad.
+**Entrega urgente del MVP autorizada: máximo una hora desde 20:16:59 UTC del 12/11/2026.** M01 y M02 completas; M03 en verificación de imagen/arranque y documentación. Eve está abierto por el usuario; no detener el llavero ni reiniciar dependencias sin necesidad.
+
+## M02: panel y conversación de extremo a extremo
+
+apps/web usa React 19.3.1 y Vite 8.3.8, versiones fijadas. Panel del dueño en http://localhost:5173; scripts/start reutiliza el proceso Eve abierto (excluye el backend de pruebas) y configura su proxy. scripts/open-panel abre con token por fragmento, que se elimina del URL al cargar y permanece solo en sessionStorage. No hay secretos incrustados en JS ni llamadas directas del navegador a SQL.
+
+Ficha, métricas, evidencias, actividades y bandeja de propuestas; permite registrar, aprobar/rechazar y simular. El chat usa /api/chat y muestra respuesta, herramientas y sesión. Cambiar de alumno genera conversación separada y bloquea selección mientras llega una respuesta; peticiones obsoletas no reemplazan la ficha nueva.
+
+Verificación: build web correcto. Playwright real a 1440px y 390px: login, selección, Gabriela pendiente/no aplicable, sin desbordamiento ni errores JS. Flujo registrar RECOMENDACION_RUTA → aprobar → simular probado con UI real y API SQL aislada en 3001. Capturas inspeccionadas en tmp/mvp-desktop.png, mvp-mobile.png y mvp-intervencion.png (no versionadas).
+
+Prueba real adicional del modelo desde el navegador: Gabriela respondió pendiente con consultar_diagnostico; captura tmp/mvp-chat-real.png. No se simuló la respuesta. No hubo escrituras SQL en el OLTP activo para estas pruebas; las del navegador se enviaron a LaPreDigital_Customers_MvpTest. scripts/test-browser reproduce el flujo sin invocar al modelo.
 
 ## M01: núcleo funcional del MVP
 

@@ -4,6 +4,7 @@
 **/.workflow-data
 **/.output
 **/dist
+**/.dist
 **/coverage
 **/.env
 **/.env.*

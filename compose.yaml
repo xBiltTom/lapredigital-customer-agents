@@ -56,6 +56,16 @@ services:
       retries: 12
     stop_grace_period: 20s
 
+  web:
+    profiles: [app]
+    extends:
+      service: tools
+    environment:
+      API_TARGET: ${API_TARGET:-http://server:3000}
+    command: [npm, run, dev, --workspace=@lapredigital/web]
+    ports:
+      - "127.0.0.1:5173:5173"
+
 volumes:
   node_modules:
   npm_cache:

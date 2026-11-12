@@ -1,0 +1,17 @@
+#!/bin/sh
+set -eu
+cd "$(dirname "$0")/.."
+./scripts/start
+./scripts/test-mvp
+docker stop lapredigital-mvp-test-api >/dev/null 2>&1 || true
+docker compose run -d --rm --no-deps --name lapredigital-mvp-test-api \
+  -e SQLSERVER_DATABASE=LaPreDigital_Customers_MvpTest -p 127.0.0.1:3001:3000 \
+  -v lapredigital-customers_test_eve:/workspace/apps/server/.eve server npm run dev:server >/dev/null
+trap 'docker stop lapredigital-mvp-test-api >/dev/null 2>&1 || true' EXIT HUP INT TERM
+# Navegador y dependencias del sistema solo dentro de un contenedor de pruebas.
+docker run --rm --user root --network host -v "$PWD:/workspace" \
+  -v lapredigital-customers_node_modules:/workspace/node_modules -w /workspace \
+  -e TZ=America/Lima lapredigital-customers-tools sh -ec '
+    npx playwright install --with-deps --only-shell chromium >/tmp/browser-install.log 2>&1 || { tail -12 /tmp/browser-install.log; exit 1; }
+    node scripts/browser-smoke.mjs
+  '

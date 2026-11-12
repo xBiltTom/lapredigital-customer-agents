@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+cd "$(dirname "$0")/.."
+token=$(sed -n 's/^OWNER_ACCESS_TOKEN=//p' .env)
+if [ -z "$token" ]; then printf '%s\n' 'Falta el acceso local en .env.' >&2; exit 1; fi
+# El fragmento no se envía por HTTP y la app lo elimina al cargar.
+xdg-open "${PANEL_URL:-http://localhost:5173}/#token=$token" >/dev/null 2>&1

@@ -15,7 +15,12 @@
     "dev:server": "npm run dev --workspace=@lapredigital/server",
     "build:server": "npm run build --workspace=@lapredigital/server",
     "start:server": "npm run start --workspace=@lapredigital/server",
-    "typecheck": "npm run typecheck --workspace=@lapredigital/server"
+    "typecheck": "npm run typecheck --workspace=@lapredigital/server",
+    "build:web": "npm run build --workspace=@lapredigital/web",
+    "test": "npm test --workspace=@lapredigital/server"
   },
-  "packageManager": "npm@11.19.1"
+  "packageManager": "npm@11.19.1",
+  "devDependencies": {
+    "@playwright/test": "1.65.0"
+  }
 }
