@@ -62,5 +62,5 @@ Reutilizar node:test y trazas de Eve. Tipos y pruebas dirigidas por funcionalida
 | ID | Estado | Entregable |
 | --- | --- | --- |
 | M07 | Hecha | Temario UNT 2027 versionado, progreso por tema con historial, mensajería local y consultas al dueño; SQL canónico e importación no destructiva. |
-| M08 | En cierre | Dashboard global, herramientas por rol, acompañamiento individual y portal academia/mensajería con escalamiento. |
+| M08 | Hecha | Dashboard global, herramientas por rol, acompañamiento individual y portal academia/mensajería con escalamiento. |
 | M09 | En cierre | Servicio Docker separado, compilación, verificación del circuito y documentación de demostración. |

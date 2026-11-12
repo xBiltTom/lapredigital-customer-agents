@@ -38,15 +38,20 @@ export default defineChannel({routes:[
       return json(session?await historialChat(session):{mensajes:[],sesionId:null});
     }catch(e){return error(e);}
   }),
+  GET('/api/dashboard/chat',async(request,{resolveSession})=>{
+    const owner=await dueno(request);if(!owner)return json({error:'Acceso requerido.'},401);
+    try{const session=await resolveSession(`dueno:${owner.id}:global`);return json(session?await historialChat(session):{mensajes:[]});}catch(e){return error(e);}
+  }),
   POST('/api/chat',async(request,{from})=>{
     const owner=await dueno(request);if(!owner)return json({error:'Acceso requerido.'},401);
     try{
-      const b=z.object({estudianteId:idSchema,mensaje:z.string().trim().min(1).max(2000)}).parse(await request.json());
-      await diagnostico(owner.id,b.estudianteId);
+      const b=z.object({estudianteId:idSchema.optional(),global:z.boolean().optional(),mensaje:z.string().trim().min(1).max(2000)}).parse(await request.json());
+      if(!b.global&&!b.estudianteId)throw new Error('Selecciona estudiante');
+      if(!b.global)await diagnostico(owner.id,b.estudianteId!);
       const info=await fetch('http://127.0.0.1:3000/eve/v1/info',{headers:{authorization:request.headers.get('authorization')!}}).then(r=>r.json());
       if(info.agent?.model?.endpoint?.state!=='ready')return json({error:'Modelo sin conexión. Abre scripts/chat-local y desbloquea el llavero.'},503);
-      const source=from(direccionChat(owner.id,b.estudianteId));
-      const delivery=await source.send(b.mensaje,{auth:{...owner.auth,attributes:{...owner.auth.attributes,estudianteId:String(b.estudianteId)}},turnPolicy:'queue'});
+      const source=from(b.global?`dueno:${owner.id}:global`:direccionChat(owner.id,b.estudianteId!));
+      const delivery=await source.send(b.mensaje,{auth:{...owner.auth,attributes:{...owner.auth.attributes,estudianteId:b.global?'':String(b.estudianteId),modo:b.global?'global':'individual'}},turnPolicy:'queue'});
       if(request.headers.get('accept')?.includes('application/x-ndjson')){
         const encoder=new TextEncoder(),signal=AbortSignal.any([request.signal,AbortSignal.timeout(180000)]);
         const iterator=(async function*(){

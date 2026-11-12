@@ -1,4 +1,4 @@
-import type {ReactNode} from 'react';
+import {useState,type ReactNode} from 'react';
 import type {Diagnostico} from './types';
 
 const fecha=(value:string|null|undefined,soloDia=false)=>value?new Date(value).toLocaleString('es-PE',{
@@ -35,8 +35,10 @@ export function ContactoEstudiante({datos}:{datos:Diagnostico}){
 }
 
 export function DesempenoAcademico({datos}:{datos:Diagnostico}){
+ const [curso,setCurso]=useState('');
  const intentos=[...datos.intentos].sort((a,b)=>b.fecha.localeCompare(a.fecha)||b.id-a.id);
  return <>
+  <section className="card"><h3>Temario UNT 2027 · avance por tema</h3><p className="muted">{datos.temario.filter(t=>t.estado==='COMPLETADA').length} / {datos.temario.length} temas completados. Avance de estudio; no acredita dominio. El avance inicial tiene origen CARGA_DEMO.</p><select aria-label="Curso del temario" value={curso} onChange={e=>setCurso(e.target.value)}><option value="">Todos los cursos</option>{[...new Set(datos.temario.map(t=>t.curso))].map(c=><option key={c}>{c}</option>)}</select><div style={{maxHeight:380,overflow:'auto'}}>{datos.temario.filter(t=>!curso||t.curso===curso).map(t=><div className="record" key={t.id}><strong>{t.curso} · {t.tema}</strong><small className="detail-line">{t.estado} · {t.origen??'Sin registro de avance'}</small></div>)}</div></section>
   <section className="card"><div className="card-heading"><h3>Resultados de evaluaciones</h3><span className="pill neutral">{intentos.length} intentos</span></div>
    <p className="muted">Todos los intentos finalizados hasta el corte. Cada porcentaje corresponde a sus aciertos; la mejora del resumen solo compara pruebas del mismo grupo.</p>
    {intentos.length?<div className="academic-table-wrap" tabIndex={0} role="region" aria-label="Resultados de evaluaciones"><table className="academic-table"><thead><tr><th>Intento / fecha</th><th>Grupo y alcance</th><th>Aciertos</th><th>Resultado</th></tr></thead><tbody>

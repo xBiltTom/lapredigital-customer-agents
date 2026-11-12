@@ -2,7 +2,21 @@
 
 Actualizado: 12/11/2026. Instrucción vigente: terminar un MVP local en una sola pasada de máximo una hora; reemplaza el plan individual B02–B08.
 
-## Último cambio: M07 — temario, avance y canal local
+## Último cambio: M08 — dashboard, portal y agente que actúa
+
+Dashboard global del dueño con 14 estudiantes, 12 CUSTOMERS, riesgo, avance del temario, casos abiertos y chat global persistente. Acompañamiento conserva sesiones individuales y añade el temario. Las definiciones diferencian temas completados de cumplimiento de actividades de ruta: no son cifras contradictorias.
+
+El portal tiene vistas academia y mensajería, selección controlada de estudiante/apoderado, estados del temario y conversación. El dueño emite un token de participante firmado, con estudiante, contacto, rol y vencimiento; el backend revalida vínculo y Plus vigente para apoderados. No se da el token del dueño al agente/participante ni acceso a herramientas privadas. Cambiar participante/canal descarta respuestas de lecturas anteriores. El selector de control usa el acceso del dueño en su propia sesión de navegador.
+
+operar_plataforma permite resumen global, detalle, temario, envío local preautorizado, consulta al dueño, bloqueo de no contacto y comunicación de una decisión explícita. El envío verifica servicio, prestación, finalidad/canal PLATAFORMA, revocaciones y narrativas pendientes. Mensajes quedan en MensajeCanalLocal; FechaEntrega se confirma solo al consultar la bandeja del participante, no cuando el agente lee su contexto. No hay WhatsApp/Instagram real ni cómputo automático de C-4.
+
+Las respuestas entrantes se entregan al agente del participante y su respuesta vuelve al mismo hilo. Lo desconocido/económico se registra en ConsultaDueno y aparece en el chat del dashboard. El dueño responde por tarjeta o mediante RESPONDER_CONSULTA en el chat; el agente comunica su decisión. Los modos global, individual y participante tienen instrucciones específicas y contexto institucional común.
+
+Verificación real: conversación académica con Ana usando su temario; envío desde chat global a su bandeja; solicitud de descuento → consulta al dueño → respuesta por tarjeta → comunicación al interesado. Segunda consulta de beca resuelta escribiendo la decisión en el chat global (RESPONDIDA). Avance del portal actualizado y reflejado en SQL/ficha; rechazo de apoderado sin Plus y acceso válido de apoderado de Elena. Playwright: dashboard, navegación a desempeño, portal, filtro Álgebra, mensajería, escritorio/móvil sin errores JS; capturas inspeccionadas en tmp/*-extension*.png. Tipos y builds correctos. No se ejecutaron suites históricas ni pruebas destructivas sobre el OLTP.
+
+Siguiente tarea: M09, terminar empaquetado/documentación y entregar. No añadir capacidades nuevas.
+
+## M07 — temario, avance y canal local
 
 Autorización: extensión de 30 minutos iniciada el 12/11/2026 a las 21:54 UTC. Temario JSON aportado por el dueño incorporado sin cambiar su contenido: 18 cursos, 162 temas; subtemas y documento completo conservados. ContenidoUNT es catálogo versionado separado de los recursos/rutas existentes para no alterar sus FK ni comparabilidad. ProgresoTemaUNT identifica estado de estudio y origen; no es una nota ni acredita dominio. Carga de demostración: 2.268 registros (14 alumnos × 162 temas), origen CARGA_DEMO; LEAD/TURNED empiezan pendientes. El portal registra PORTAL_LOCAL y eventos de estudio. Historial multirregistro conserva las filas anteriores U/D.
 

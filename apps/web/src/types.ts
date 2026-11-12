@@ -1,5 +1,6 @@
 export type Alumno={estudianteId:number;codigo:string;nombreCompleto:string;etapaActual:string;carreraObjetivo:string|null};
 export type Diagnostico={
+ temario:{id:number;curso:string;tema:string;subtemas:string;estado:string;origen:string|null}[];
  estudianteId:number;corte:string;inicio:string;narrativaPendiente:boolean;
  ficha:{estudiante:{codigo:string;nombreCompleto:string;correo:string|null;telefono:string|null;etapaActual:string;carreraObjetivo:string|null;universidadObjetivo:string;disponibilidadSemanalHoras:number|null;fechaExamen:string|null;parentesco:string|null;fechaRegistro:string};apoderado:{nombreCompleto:string;correo:string|null;telefono:string|null}|null;servicioActual:{plan:string;fin:string;becaPorcentaje:number;cobrosConfirmados:number;importeCobradoPEN:number;renovacionAutomatica:boolean}|null;historial:{periodoServicioId:number;plan:string;tipo:string;inicio:string;fin:string}[];prestaciones:{codigo:string;descripcion:string}[]};
  ruta:{id:number;version:number}|null;rutas:{id:number;version:number;vigente:boolean}[];cumplimiento:{planificadas:number;completadas:number;porcentaje:number|null};

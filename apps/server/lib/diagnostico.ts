@@ -64,7 +64,8 @@ export async function diagnostico(personalInternoId: number, estudianteId: numbe
   if(!canales.length) causas.push('Sin canal académico autorizado');
   const calificaciones=valoraciones.filter(v=>v.fecha>=inicio);
   const ultima=evaluaciones[0]??null;
-  return {estudianteId,corte,inicio,versionReglas:'INFORME_7.1',huella,ficha,ruta,rutas,actividades,intentos,
+  const temario=(await pool.request().input('e',sql.Int,estudianteId).query(`SELECT c.ContenidoId id,c.Curso curso,c.Tema tema,c.Subtemas subtemas,COALESCE(p.Estado,'PENDIENTE') estado,p.Origen origen FROM dbo.ContenidoUNT c LEFT JOIN dbo.ProgresoTemaUNT p ON p.ContenidoId=c.ContenidoId AND p.EstudianteId=@e ORDER BY c.ContenidoId`)).recordset;
+  return {temario,estudianteId,corte,inicio,versionReglas:'INFORME_7.1',huella,ficha,ruta,rutas,actividades,intentos,
     cumplimiento:cumplimiento(actividades,ruta?.id??null,inicio,corte),mejoras:mejoras(intentos),uso:uso[0]??null,
     frecuencia:frecuencia[0]!,casos,dificultades,revisiones,mensajes,valoraciones,permisos,acciones,
     satisfaccion:calificaciones.length?calificaciones.reduce((s,v)=>s+v.estrellas,0)/calificaciones.length:null,
