@@ -8,11 +8,11 @@ Proyecto académico de Ingeniería de Sistemas de la Universidad Nacional de Tru
 2. Seguir [el roadmap de tareas y commits](docs/ROADMAP.md).
 3. Consultar [contexto y decisiones](docs/CONTEXTO.md) y [arquitectura](docs/ARQUITECTURA.md).
 
-**Siguiente tarea: T08, consultar perfil, servicio y prestaciones.** Una tarea corresponde a un commit; el roadmap incluye dependencias y criterios para cerrarla.
+**Siguiente tarea: T09, consultar progreso académico y revisiones.** Una tarea corresponde a un commit; el roadmap incluye dependencias y criterios para cerrarla.
 
 ## Estado actual
 
-La base OLTP y los escenarios ficticios ya existen. El backend mínimo de Eve arranca en Docker y tiene un endpoint de salud. El login local de ChatGPT, una herramienta fija y la conexión SQL de lectura se verificaron; aún faltan las herramientas de negocio y la interfaz. Por decisión del usuario se conserva el esquema actual mientras se desarrolla el prototipo local.
+La base OLTP y los escenarios ficticios ya existen. El backend mínimo de Eve arranca en Docker y tiene un endpoint de salud. El login local de ChatGPT, una herramienta fija, la conexión SQL de lectura y los repositorios de perfil/servicio se verificaron; aún faltan las herramientas de negocio y la interfaz. Por decisión del usuario se conserva el esquema actual mientras se desarrolla el prototipo local.
 
 Stack acordado: TypeScript, Node.js 24, Eve/Nitro, React/Vite, SQL Server 2022 en Docker, `mssql`, Zod y Vitest. El acceso local al modelo se comprobó con la suscripción de ChatGPT en la TUI de Eve; no equivale a acceso API ni a despliegue. MiniMax queda como alternativa si sus créditos son utilizables por API.
 
@@ -46,7 +46,7 @@ La salud devuelve `ok: true`. No hay panel; el login funcionó en la TUI con `sc
 
 `npm run check` revisa únicamente estructura y enlaces; `typecheck` verifica el backend. `build:server` falla con EXDEV en Docker Desktop/Windows al mover la salida entre volúmenes; se documenta en [ESTADO.md](docs/ESTADO.md). Ninguno de esos comandos ejecuta SQL ni prueba una respuesta del modelo.
 
-El archivo `.env.example` documenta la conexión SQL sin secretos. En Windows, `scripts/provision-sql-app.ps1` creó `lapredigital_app` con lectura de `dbo.Estudiante` y guardó la contraseña generada en `.env`, excluido de Git. La conexión se prueba mediante `docker compose run --rm --no-deps --workdir /workspace/apps/server server npm run db:check`; no se abre al iniciar Eve.
+El archivo `.env.example` documenta la conexión SQL sin secretos. En Windows, `scripts/provision-sql-app.ps1` creó `lapredigital_app` y guardó la contraseña generada en `.env`, excluido de Git; `scripts/grant-sql-read.ps1` amplió después la lectura a las tablas de perfil y servicio. La conexión se prueba con `db:check` y el repositorio con `db:t08` mediante `docker compose run --rm --no-deps --workdir /workspace/apps/server server npm run <comando>`; SQL no se abre al iniciar Eve.
 
 ## Base de datos
 

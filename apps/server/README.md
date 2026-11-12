@@ -21,7 +21,7 @@ Detener el servidor antes de repetir npm ci. Si tu UID/GID difiere de 1000, expo
 
 ## T07: SQL Server local
 
-La instancia actual es SQL Server nativo de Windows en 1433. En este equipo se ejecutó una vez `scripts/provision-sql-app.ps1` desde PowerShell con la cuenta administradora local: creó `lapredigital_app` con permiso SELECT solo sobre `dbo.Estudiante` y escribió la credencial generada en `.env`, que Git excluye. El script se detiene sin sobrescribir un `.env` o un login previo. En otra instalación, configurar el usuario y `.env` localmente siguiendo `.env.example`; nunca usar `sa` ni copiar la contraseña al navegador o al chat.
+La instancia actual es SQL Server nativo de Windows en 1433. En este equipo se ejecutó una vez `scripts/provision-sql-app.ps1` desde PowerShell con la cuenta administradora local: creó `lapredigital_app` y escribió la credencial generada en `.env`, que Git excluye; el script se detiene sin sobrescribir un `.env` o un login previo. Después, `scripts/grant-sql-read.ps1` amplió la lectura a las tablas de T08 sin crear logins ni escribir datos. En otra instalación, configurar el usuario y `.env` localmente siguiendo `.env.example`; nunca usar `sa` ni copiar la contraseña al navegador o al chat.
 
 Compose pasa las variables SQL del `.env` únicamente al servicio `server`, con `host.docker.internal` para llegar al host desde Docker. El pool de `lib/database/pool.ts` es compartido y se conecta únicamente al invocar `getPool()`. `closePool()` lo cierra; el comando manual de verificación llama ambos y no hace escrituras:
 
@@ -29,7 +29,22 @@ Compose pasa las variables SQL del `.env` únicamente al servicio `server`, con 
 docker compose run --rm --no-deps --workdir /workspace/apps/server server npm run db:check
 ```
 
-Comprueba C001 con SQL parametrizado, SELECT sobre `dbo.Estudiante`, ausencia de permisos DML y la hora SQL de Perú. Si no hay conexión, devuelve un error claro sin imprimir el secreto. T08 ampliará solo los permisos de lectura necesarios para consultas de perfil y servicio. No se expone una herramienta SQL al modelo ni un endpoint de base de datos.
+Comprueba C001 con SQL parametrizado, SELECT sobre `dbo.Estudiante`, ausencia de permisos DML y la hora SQL de Perú. Si no hay conexión, devuelve un error claro sin imprimir el secreto. T08 amplió solo los permisos de lectura necesarios para perfil y servicio; ver su sección. No se expone una herramienta SQL al modelo ni un endpoint de base de datos.
+
+## T08: perfil, servicio y prestaciones
+
+`lib/database/estudiantes.ts` implementa el acceso de solo lectura con SQL parametrizado:
+
+- `listarEstudiantes(identidad, { pagina, tamano })` pagina de 1 a 50 filas (20 por defecto) y devuelve `items`, `total` y `paginas`. La identidad es un `contactoId` validado por el backend: el estudiante ve su ficha y el apoderado solo las de sus estudiantes vinculados. Un apoderado compartido no duplica filas.
+- `obtenerFichaEstudiante(identidad, estudianteId)` devuelve perfil y contacto, apoderado, `servicioActual`, `historial` y prestaciones. El servicio actual exige suscripción `VIGENTE`, periodo que cubre `GETDATE()` y acceso `HABILITADO`/`CON_INCIDENCIA`. El historial conserva todos los periodos, sus cobros confirmados, operaciones correctivas y baja. Una ficha ajena devuelve `null`, sin revelar si el estudiante existe.
+
+`scripts/grant-sql-read.ps1` concede SELECT sobre Estudiante, Contacto, Apoderado, Suscripcion, PeriodoServicio, ModalidadPlan, PlanServicio, Prestacion, PlanPrestacion y BajaServicio; en Pago solo `PeriodoServicioId`, `Tipo`, `Estado` e `ImportePEN`. No concede DML. `provision-sql-app.ps1` incluye el mismo conjunto para instalaciones nuevas. Verificación real:
+
+```text
+docker compose run --rm --no-deps --workdir /workspace/apps/server server npm run db:t08
+```
+
+Comprueba paginación y apoderado compartido, C006 (beca 100 %, importe 0, sin pagos), C011 (dos episodios), C013 (LEAD sin servicio), denegación de una ficha ajena, permisos mínimos y que `Pago.CodigoOperacion` no es legible. Los repositorios no se exponen todavía como tools de Eve ni como endpoint.
 
 ## Alcance actual
 
@@ -37,7 +52,7 @@ Comprueba C001 con SQL parametrizado, SELECT sobre `dbo.Estudiante`, ausencia de
 - Eve usa `localDev()` para permitir sesiones desde el contenedor durante `eve dev`; las peticiones desde Windows mediante el puerto publicado reciben 401 en esta instalación.
 - agent/agent.ts selecciona chatgpt(), pero no inicia login ni hace llamadas por arrancar o compilar. El modelo efectivo que muestra eve info es configuración; no demuestra acceso a ese modelo.
 - `defaultTools: false` deja solo la herramienta local `comprobar_conexion`. No se ofrece bash, archivos ni SQL al modelo.
-- No hay conexión SQL, tareas programadas ni comunicaciones reales. La lógica del Agente Académico está pendiente.
+- No hay herramientas de negocio, tareas programadas ni comunicaciones reales. La lógica del Agente Académico está pendiente. Los repositorios SQL de T08 no están expuestos al modelo.
 
 El volumen eve_state conserva apps/server/.eve y es compartido por CLI y servidor. Para el `/login` interactivo, `scripts/eve-local` inicia D-Bus y un llavero Linux desbloqueado con una contraseña local; sus archivos cifrados residen en el volumen `keyring_state`. Recuerda esa contraseña para sesiones posteriores. No copiar tokens desde el host ni borrar estos volúmenes al reinstalar dependencias. El login real y una llamada real al modelo funcionaron; solo se comprobó la persistencia del llavero con un valor ficticio, no la del login real tras reiniciar.
 

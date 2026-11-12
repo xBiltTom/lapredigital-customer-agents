@@ -6,9 +6,9 @@ Actualizado: 12 de noviembre de 2026. Este archivo es el plan canónico de tarea
 
 1. Leer [AGENTS.md](../AGENTS.md), [contexto y acuerdos](CONTEXTO.md), [estado de continuidad](ESTADO.md) y [arquitectura](ARQUITECTURA.md).
 2. Revisar `git status`, `git log -5 --oneline` y `git remote -v`. No sobrescribir cambios del usuario.
-3. Continuar con **T08**, primer pendiente. T07 conectó SQL Server con una identidad de aplicación que solo puede leer `dbo.Estudiante`; ampliar permisos solo para las consultas necesarias de T08.
+3. Continuar con **T09**, primer pendiente. T08 dejó repositorios de listado y ficha con identidad validada en el backend; T09 debe calcular progreso comparable sin ampliar el esquema.
 4. Leer los scripts de [database/](../database/README.md) y el [informe 7.1](reference/documento_InteligenciaNegocios.pdf) antes de convertir consultas en herramientas. La base está congelada por decisión del usuario.
-5. El login de ChatGPT está verificado solo en la TUI local; no asumir que funciona en despliegue o desde Windows por el puerto publicado. No asumir créditos API de MiniMax ni permisos SQL adicionales a `SELECT` sobre `dbo.Estudiante`.
+5. El login de ChatGPT está verificado solo en la TUI local; no asumir que funciona en despliegue o desde Windows por el puerto publicado. No asumir créditos API de MiniMax ni permisos SQL distintos de los SELECT documentados para el repositorio de T08; no hay DML.
 
 ## Objetivo y decisiones aceptadas
 
@@ -52,7 +52,7 @@ Los IDs dan una secuencia sugerida, pero mandan las dependencias. T10 y otras ta
 | T05 | Hecha | Probar ChatGPT local con una herramienta inocua | T04 |
 | T06 | Hecha | Validar la configuración de la aplicación | T04 |
 | T07 | Hecha | Conectar a SQL Server con un usuario de aplicación | T06 |
-| T08 | Pendiente | Consultar perfil, servicio y prestaciones | T07 |
+| T08 | Hecha | Consultar perfil, servicio y prestaciones | T07 |
 | T09 | Pendiente | Consultar progreso académico y revisiones | T08 |
 | T10 | Pendiente | Implementar las reglas deterministas de riesgo | T06, T08 |
 | T11 | Pendiente | Interpretar mensajes y valoraciones con evidencia | T05, T10 |
@@ -154,12 +154,12 @@ Los IDs dan una secuencia sugerida, pero mandan las dependencias. T10 y otras ta
 
 ### T08 · Consultar perfil, servicio y prestaciones
 
-- [ ] Tarea completada.
+- [x] Tarea completada.
 - **Depende de:** T07.
 - **Commit:** `feat(T08): consultar perfil y servicio del customer`.
 - **Entregable:** Implementar repositorios parametrizados para estudiante, contactos, apoderado, periodos y prestaciones; paginar listados y distinguir servicio actual de historial.
 - **Cierre verificable:** C006 beca sin pago; C011 dos episodios; C013 LEAD; apoderado compartido sin duplicar estudiantes.
-- **Contexto o límite:** La identidad activa proviene del contexto validado del backend; una instrucción del chat no concede acceso a otro estudiante.
+- **Contexto o límite:** La identidad activa proviene del contexto validado del backend; una instrucción del chat no concede acceso a otro estudiante. `apps/server/lib/database/estudiantes.ts` expone listado paginado y ficha; `db:t08` verificó C006, C011, C013, el apoderado compartido de C003/C005 y la denegación de una ficha ajena. `scripts/grant-sql-read.ps1` concedió SELECT solo a las tablas del repositorio y a cuatro columnas de `Pago`; no hay DML ni `sa`. Los repositorios aún no son herramientas del agente ni endpoint (T12/T16).
 
 ### T09 · Consultar progreso académico y revisiones
 

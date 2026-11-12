@@ -15,7 +15,7 @@ Leer [README.md](README.md), [docs/ESTADO.md](docs/ESTADO.md), [docs/CONTEXTO.md
 
 ## Stack y código
 
-TypeScript + Node 24; npm workspaces; Eve/Nitro en apps/server; React/Vite en apps/web; mssql; Zod; Vitest. Existe el backend mínimo y la conexión SQL de lectura con usuario propio; frontend y herramientas del negocio siguen pendientes. No introducir Next.js/NestJS, Python u otro framework de agentes sin una decisión nueva del usuario.
+TypeScript + Node 24; npm workspaces; Eve/Nitro en apps/server; React/Vite en apps/web; mssql; Zod; Vitest. Existe el backend mínimo, la conexión SQL de lectura y repositorios de perfil/servicio con identidad validada; frontend y herramientas de negocio siguen pendientes. No introducir Next.js/NestJS, Python u otro framework de agentes sin una decisión nueva del usuario.
 
 Verificar login local ChatGPT temprano. No asumir que una suscripción es una API key ni que sirve para un despliegue. Leer docs de la versión instalada de Eve/AI SDK antes de programar su integración.
 
@@ -42,7 +42,7 @@ Node/npm del proyecto se ejecutan en Docker: `./scripts/dev node --version` y `.
 
 ## Verificación y continuidad
 
-Hoy: `./scripts/dev npm run check` valida únicamente el workspace y `./scripts/dev npm run typecheck` verifica tipos. `build:server` falla con EXDEV en Docker Desktop/Windows al mover el resultado entre volúmenes. `docker compose up --build -d server` inicia salud en 127.0.0.1:3000; `localDev()` admite sesiones desde dentro del contenedor, pero desde Windows devuelve 401. T05 verificó el login de ChatGPT y una herramienta fija en la TUI lanzada con `scripts/eve-local`; el servidor estándar no desbloquea ese llavero. No hay herramientas de negocio. Detener los procesos del servidor antes de reinstalar dependencias con npm ci. CLI y servidor comparten el volumen eve_state, excluido de Git; el llavero persistente está en keyring_state.
+Hoy: `./scripts/dev npm run check` valida únicamente el workspace y `./scripts/dev npm run typecheck` verifica tipos. `build:server` falla con EXDEV en Docker Desktop/Windows al mover el resultado entre volúmenes. `docker compose up --build -d server` inicia salud en 127.0.0.1:3000; `localDev()` admite sesiones desde dentro del contenedor, pero desde Windows devuelve 401. T05 verificó el login de ChatGPT y una herramienta fija en la TUI lanzada con `scripts/eve-local`; el servidor estándar no desbloquea ese llavero. T08 añadió repositorios SQL de perfil y servicio, aún no expuestos como herramientas de negocio. Detener los procesos del servidor antes de reinstalar dependencias con npm ci. CLI y servidor comparten el volumen eve_state, excluido de Git; el llavero persistente está en keyring_state.
 
 Separar resultados históricos, revisión estática y ejecución real. Los datos ficticios envejecen; no ocultar los cinco HALLAZGO conocidos cambiando las expectativas de prueba. Usar una base aislada para integración destructiva, no la base académica activa. No subir .env, .eve, tokens, volcados ni archivos de datos a Git.
 

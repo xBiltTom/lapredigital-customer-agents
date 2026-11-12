@@ -48,7 +48,7 @@ No ejecutar `docker system prune` o borrados globales para limpiar este proyecto
 
 En el entorno histórico CachyOS, `sql-server-local` era un contenedor independiente que publicaba 1433. Compose de este proyecto no lo modifica ni lo reemplaza. `127.0.0.1` dentro de un contenedor apunta a ese contenedor, no al host ni a SQL Server.
 
-En el entorno Windows de T07, el motor es el servicio local **MSSQLSERVER**, no un contenedor; atiende en el puerto 1433 y mantiene hora peruana (-05:00). Docker lo alcanza por `host.docker.internal:1433`. Se creó una identidad SQL independiente con SELECT sobre `dbo.Estudiante` y contraseña local ignorada por Git; ver [conexión y prueba](../apps/server/README.md). La cuenta administrativa Windows solo funciona desde el host por conexión local (`-S .`), no como credencial del backend. El servidor Eve arranca sin abrir conexiones SQL.
+En el entorno Windows de T07, el motor es el servicio local **MSSQLSERVER**, no un contenedor; atiende en el puerto 1433 y mantiene hora peruana (-05:00). Docker lo alcanza por `host.docker.internal:1433`. Se creó una identidad SQL independiente con SELECT de lectura para perfil y servicio (T08) y contraseña local ignorada por Git; en `Pago` solo puede leer cuatro columnas. Ver [conexión y prueba](../apps/server/README.md). La cuenta administrativa Windows solo funciona desde el host por conexión local (`-S .`), no como credencial del backend. El servidor Eve arranca sin abrir conexiones SQL.
 
 Los scripts 01/02 no se ejecutan al construir o iniciar la aplicación. La configuración de recreación de SQL Server, sus volúmenes y America/Lima sigue pendiente de documentarse con detalle, sin alterar la instancia activa.
 

@@ -4,7 +4,17 @@ Actualizado: 12 de noviembre de 2026. Documento de traspaso para otra sesión o 
 
 ## Próxima tarea
 
-**T08 del [roadmap](ROADMAP.md): consultar perfil, servicio y prestaciones.** T07 conectó SQL Server con un usuario de aplicación de solo lectura sobre `dbo.Estudiante`. Leer el informe 7.1 y los cuatro scripts de `database/` antes de ampliar consultas; conceder únicamente los SELECT adicionales necesarios, paginar listados y validar la identidad activa en el backend. No cambiar de stack ni modificar el esquema sin evidencia.
+**T09 del [roadmap](ROADMAP.md): consultar progreso académico y revisiones.** T08 dejó repositorios de solo lectura para listado y ficha, con identidad activa validada en el backend y permisos SQL mínimos. T09 debe calcular cumplimiento por ruta y mejora por grupo comparable, exponer actividades, dificultades y revisiones, y no mezclar versiones de ruta. Leer el informe 7.1 y los cuatro scripts de `database/` antes de ampliar consultas; no cambiar de stack ni modificar el esquema sin evidencia.
+
+## T08: perfil, servicio y prestaciones
+
+`apps/server/lib/database/estudiantes.ts` añade dos operaciones de solo lectura: listado paginado por identidad activa (1–50 elementos, total y páginas) y ficha por estudiante. La identidad es un `contactoId` que valida el backend; un estudiante ve su propia ficha y un apoderado solo las de sus estudiantes vinculados. Una instrucción del chat no cambia ese identificador. La ficha separa `servicioActual` (suscripción `VIGENTE`, periodo que cubre `GETDATE()` y acceso `HABILITADO`/`CON_INCIDENCIA`) del `historial`, e incluye contactos, apoderado, periodos con cobros confirmados y operaciones correctivas, baja y prestaciones del plan actual. C013 se devuelve como LEAD sin servicio ni prestaciones.
+
+`scripts/grant-sql-read.ps1` amplió los permisos de `lapredigital_app`: SELECT de tabla sobre Estudiante, Contacto, Apoderado, Suscripcion, PeriodoServicio, ModalidadPlan, PlanServicio, Prestacion, PlanPrestacion y BajaServicio; en Pago solo `PeriodoServicioId`, `Tipo`, `Estado` e `ImportePEN`. No hay DML ni `sa`. `scripts/provision-sql-app.ps1` incluye el mismo conjunto para instalaciones nuevas. No se modificaron tablas, datos ni los scripts 01/02.
+
+Verificación real: `docker compose run --rm --no-deps --workdir /workspace/apps/server server npm run db:t08` comprobó paginación sin duplicados con el apoderado compartido de C003/C005, C006 con beca 100 % e importe exigible 0 sin pagos, C011 con dos episodios (REACTIVACION vigente y periodo anterior FINALIZADO), C013 LEAD sin servicio, ficha de C001 denegada a la identidad de ese apoderado, rechazo de páginas fuera de rango, SELECT permitido y DML denegado en las tablas del repositorio, y acceso denegado a `Pago.CodigoOperacion`. `typecheck`, 7 pruebas y `npm run check` pasaron.
+
+Límites: los repositorios aún no se exponen como herramientas del agente ni como endpoint; la identidad real y las sesiones se integran en T16/T20. No se paginan todavía los periodos históricos ni se probaron volúmenes grandes. El corte del servicio usa `GETDATE()`, coherente con las consultas de referencia; la serialización de fechas queda a cargo de la capa que consuma estos datos.
 
 ## T07: conexión SQL de lectura
 
@@ -14,7 +24,7 @@ El usuario informó que creó y pobló `LaPreDigital_Customers` en SQL Server na
 
 Verificación real: `docker compose run --rm --no-deps --workdir /workspace/apps/server server npm run db:check` completó una consulta parametrizada por `Codigo='C001'`, comprobó reutilización y cierre del pool, SELECT permitido, INSERT/UPDATE/DELETE denegados mediante `HAS_PERMS_BY_NAME`, hora local de `GETDATE()` y offset -05:00 de `SYSDATETIMEOFFSET()`. Un puerto erróneo (`SQLSERVER_PORT=1`) terminó con error claro y código no cero sin imprimir contraseña. `npm ci` instaló 103 paquetes desde lockfile y auditó 105 sin vulnerabilidades reportadas; `typecheck`, 4 pruebas de configuración, `npm run check` y salud 200 de Eve pasaron. El contenedor de prueba del servidor se detuvo después.
 
-Límites: no se ejecutaron las pruebas SQL exploratorias sobre esta instancia ni se usaron escrituras de negocio. No se verificó la serialización de columnas DATETIME2 de negocio: solo `GETDATE()` como texto y el offset del servidor. El usuario de aplicación todavía no tiene permisos para leer Contacto, Suscripcion ni las demás tablas que T08 necesitará; ampliar según consultas concretas. `build:server` conserva el EXDEV documentado; no afecta la prueba de conexión.
+Límites: no se ejecutaron las pruebas SQL exploratorias sobre esta instancia ni se usaron escrituras de negocio. No se verificó la serialización de columnas DATETIME2 de negocio: solo `GETDATE()` como texto y el offset del servidor. T08 amplió después los SELECT de perfil y servicio; ver su sección. `build:server` conserva el EXDEV documentado; no afecta la prueba de conexión.
 
 ## T05: login local y herramienta inocua
 
@@ -70,7 +80,7 @@ El `npm ci` de esta sesión instaló 29 paquetes y reportó cero vulnerabilidade
 
 ## Qué existe y qué falta
 
-Existe la base OLTP en SQL Server nativo de Windows, sus scripts, la toolchain Docker y el backend mínimo apps/server con configuración Zod y pool SQL de lectura. El login local de ChatGPT y una herramienta fija funcionan en la TUI. No existen apps/web ni herramientas de negocio. Hay comandos de typecheck, build e inicio del servidor; el build actual tiene el fallo EXDEV descrito arriba en Windows. Las pruebas SQL del 03 siguen siendo históricas.
+Existe la base OLTP en SQL Server nativo de Windows, sus scripts, la toolchain Docker y el backend mínimo apps/server con configuración Zod, pool SQL de lectura y repositorios de perfil/servicio. El login local de ChatGPT y una herramienta fija funcionan en la TUI. No existen apps/web ni herramientas de negocio expuestas al modelo. Hay comandos de typecheck, build e inicio del servidor; el build actual tiene el fallo EXDEV descrito arriba en Windows. Las pruebas SQL del 03 siguen siendo históricas.
 
 El host conserva Node v26.13.1 y npm 12.2.2. Node del proyecto se ejecuta en Docker: imagen oficial fijada por digest, Node 24.22.3 y npm 11.19.1. Usar `./scripts/dev npm run check`; el chequeo rechaza Node de otra versión. No se instaló ni cambió Node global.
 
@@ -85,7 +95,7 @@ El host conserva Node v26.13.1 y npm 12.2.2. Node del proyecto se ejecuta en Doc
 
 ## Pendientes reales
 
-1. T08: implementar repositorios parametrizados para perfil y servicio. Conceder solo los SELECT adicionales requeridos por esas consultas y probar casos C006/C011/C013 sin mezclar estudiante con apoderado.
+1. T09: calcular progreso académico comparable y exponer actividades, dificultades y revisiones; no mezclar versiones de ruta.
 2. Corregir el fallo EXDEV del build entre el volumen `.eve` y `.output` al abordar el empaquetado de desarrollo; no exponer Docker al agente para eliminar el aviso de sandbox. Verificar persistencia del login real tras reiniciar antes de depender de ella.
 3. Confirmar si los 2.000 créditos MiniMax son de API o de su aplicación; no consumirlos todavía.
 4. Implementar política de contacto con aceptación inicial de términos y revocación posterior; el texto de términos y el registro público de usuarios no están implementados.
