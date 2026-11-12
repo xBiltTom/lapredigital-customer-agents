@@ -4,7 +4,7 @@ Actualizado: 12 de noviembre de 2026. Documento de traspaso para otra sesión o 
 
 ## Próxima tarea
 
-**T05 del [roadmap](ROADMAP.md): verificar el login local de ChatGPT y una herramienta inocua.** T03 dejó Node aislado y T04 el backend mínimo. Leer la documentación instalada antes de configurar el acceso; el usuario debe realizar el login. T06 (configuración Zod) puede avanzar si el login queda pendiente. No cambiar de stack ni modificar el esquema SQL.
+**T05 del [roadmap](ROADMAP.md): verificar el login local de ChatGPT y una herramienta inocua.** T06 dejó lista la configuración mínima del servidor. El usuario debe efectuar `/login` en una terminal interactiva de Eve; T07 puede avanzar de manera independiente si el login sigue pendiente. No cambiar de stack ni modificar el esquema SQL.
 
 ## Trabajo completado en esta inicialización
 
@@ -40,9 +40,17 @@ Verificación ejecutada:
 
 Límites: Eve es una versión candidata. El build advierte que no existe proveedor de sandbox; pasa y no hay herramientas que lo necesiten. No se conectó SQL ni se consumió MiniMax. El login de ChatGPT, su ubicación efectiva y persistencia, el acceso desde la CLI a través de Docker y una llamada real siguen pendientes de T05. No copiar tokens del host ni asumir que el volumen .eve cubre ubicaciones de credenciales aún no verificadas.
 
+## T06: configuración mínima validada
+
+Se añadió `apps/server/lib/config.ts` con Zod para exigir `TZ=America/Lima` y `AI_PROVIDER=chatgpt`, y se llama desde el agente. Compose suministra esas variables a CLI y servidor; `.env.example` deja de mostrar puertos y credenciales SQL como si estuvieran implementados. El puerto de desarrollo sigue fijado en 127.0.0.1:3000. No hay conexión a SQL ni variables secretas de aplicación en uso.
+
+Verificación ejecutada en Docker desde Windows: `npm test --workspace=@lapredigital/server` (3/3), `npm run typecheck`, `npm run check` y `eve info --json` (ready, cero errores o advertencias). Sin `AI_PROVIDER`, `eve info` falló con `Configuración inválida o ausente: AI_PROVIDER` sin imprimir el entorno. `docker compose up --build -d --wait server` llegó a healthy y GET /eve/v1/health devolvió `ok: true`; el servidor se detuvo después. No se probaron sesiones de modelo ni se ejecutó SQL.
+
+El `npm ci` de esta sesión instaló 29 paquetes y reportó cero vulnerabilidades. En esta máquina, `npm run build:server` compila Nitro pero falla en el paso final `EXDEV` al mover el resultado de `.eve/builds` (volumen Docker) a `.output` (montaje del proyecto). Es un problema del empaquetado de desarrollo pendiente; no confundir la compilación parcial con un build correcto. Las docs instaladas de Eve indican que `/login` usa una terminal interactiva y guarda OAuth/credenciales en el almacén de secretos del sistema, no en el proyecto ni necesariamente en el volumen `.eve`. La ubicación efectiva en este contenedor y el login real continúan sin verificarse (T05); no se copiaron tokens.
+
 ## Qué existe y qué falta
 
-Existe la base OLTP, sus scripts, la toolchain Docker y el backend mínimo apps/server. No existen apps/web, mssql instalado, herramientas de negocio ni autenticación de modelo probada. Hay comandos de typecheck, build e inicio del servidor. Las pruebas SQL siguen siendo históricas.
+Existe la base OLTP, sus scripts, la toolchain Docker y el backend mínimo apps/server con configuración Zod. No existen apps/web, mssql instalado, herramientas de negocio ni autenticación de modelo probada. Hay comandos de typecheck, build e inicio del servidor; el build actual tiene el fallo EXDEV descrito arriba en Windows. Las pruebas SQL siguen siendo históricas.
 
 El host conserva Node v26.13.1 y npm 12.2.2. Node del proyecto se ejecuta en Docker: imagen oficial fijada por digest, Node 24.22.3 y npm 11.19.1. Usar `./scripts/dev npm run check`; el chequeo rechaza Node de otra versión. No se instaló ni cambió Node global.
 
@@ -57,10 +65,10 @@ El host conserva Node v26.13.1 y npm 12.2.2. Node del proyecto se ejecuta en Doc
 
 ## Pendientes reales
 
-1. Confirmar el plan de ChatGPT y probar /login con la versión instalada de Eve (T05). Mantener el login fuera de Git y probar una herramienta inocua.
-2. Implementar configuración de aplicación validada con Zod (T06); los paquetes de React, mssql y Vitest se instalarán cuando sus tareas los necesiten.
+1. Confirmar el plan de ChatGPT y probar /login con la versión instalada de Eve (T05). Mantener el login fuera de Git y probar una herramienta inocua. Verificar la persistencia del almacén de secretos en el contenedor antes de depender de ella.
+2. Corregir el fallo EXDEV del build entre el volumen `.eve` y `.output` al abordar el empaquetado de desarrollo; no exponer Docker al agente para eliminar el aviso de sandbox.
 3. Confirmar si los 2.000 créditos MiniMax son de API o de su aplicación; no consumirlos todavía.
-4. Comprobar el puerto SQL publicado y configurar el usuario de aplicación. Los datos de .env.example son plantilla, no conexión ya provisionada.
+4. Comprobar el puerto SQL publicado y configurar el usuario de aplicación en T07. `.env.example` no contiene credenciales SQL ni una conexión provisionada.
 5. Implementar política de contacto con aceptación inicial de términos y revocación posterior; el texto de términos y el registro público de usuarios no están implementados.
 6. Cubrir en servicios los cinco huecos conocidos, manteniendo el esquema actual.
 

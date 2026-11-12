@@ -14,6 +14,7 @@ services:
     working_dir: /workspace
     environment:
       TZ: America/Lima
+      AI_PROVIDER: chatgpt
       NPM_CONFIG_CACHE: /home/node/.npm
       EVE_TELEMETRY_DISABLED: "1"
     volumes:

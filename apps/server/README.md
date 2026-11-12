@@ -18,6 +18,8 @@ Detener el servidor antes de repetir npm ci. Si tu UID/GID difiere de 1000, expo
 
 `dev:server` ejecuta Eve sin UI ni extensiones predeterminadas. `build:server` compila con Eve y `start:server` inicia el resultado compilado; este último debe ejecutarse desde el mismo volumen de estado donde se hizo el build, con el servicio dev detenido. El servidor solo se publica en 127.0.0.1:3000. Todavía no existe frontend.
 
+`lib/config.ts` valida al cargar el agente `TZ=America/Lima` y `AI_PROVIDER=chatgpt`. Compose suministra ambos valores; `.env.example` es una referencia y no se carga automáticamente. Para comprobar la configuración sin invocar al modelo: `./scripts/dev npm test --workspace=@lapredigital/server`. En un host Windows con el volumen `.eve` separado, `build:server` puede fallar con EXDEV al mover el resultado a `.output`; el servidor de desarrollo sí pasó el chequeo de salud. El build correcto queda pendiente de resolver.
+
 ## Alcance actual
 
 - GET /eve/v1/health responde 200 con ok: true.
@@ -26,9 +28,9 @@ Detener el servidor antes de repetir npm ci. Si tu UID/GID difiere de 1000, expo
 - defaultTools: false y el manifiesto observado dejan la lista de herramientas vacía. No se ofrece bash, archivos ni SQL al modelo.
 - No hay conexión SQL, tareas programadas ni comunicaciones reales. La lógica del Agente Académico está pendiente.
 
-El volumen eve_state conserva apps/server/.eve y es compartido por CLI y servidor. No copiar tokens desde el host ni borrar ese volumen como parte de reinstalar dependencias. T05 debe verificar dónde guarda realmente el login esta versión y probar una respuesta y una herramienta inocua. No se afirma todavía persistencia de autenticación ni compatibilidad de la cuenta.
+El volumen eve_state conserva apps/server/.eve y es compartido por CLI y servidor. No copiar tokens desde el host ni borrar ese volumen como parte de reinstalar dependencias. Según la documentación instalada, `/login` guarda OAuth/credenciales en el almacén de secretos del sistema: la persistencia real de ese almacén dentro de Docker y la compatibilidad de la cuenta requieren prueba interactiva en T05. No se ha probado ninguna respuesta ni herramienta con el modelo.
 
-Eve puede advertir que no tiene proveedor de sandbox al compilar. El build pasa y no existen herramientas que requieran ese proveedor. No montar el socket Docker para eliminar el aviso.
+Eve puede advertir que no tiene proveedor de sandbox al compilar. No existen herramientas que requieran ese proveedor; el fallo EXDEV descrito arriba es independiente del aviso. No montar el socket Docker para eliminarlo.
 
 ## Documentación usada de la versión instalada
 

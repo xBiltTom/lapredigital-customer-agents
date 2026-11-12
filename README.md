@@ -47,7 +47,7 @@ La salud devuelve `ok: true`. No hay panel ni chat habilitado todavía: crear un
 
 `npm run check` revisa únicamente estructura y enlaces; `typecheck` y `build:server` verifican el backend. Estos comandos no ejecutan SQL ni prueban una respuesta del modelo.
 
-El archivo `.env.example` es una plantilla sin secretos. No contiene una conexión lista para usar: el puerto publicado y el usuario de aplicación requieren verificación y configuración posterior.
+El archivo `.env.example` documenta la zona horaria y el proveedor local, sin secretos. Compose suministra ambos; la conexión SQL y el usuario de aplicación se configuran en T07.
 
 ## Base de datos
 

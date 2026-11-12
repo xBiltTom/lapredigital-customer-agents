@@ -6,7 +6,7 @@ Actualizado: 12 de noviembre de 2026. Este archivo es el plan canónico de tarea
 
 1. Leer [AGENTS.md](../AGENTS.md), [contexto y acuerdos](CONTEXTO.md), [estado de continuidad](ESTADO.md) y [arquitectura](ARQUITECTURA.md).
 2. Revisar `git status`, `git log -5 --oneline` y `git remote -v`. No sobrescribir cambios del usuario.
-3. Continuar con **T05**, primer pendiente. Existe el backend mínimo en Docker; falta verificar el login de ChatGPT. T06 puede avanzar de manera independiente si el login requiere intervención del usuario.
+3. Continuar con **T05**, primer pendiente. Existe el backend mínimo y T06 valida su configuración; el login de ChatGPT requiere una terminal interactiva del usuario. T07 puede avanzar de manera independiente si el login sigue pendiente.
 4. Leer los scripts de [database/](../database/README.md) y el [informe 7.1](reference/documento_InteligenciaNegocios.pdf) antes de convertir consultas en herramientas. La base está congelada por decisión del usuario.
 5. No asumir autenticación de ChatGPT, créditos API de MiniMax ni permisos SQL: esas verificaciones tienen tareas explícitas.
 
@@ -50,7 +50,7 @@ Los IDs dan una secuencia sugerida, pero mandan las dependencias. T10 y otras ta
 | T03 | Hecha | Preparar Node 24 y el gestor de paquetes | T02 |
 | T04 | Hecha | Crear el backend mínimo de Eve | T03 |
 | T05 | Pendiente | Probar ChatGPT local con una herramienta inocua | T04 |
-| T06 | Pendiente | Validar la configuración de la aplicación | T04 |
+| T06 | Hecha | Validar la configuración de la aplicación | T04 |
 | T07 | Pendiente | Conectar a SQL Server con un usuario de aplicación | T06 |
 | T08 | Pendiente | Consultar perfil, servicio y prestaciones | T07 |
 | T09 | Pendiente | Consultar progreso académico y revisiones | T08 |
@@ -136,12 +136,12 @@ Los IDs dan una secuencia sugerida, pero mandan las dependencias. T10 y otras ta
 
 ### T06 · Validar la configuración de la aplicación
 
-- [ ] Tarea completada.
+- [x] Tarea completada.
 - **Depende de:** T04.
 - **Commit:** `feat(T06): validar configuracion de entorno`.
 - **Entregable:** Implementar configuración Zod y .env.example coherente, puertos locales, zona horaria y proveedor; separar opciones públicas de secretos del servidor.
 - **Cierre verificable:** Una variable requerida ausente produce un error claro; ningún secreto llega al frontend o al log.
-- **Contexto o límite:** No conectar ni reconstruir la base al importar un módulo.
+- **Contexto o límite:** Configuración mínima de TZ y proveedor local; Compose fija el puerto 127.0.0.1:3000. Sin frontend ni conexión SQL, no hay secretos que transmitir. El login de ChatGPT sigue pendiente de T05; no se conecta ni reconstruye la base al importar el módulo.
 
 ### T07 · Conectar a SQL Server con un usuario de aplicación
 
