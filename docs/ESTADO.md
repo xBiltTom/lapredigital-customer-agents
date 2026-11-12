@@ -2,7 +2,11 @@
 
 Actualizado: 12/11/2026. Instrucción vigente: terminar un MVP local en una sola pasada de máximo una hora; reemplaza el plan individual B02–B08.
 
-## Último cambio: M11 — identidad de destinatarios y dos asistentes del portal
+## Último cambio: M12 — perspectiva de la bandeja del participante
+
+La cabecera y la conversación seleccionada de Mensajería muestran Seguimiento LaPreDigital, que es la contraparte del estudiante/apoderado. La identidad propia se mantiene en «Tu cuenta», con nombre y rol/vínculo. Corrección visual sin cambios de sesiones, mensajes, permisos ni lógica del agente. Verificación: compilación web; sin pruebas adicionales.
+
+## M11 — identidad de destinatarios y dos asistentes del portal
 
 Academia y Mensajería tienen diseños diferenciados. Mensajería presenta cabecera con el nombre real del contacto autenticado, teléfono, rol ESTUDIANTE/APODERADO y, para apoderados, estudiante vinculado; el nombre del estudiante nunca sustituye al del apoderado. Las burbujas identifican al interlocutor y al asistente correspondiente. La ficha expone solo el contacto de esa identidad, resuelta en servidor.
 
