@@ -21,6 +21,8 @@ const required = [
   'package-lock.json', 'apps/server/package.json', 'apps/server/tsconfig.json',
   'apps/server/README.md', 'apps/server/agent/agent.ts',
   'apps/server/agent/instructions.md', 'apps/server/agent/channels/eve.ts',
+  'apps/server/lib/auth.ts', 'infra/sql/app-read-permissions.sql',
+  'scripts/provision-sql-app', 'scripts/chat-local',
 ];
 for (const name of required) await access(path.join(root, name));
 const pkg = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));

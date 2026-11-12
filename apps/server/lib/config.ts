@@ -32,3 +32,12 @@ export function loadSqlConfig(env: Record<string, string | undefined> = process.
   }
   return result.data;
 }
+
+export function loadOwnerConfig(env: Record<string, string | undefined> = process.env) {
+  const result = z.object({
+    OWNER_PERSONAL_ID: z.coerce.number().int().positive(),
+    OWNER_ACCESS_TOKEN: z.string().min(32),
+  }).safeParse(env);
+  if (!result.success) throw new Error('Falta configurar el acceso local del dueño. Consulta .env.example.');
+  return result.data;
+}

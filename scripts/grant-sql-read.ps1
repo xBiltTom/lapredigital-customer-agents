@@ -12,20 +12,7 @@ try {
     }
 
     $grant = $connection.CreateCommand()
-    $grant.CommandText = @'
-USE [LaPreDigital_Customers];
-GRANT SELECT ON OBJECT::dbo.Estudiante TO [lapredigital_app];
-GRANT SELECT ON OBJECT::dbo.Contacto TO [lapredigital_app];
-GRANT SELECT ON OBJECT::dbo.Apoderado TO [lapredigital_app];
-GRANT SELECT ON OBJECT::dbo.Suscripcion TO [lapredigital_app];
-GRANT SELECT ON OBJECT::dbo.PeriodoServicio TO [lapredigital_app];
-GRANT SELECT ON OBJECT::dbo.ModalidadPlan TO [lapredigital_app];
-GRANT SELECT ON OBJECT::dbo.PlanServicio TO [lapredigital_app];
-GRANT SELECT ON OBJECT::dbo.Prestacion TO [lapredigital_app];
-GRANT SELECT ON OBJECT::dbo.PlanPrestacion TO [lapredigital_app];
-GRANT SELECT ON OBJECT::dbo.BajaServicio TO [lapredigital_app];
-GRANT SELECT ON dbo.Pago (PeriodoServicioId, Tipo, Estado, ImportePEN) TO [lapredigital_app];
-'@
+    $grant.CommandText = [System.IO.File]::ReadAllText((Join-Path $PSScriptRoot '../infra/sql/app-read-permissions.sql'))
     [void]$grant.ExecuteNonQuery()
     'Permisos de lectura de T08 concedidos a lapredigital_app; Pago queda limitado a sus columnas de servicio.'
 } finally {

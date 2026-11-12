@@ -4,7 +4,10 @@ import { getPool } from './pool.ts';
 export const TAMANO_PAGINA_MAX = 50;
 export const TAMANO_PAGINA_PREDETERMINADO = 20;
 
-export type IdentidadActiva = { contactoId: number };
+// Se construye en el backend a partir de la sesión verificada. No aceptar desde JSON.
+export type IdentidadActiva =
+  | { contactoId: number; personalInternoId?: never }
+  | { personalInternoId: number; contactoId?: never };
 
 export type OpcionesListado = { pagina?: number; tamano?: number };
 
@@ -88,7 +91,9 @@ export function normalizarPagina(opciones: OpcionesListado = {}) {
 }
 
 function validarIdentidad(identidad: IdentidadActiva) {
-  if (!Number.isInteger(identidad.contactoId) || identidad.contactoId < 1) {
+  const id = identidad.personalInternoId ?? identidad.contactoId;
+  if (typeof id !== 'number' || !Number.isSafeInteger(id) || id < 1 ||
+      (identidad.contactoId !== undefined && identidad.personalInternoId !== undefined)) {
     throw new Error('La identidad activa no es válida.');
   }
 }
@@ -99,9 +104,19 @@ function validarEstudianteId(estudianteId: number) {
   }
 }
 
-const accesoIdentidad = `(e.ContactoId = @contactoId OR EXISTS (
+const accesoIdentidad = `(EXISTS (
+  SELECT 1 FROM dbo.PersonalInterno pi
+  WHERE pi.PersonalInternoId = @personalInternoId AND pi.Rol = N'DUEÑO' AND pi.Activo = 1
+) OR e.ContactoId = @contactoId OR EXISTS (
   SELECT 1 FROM dbo.Apoderado ap
+  JOIN dbo.Suscripcion s ON s.EstudianteId = e.EstudianteId AND s.Estado = 'VIGENTE'
+  JOIN dbo.PeriodoServicio ps ON ps.SuscripcionId = s.SuscripcionId
+  JOIN dbo.ModalidadPlan mp ON mp.ModalidadPlanId = ps.ModalidadPlanId
+  JOIN dbo.PlanPrestacion pp ON pp.PlanServicioId = mp.PlanServicioId
+  JOIN dbo.Prestacion pr ON pr.PrestacionId = pp.PrestacionId AND pr.Codigo = 'REPORTES_APODERADO'
   WHERE ap.ApoderadoId = e.ApoderadoId AND ap.ContactoId = @contactoId
+    AND ps.Inicio <= GETDATE() AND ps.Fin > GETDATE()
+    AND ps.EstadoAcceso IN ('HABILITADO', 'CON_INCIDENCIA')
 ))`;
 
 export async function listarEstudiantes(
@@ -113,12 +128,14 @@ export async function listarEstudiantes(
   const pool = await getPool();
 
   const totalResult = await pool.request()
-    .input('contactoId', sql.Int, identidad.contactoId)
+    .input('contactoId', sql.Int, identidad.contactoId ?? null)
+    .input('personalInternoId', sql.Int, identidad.personalInternoId ?? null)
     .query(`SELECT COUNT(*) AS Total FROM dbo.Estudiante e WHERE ${accesoIdentidad}`);
   const total = Number(totalResult.recordset[0].Total);
 
   const { recordset } = await pool.request()
-    .input('contactoId', sql.Int, identidad.contactoId)
+    .input('contactoId', sql.Int, identidad.contactoId ?? null)
+    .input('personalInternoId', sql.Int, identidad.personalInternoId ?? null)
     .input('offset', sql.Int, offset)
     .input('tamano', sql.Int, tamano)
     .query(`SELECT e.EstudianteId, e.Codigo, e.EtapaActual, e.CarreraObjetivo,
@@ -154,7 +171,8 @@ export async function obtenerFichaEstudiante(
   const pool = await getPool();
 
   const perfilResult = await pool.request()
-    .input('contactoId', sql.Int, identidad.contactoId)
+    .input('contactoId', sql.Int, identidad.contactoId ?? null)
+    .input('personalInternoId', sql.Int, identidad.personalInternoId ?? null)
     .input('estudianteId', sql.Int, estudianteId)
     .query(`SELECT e.EstudianteId, e.Codigo, e.EtapaActual, e.UniversidadObjetivo,
                    e.CarreraObjetivo, e.FechaExamen, e.DisponibilidadSemanalHoras,

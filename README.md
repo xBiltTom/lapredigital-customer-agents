@@ -8,7 +8,7 @@ Proyecto académico de Ingeniería de Sistemas de la Universidad Nacional de Tru
 2. Seguir [el roadmap de tareas y commits](docs/ROADMAP.md).
 3. Consultar [contexto y decisiones](docs/CONTEXTO.md) y [arquitectura](docs/ARQUITECTURA.md).
 
-**Siguiente tarea: B01, resolver acceso local, conexión y build.** El roadmap se compactó en ocho bloques con entregables completos; los antiguos IDs se conservan como referencia. Ver [la revisión del trabajo](docs/REVISION_T08_Y_PLAN.md). Cada bloque activo corresponde a un commit.
+**B01 finalizada; pendiente la reestructuración solicitada antes de continuar.** Se verificaron SQL, acceso del dueño, build y una respuesta/herramienta reales del modelo en este equipo. El roadmap posterior queda como referencia hasta incorporar la nueva dirección. Cada bloque corresponde a un commit. Ver [la revisión](docs/REVISION_T08_Y_PLAN.md) y [el estado vigente](docs/ESTADO.md).
 
 ## Estado actual
 
@@ -33,22 +33,28 @@ Stack acordado: TypeScript, Node.js 24, Eve/Nitro, React/Vite, SQL Server 2022 e
 ```bash
 ./scripts/dev node --version
 ./scripts/dev npm --version
+# Solo al clonar o cambiar el lockfile, con el servidor detenido:
 ./scripts/dev npm ci
+# CachyOS con SQL Docker existente: una sola vez, si no existe .env:
+./scripts/provision-sql-app
 ./scripts/dev npm run check
 ./scripts/dev npm run typecheck
-docker compose up --build -d server
+./scripts/dev npm run build:server
+docker compose up --build -d --wait server
 curl http://127.0.0.1:3000/eve/v1/health
 ```
 
 Node está aislado en Docker: imagen oficial fijada por digest, Node 24.22.3 y npm 11.19.1. `scripts/dev` ejecuta cada comando en un contenedor temporal con tu UID/GID; dependencias, caché y estado de Eve quedan en volúmenes del proyecto. No es necesario instalar Node en el host. Ver [la guía de infraestructura](infra/README.md). Si tu UID/GID difiere de 1000, exporta `LOCAL_UID=$(id -u)` y `LOCAL_GID=$(id -g)` antes de usar Compose directamente.
 
-La salud devuelve `ok: true`. No hay panel; el login funcionó en la TUI con `scripts/eve-local`. `localDev()` solo admitió peticiones desde dentro del contenedor, mientras que las peticiones desde Windows al puerto publicado recibieron 401. Antes de repetir `npm ci`, detener los procesos del servidor para evitar reemplazar sus dependencias. [Detalles y comando de login](apps/server/README.md).
+La salud es pública y devuelve ok: true. El resto requiere el token local del dueño; el backend comprueba su rol DUEÑO y estado activo en SQL. La terminal interna de Eve también puede acceder durante desarrollo mediante localDev y el mismo dueño validado. No hay panel todavía.
 
-`npm run check` revisa únicamente estructura y enlaces; `typecheck` verifica el backend. `build:server` falla con EXDEV tanto en Linux como en Docker Desktop/Windows al mover la salida entre volúmenes; se documenta en [ESTADO.md](docs/ESTADO.md). Ninguno de esos comandos ejecuta SQL ni prueba una respuesta del modelo.
+El build copia las fuentes mínimas a .eve/packaged dentro del volumen Docker y compila allí. El resultado .eve/packaged/.output permanece en Docker y ya no cruza sistemas de archivos: EXDEV corregido. Con server detenido, se puede probar el compilado con docker compose run --rm --no-deps --service-ports server npm run start:server. Es una verificación local, todavía no la imagen final de VPS.
 
-En la revisión actual de CachyOS quedaron encendidos el backend y sql-server-local; salud 200, tipos y 7 pruebas correctas. La integración SQL de la app sigue pendiente aquí: no existen .env ni lapredigital_app y host.docker.internal no resuelve. Las verificaciones SQL y de login en Windows descritas abajo son históricas, no configuración trasladada automáticamente entre equipos. No hay panel todavía.
+Para usar el modelo: ejecutar ./scripts/chat-local en una terminal interactiva. Detiene server, abre el llavero y lanza Eve en el mismo proceso de entorno. Completar /login → ChatGPT Subscription y mantener la terminal abierta mientras se usa el chat. El servicio estándar no desbloquea el llavero. [Guía del servidor](apps/server/README.md).
 
-El archivo `.env.example` documenta la conexión SQL sin secretos. En Windows, `scripts/provision-sql-app.ps1` creó `lapredigital_app` y guardó la contraseña generada en `.env`, excluido de Git; `scripts/grant-sql-read.ps1` amplió después la lectura a las tablas de perfil y servicio. La conexión se prueba con `db:check` y el repositorio con `db:t08` mediante `docker compose run --rm --no-deps --workdir /workspace/apps/server server npm run <comando>`; SQL no se abre al iniciar Eve.
+El aprovisionamiento Linux genera .env privado con la cuenta lapredigital_app de solo lectura, el ID del dueño existente y su token aleatorio. No sobrescribe .env/logins ni recrea la base. Windows conserva provision-sql-app.ps1 y grant-sql-read.ps1; ambos usan el mismo archivo de permisos de infra/sql. Compose resuelve host.docker.internal en Linux con host-gateway. SQL se conecta al solicitar datos o autenticar al dueño, no al arrancar salud.
+
+Pruebas de lectura: docker compose run --rm --no-deps --workdir /workspace/apps/server server npm run db:check, db:t08 y db:b01. npm test --workspace=@lapredigital/server (mediante scripts/dev) comprueba configuración, paginación y autenticación; check solo revisa estructura/enlaces. El estado separa pruebas actuales, login pendiente y resultados históricos.
 
 ## Base de datos
 

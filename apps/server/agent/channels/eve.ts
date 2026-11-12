@@ -1,5 +1,5 @@
 import { eveChannel } from 'eve/channels/eve';
-import { localDev } from 'eve/channels/auth';
+import { autenticarDueno, autenticarTerminalLocal } from '../../lib/auth.ts';
 
-// Solo eve dev admite sesiones locales; eve start sigue rechazando accesos.
-export default eveChannel({ auth: [localDev()] });
+// La publicación por Docker no cambia la identidad ni permite acceso anónimo.
+export default eveChannel({ auth: [autenticarDueno, autenticarTerminalLocal] });

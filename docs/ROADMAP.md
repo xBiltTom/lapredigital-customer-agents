@@ -6,7 +6,7 @@ Reorganizado el 12 de noviembre de 2026 por pedido del usuario: entregar resulta
 
 1. Leer [AGENTS.md](../AGENTS.md), [ESTADO.md](ESTADO.md), [CONTEXTO.md](CONTEXTO.md) y [ARQUITECTURA.md](ARQUITECTURA.md).
 2. Revisar git status y los últimos commits; preservar cambios del usuario.
-3. Empezar por **B01**. La revisión [R01](REVISION_T08_Y_PLAN.md) encontró problemas de acceso y portabilidad que deben abordarse antes de integrar más funciones.
+3. **B01 finalizada; esperar la reestructuración que el usuario pidió definir antes de continuar.** Los bloques B02 en adelante quedan como referencia. B01 resolvió acceso, SQL local y build; se verificaron login y herramienta reales. La revisión [R01](REVISION_T08_Y_PLAN.md) conserva los hallazgos originales.
 4. Antes de escribir SQL o reglas, contrastar el [informe 7.1](reference/documento_InteligenciaNegocios.pdf) y los cuatro scripts de [database/](../database/README.md). El esquema sigue congelado.
 
 ## Primer resultado útil
@@ -20,7 +20,7 @@ Node 24 sigue en Docker; npm workspaces, SQL Server 2022, mssql y Zod se conserv
 | ID | Estado | Resultado | Integra tareas anteriores | Depende de |
 | --- | --- | --- | --- | --- |
 | R01 | Hecha | Revisar T08, encender servicios y compactar el plan | Revisión solicitada | T08 |
-| B01 | Pendiente | Acceso local, conexión y build utilizables | Ajustes T05/T07/T08; identidad de T16 | R01 |
+| B01 | Hecha | Acceso local, conexión y build utilizables | Ajustes T05/T07/T08; identidad de T16 | R01 |
 | B02 | Pendiente | Diagnóstico académico y políticas con datos SQL | T09, T10, T13 | B01 |
 | B03 | Pendiente | Agente que explica el diagnóstico en terminal | T11, T12, trazas mínimas T28 | B02 |
 | B04 | Pendiente | Panel con listado, ficha y diagnóstico | T16, T17, T18, T19 | B02 |

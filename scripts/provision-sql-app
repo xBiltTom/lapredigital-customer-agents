@@ -1,0 +1,44 @@
+#!/bin/sh
+# Configuración del SQL Server Docker existente en Linux. No recrea la base.
+set -eu
+umask 077
+project_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+if [ -e "$project_dir/.env" ]; then
+  printf '%s\n' '.env ya existe; no se sobrescribirá.' >&2
+  exit 1
+fi
+
+run_sql() {
+  docker exec -i sql-server-local sh -c '
+    export SQLCMDPASSWORD="$MSSQL_SA_PASSWORD"
+    exec /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -b -l 5 -h -1 -W -i /dev/stdin
+  '
+}
+
+owner_id=$(printf '%s\n' "SET NOCOUNT ON; SELECT MIN(PersonalInternoId) FROM [LaPreDigital_Customers].dbo.PersonalInterno WHERE Rol=N'DUEÑO' AND Activo=1;" | run_sql | tr -d '[:space:]')
+case "$owner_id" in ''|*[!0-9]*) printf '%s\n' 'Falta un dueño activo en la base existente.' >&2; exit 1;; esac
+app_sql_password="LpD1!$(openssl rand -hex 24)"
+owner_access_token=$(openssl rand -hex 32)
+env_tmp=$(mktemp "$project_dir/.env.provision.XXXXXX")
+trap 'rm -f "$env_tmp"' EXIT HUP INT TERM
+printf '%s\n' \
+  'SQLSERVER_HOST=host.docker.internal' \
+  'SQLSERVER_PORT=1433' \
+  'SQLSERVER_DATABASE=LaPreDigital_Customers' \
+  'SQLSERVER_USER=lapredigital_app' \
+  "SQLSERVER_PASSWORD=$app_sql_password" \
+  'SQLSERVER_ENCRYPT=true' \
+  'SQLSERVER_TRUST_SERVER_CERTIFICATE=true' \
+  "OWNER_PERSONAL_ID=$owner_id" \
+  "OWNER_ACCESS_TOKEN=$owner_access_token" > "$env_tmp"
+
+{
+  printf '%s\n' 'SET XACT_ABORT ON; BEGIN TRANSACTION;' \
+    "IF SUSER_ID(N'lapredigital_app') IS NOT NULL THROW 51920, N'El login ya existe; no se cambia su contraseña.', 1;" \
+    "CREATE LOGIN [lapredigital_app] WITH PASSWORD=N'$app_sql_password', CHECK_POLICY=ON, DEFAULT_DATABASE=[LaPreDigital_Customers];" \
+    'USE [LaPreDigital_Customers]; CREATE USER [lapredigital_app] FOR LOGIN [lapredigital_app];'
+  cat "$project_dir/infra/sql/app-read-permissions.sql"
+  printf '%s\n' 'COMMIT;'
+} | run_sql
+mv "$env_tmp" "$project_dir/.env"
+printf '%s\n' 'Cuenta de lectura y acceso local del dueño configurados. Credenciales en .env (modo 600); no se imprimen.'

@@ -4,7 +4,21 @@ Actualizado: 12 de noviembre de 2026. Documento de traspaso para otra sesión o 
 
 ## Próxima tarea
 
-**B01 del [roadmap reorganizado](ROADMAP.md): acceso local, conexión y build utilizables.** El usuario pidió revisar el trabajo y reducir sobreingeniería. T00–T08 son nueve tareas hechas; T09 no está implementada en HEAD/origin revisados y ahora se integra en B02. La ejecución independiente de T09–T32 se sustituye por ocho bloques y cinco extensiones posteriores. Una tarea activa equivale a un commit.
+**B01 finalizada. El usuario pidió detenerse aquí para una reestructuración rápida antes de continuar.** No iniciar B02 ni otros bloques hasta incorporar esa nueva dirección. Se retiró el inicio no publicado de B02; no se aplicaron sus permisos ni hubo cambios SQL de negocio. B01 quedó verificada tras el login en CachyOS: modelo y herramienta reales por el canal autenticado. La terminal interactiva se cerró después; comprobar servicios al retomar y usar scripts/chat-local cuando haga falta desbloquear el llavero.
+
+## B01: implementación y pruebas actuales
+
+El usuario autorizó continuar y mantener la compilación en Docker. scripts/provision-sql-app creó lapredigital_app con SELECT, configuró el dueño existente y generó contraseña/token en .env (modo 600, ignorado). Solo cambió configuración de acceso; no hubo DDL de tablas, carga ni escrituras de negocio. infra/sql/app-read-permissions.sql centraliza los permisos usados por Linux y los scripts Windows; PersonalInterno se consulta para validar DUEÑO activo. Compose añadió host.docker.internal:host-gateway.
+
+lib/auth.ts autentica Bearer del dueño y lo valida en SQL; no acepta identidad del body. La TUI interna usa localDev solo en desarrollo y se resuelve al mismo dueño activo; un token incorrecto no tiene ese fallback. allowAgentInfo habilita la información operativa para ese dueño. El repositorio admite su identidad de personal y exige REPORTES_APODERADO vigente a la rama familiar. No hay portal familiar ni herramientas de negocio todavía.
+
+build:server copia agent/lib/package.json/tsconfig a .eve/packaged y ejecuta Eve allí; staging y .output comparten volumen. start:server arranca ese resultado. No se cambió Eve ni se montó Docker del host. Los artefactos quedan en Docker; la imagen final sigue para B08. Detener el servidor compilado antes de reemplazar sus fuentes con otro build. Desarrollo y compilado tienen raíces de sesiones distintas, ambas persistentes en el volumen; no se verificó intercambio de sesiones entre modalidades.
+
+Pruebas reales: tipos y 10 pruebas unitarias correctos; db:check, db:t08 y db:b01 correctos. El dueño lista los 14 alumnos; soporte/personal inexistente no acceden; Pedro no obtiene la ficha de Ana con Meta UNT y María sí accede a sus alumnas Plus. GET /eve/v1/info desde el host: sin token/incorrecto 401, dueño 200, origen externo 401; TUI interna 200. Build completo correcto y start:server probado: salud 200, anónimo 401 y dueño 200. Se revisaron 203 archivos del empaquetado sin encontrar contraseña SQL ni token del dueño.
+
+Login real completado por el usuario. El cliente eve/client autenticado con el token del dueño creó una sesión y obtuvo respuesta completed de codex/gpt-6-luna-fast. El snapshot confirmó call.requested y call.settled de comprobar_conexion, outcome completed y output {estado: ok, fuente: prueba_local}. Dos pasos del modelo registraron 441 tokens de entrada y 33 de salida. Evidencia técnica local en .eve/b01-smoke.json, sin secretos en Git. Se comprobó el proceso con llavero abierto, no la persistencia del login después de recrearlo. No se ejecutaron 01/02/03/04, MiniMax ni mensajes. Windows: ajustes revisados estáticamente, no ejecutados aquí.
+
+Las secciones R01/Txx siguientes son históricas: sus problemas de configuración/build ya corregidos no describen el estado actual.
 
 ## R01: revisión y arranque en CachyOS
 
@@ -107,8 +121,8 @@ El host conserva Node v26.13.1 y npm 12.2.2. Node del proyecto se ejecuta en Doc
 
 ## Pendientes reales
 
-1. B01: configurar usuario SQL/.env/red en este CachyOS sin reconstruir el OLTP; definir acceso local del dueño y no habilitar acceso familiar sin prestación.
-2. B01: corregir EXDEV (reproducido en Linux y Windows) y verificar el canal/llavero del proceso real; no montar Docker ni copiar tokens. B02 reúne después progreso, riesgo y políticas.
+1. Incorporar la reestructuración que el usuario quiere definir antes de desarrollar B02. B01 está terminada: no repetir aprovisionamiento, instalación o login sin necesidad.
+2. La terminal del llavero se cerró después de la prueba; su persistencia tras recreación sigue sin verificar. El roadmap posterior permanece como referencia, no como orden de continuar ahora.
 3. Confirmar si los 2.000 créditos MiniMax son de API o de su aplicación; no consumirlos todavía.
 4. Implementar política de contacto con aceptación inicial de términos y revocación posterior; el texto de términos y el registro público de usuarios no están implementados.
 5. Cubrir en servicios los cinco huecos conocidos, manteniendo el esquema actual.

@@ -1,0 +1,13 @@
+USE [LaPreDigital_Customers];
+GRANT SELECT ON OBJECT::dbo.PersonalInterno TO [lapredigital_app];
+GRANT SELECT ON OBJECT::dbo.Estudiante TO [lapredigital_app];
+GRANT SELECT ON OBJECT::dbo.Contacto TO [lapredigital_app];
+GRANT SELECT ON OBJECT::dbo.Apoderado TO [lapredigital_app];
+GRANT SELECT ON OBJECT::dbo.Suscripcion TO [lapredigital_app];
+GRANT SELECT ON OBJECT::dbo.PeriodoServicio TO [lapredigital_app];
+GRANT SELECT ON OBJECT::dbo.ModalidadPlan TO [lapredigital_app];
+GRANT SELECT ON OBJECT::dbo.PlanServicio TO [lapredigital_app];
+GRANT SELECT ON OBJECT::dbo.Prestacion TO [lapredigital_app];
+GRANT SELECT ON OBJECT::dbo.PlanPrestacion TO [lapredigital_app];
+GRANT SELECT ON OBJECT::dbo.BajaServicio TO [lapredigital_app];
+GRANT SELECT ON dbo.Pago (PeriodoServicioId, Tipo, Estado, ImportePEN) TO [lapredigital_app];

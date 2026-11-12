@@ -1,0 +1,13 @@
+#!/bin/sh
+# El proceso de Eve y su TUI comparten el llavero desbloqueado en esta terminal.
+set -eu
+project_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+LOCAL_UID=$(id -u)
+LOCAL_GID=$(id -g)
+export LOCAL_UID LOCAL_GID
+cd "$project_dir"
+if [ ! -f .env ]; then printf '%s\n' 'Configura primero el entorno local según README.' >&2; exit 1; fi
+docker compose stop server
+exec docker compose run --rm --no-deps --service-ports --env SSH_TTY=1 \
+  --workdir /workspace/apps/server server sh /workspace/scripts/eve-local \
+  /workspace/node_modules/.bin/eve dev --host 0.0.0.0 --port 3000 --no-default-extensions

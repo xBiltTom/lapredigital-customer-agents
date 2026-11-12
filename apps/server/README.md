@@ -1,87 +1,73 @@
-# Backend mínimo de Eve (T04)
+# Backend local de Eve
 
-Node 24 en Docker, Eve **1.0.0-rc.10**, AI SDK **7.0.137**, Zod **4.6.7**. Las versiones directas y transitivas están fijadas en el package-lock.json raíz. Eve es una versión candidata; cualquier actualización requiere verificar compatibilidad.
+Eve 1.0.0-rc.10, AI SDK 7.0.137, Zod 4.6.7 y mssql 12.7.14, fijados en el lockfile raíz. Node 24 corre en Docker. No existe frontend ni herramienta académica todavía.
 
-Desde la raíz del repositorio:
+## Desarrollo y SQL
 
-```bash
+Desde la raíz del proyecto:
+
+~~~bash
+# Solo al clonar/cambiar lockfile, con procesos del servidor detenidos:
 ./scripts/dev npm ci
-./scripts/dev npm run typecheck
-docker compose up --build -d server
+# Solo primera preparación de CachyOS, con sql-server-local ya encendido:
+./scripts/provision-sql-app
+docker compose up --build -d --wait server
 curl http://127.0.0.1:3000/eve/v1/health
-docker compose logs --tail 40 server
-docker compose stop server
-```
+~~~
 
-Detener el servidor antes de repetir npm ci. Si tu UID/GID difiere de 1000, exportar LOCAL_UID y LOCAL_GID como explica [infraestructura](../../infra/README.md).
+El aprovisionamiento crea lapredigital_app con SELECT y genera .env privado con contraseña, ID del dueño activo existente y token local aleatorio. Rechaza sobrescribir .env o un login previo. No ejecuta 01/02 ni cambia tablas/datos. SQL ya existente conserva America/Lima.
 
-`dev:server` ejecuta Eve sin UI ni extensiones predeterminadas. `build:server` compila con Eve y `start:server` inicia el resultado compilado; este último debe ejecutarse desde el mismo volumen de estado donde se hizo el build, con el servicio dev detenido. El servidor solo se publica en 127.0.0.1:3000. Todavía no existe frontend.
+Windows mantiene scripts/provision-sql-app.ps1 para instalación nueva y scripts/grant-sql-read.ps1 para permisos. Comparten infra/sql/app-read-permissions.sql con Linux. En instalaciones Windows que ya tienen .env/login, no repetir aprovisionamiento: conceder lectura de PersonalInterno con el script de grants y configurar OWNER_PERSONAL_ID/OWNER_ACCESS_TOKEN localmente según .env.example. Estos ajustes Windows no se ejecutaron en CachyOS.
 
-`lib/config.ts` valida al cargar el agente `TZ=America/Lima` y `AI_PROVIDER=chatgpt`. Compose suministra ambos valores; `.env.example` es una referencia y no se carga automáticamente. Para comprobar la configuración sin invocar al modelo: `./scripts/dev npm test --workspace=@lapredigital/server`. Con el volumen `.eve` separado, `build:server` falla con EXDEV al mover el resultado a `.output`, reproducido en Windows y Linux; el servidor de desarrollo sí responde salud. B01 resolverá el build y la conexión local pendiente en CachyOS: todavía no tiene .env/usuario SQL y host.docker.internal no resuelve. Las secciones T05/T07/T08 describen verificaciones históricas de Windows.
+Compose pasa variables SQL y del dueño solo a server; host.docker.internal se resuelve en Linux mediante host-gateway. El pool abre al solicitar datos o validar al dueño, no al arrancar la salud. .env.example es documentación, no una credencial.
 
-## T07: SQL Server local
-
-La instancia actual es SQL Server nativo de Windows en 1433. En este equipo se ejecutó una vez `scripts/provision-sql-app.ps1` desde PowerShell con la cuenta administradora local: creó `lapredigital_app` y escribió la credencial generada en `.env`, que Git excluye; el script se detiene sin sobrescribir un `.env` o un login previo. Después, `scripts/grant-sql-read.ps1` amplió la lectura a las tablas de T08 sin crear logins ni escribir datos. En otra instalación, configurar el usuario y `.env` localmente siguiendo `.env.example`; nunca usar `sa` ni copiar la contraseña al navegador o al chat.
-
-Compose pasa las variables SQL del `.env` únicamente al servicio `server`, con `host.docker.internal` para llegar al host desde Docker. El pool de `lib/database/pool.ts` es compartido y se conecta únicamente al invocar `getPool()`. `closePool()` lo cierra; el comando manual de verificación llama ambos y no hace escrituras:
-
-```text
+~~~bash
 docker compose run --rm --no-deps --workdir /workspace/apps/server server npm run db:check
-```
-
-Comprueba C001 con SQL parametrizado, SELECT sobre `dbo.Estudiante`, ausencia de permisos DML y la hora SQL de Perú. Si no hay conexión, devuelve un error claro sin imprimir el secreto. T08 amplió solo los permisos de lectura necesarios para perfil y servicio; ver su sección. No se expone una herramienta SQL al modelo ni un endpoint de base de datos.
-
-## T08: perfil, servicio y prestaciones
-
-`lib/database/estudiantes.ts` implementa el acceso de solo lectura con SQL parametrizado:
-
-- `listarEstudiantes(identidad, { pagina, tamano })` pagina de 1 a 50 filas (20 por defecto) y devuelve `items`, `total` y `paginas`. La identidad es un `contactoId` validado por el backend: el estudiante ve su ficha y el apoderado solo las de sus estudiantes vinculados. Un apoderado compartido no duplica filas.
-- `obtenerFichaEstudiante(identidad, estudianteId)` devuelve perfil y contacto, apoderado, `servicioActual`, `historial` y prestaciones. El servicio actual exige suscripción `VIGENTE`, periodo que cubre `GETDATE()` y acceso `HABILITADO`/`CON_INCIDENCIA`. El historial conserva todos los periodos, sus cobros confirmados, operaciones correctivas y baja. Una ficha ajena devuelve `null`, sin revelar si el estudiante existe.
-
-R01 detectó que ese filtro familiar no verifica REPORTES_APODERADO ni hay contexto del dueño implementado: validar el número contactoId no autentica al usuario. Corregir antes de exponerlo por HTTP/tools; el portal familiar queda para después de la demo. Ver [revisión](../../docs/REVISION_T08_Y_PLAN.md).
-
-`scripts/grant-sql-read.ps1` concede SELECT sobre Estudiante, Contacto, Apoderado, Suscripcion, PeriodoServicio, ModalidadPlan, PlanServicio, Prestacion, PlanPrestacion y BajaServicio; en Pago solo `PeriodoServicioId`, `Tipo`, `Estado` e `ImportePEN`. No concede DML. `provision-sql-app.ps1` incluye el mismo conjunto para instalaciones nuevas. Verificación real:
-
-```text
 docker compose run --rm --no-deps --workdir /workspace/apps/server server npm run db:t08
-```
+docker compose run --rm --no-deps --workdir /workspace/apps/server server npm run db:b01
+./scripts/dev npm test --workspace=@lapredigital/server
+./scripts/dev npm run typecheck
+./scripts/dev npm run check
+~~~
 
-Comprueba paginación y apoderado compartido, C006 (beca 100 %, importe 0, sin pagos), C011 (dos episodios), C013 (LEAD sin servicio), denegación de una ficha ajena, permisos mínimos y que `Pago.CodigoOperacion` no es legible. Los repositorios no se exponen todavía como tools de Eve ni como endpoint.
+db:t08 comprueba perfil/servicio, beca, reactivación y apoderado compartido. db:b01 verifica dueño activo, denegación a soporte/personal inexistente y acceso familiar condicionado a REPORTES_APODERADO vigente. No realizan DML.
 
-## Alcance actual
+## Acceso local
 
-- GET /eve/v1/health responde 200 con ok: true.
-- Eve usa `localDev()` para permitir sesiones desde el contenedor durante `eve dev`; las peticiones desde Windows mediante el puerto publicado reciben 401 en esta instalación.
-- agent/agent.ts selecciona chatgpt(), pero no inicia login ni hace llamadas por arrancar o compilar. El modelo efectivo que muestra eve info es configuración; no demuestra acceso a ese modelo.
-- `defaultTools: false` deja solo la herramienta local `comprobar_conexion`. No se ofrece bash, archivos ni SQL al modelo.
-- No hay herramientas de negocio, tareas programadas ni comunicaciones reales. La lógica del Agente Académico está pendiente. Los repositorios SQL de T08 no están expuestos al modelo.
+Salud es pública. Desde el host, los canales de Eve exigen Authorization: Bearer con el token privado configurado; solo representa al dueño activo de OWNER_PERSONAL_ID. El servidor revalida rol DUEÑO y Activo en SQL, ignorando IDs enviados en el body. El dueño tiene allowAgentInfo para consultar la configuración operativa; no puede reemplazar herramientas mediante stubs.
 
-El volumen eve_state conserva apps/server/.eve y es compartido por CLI y servidor. Para el `/login` interactivo, `scripts/eve-local` inicia D-Bus y un llavero Linux desbloqueado con una contraseña local; sus archivos cifrados residen en el volumen `keyring_state`. Recuerda esa contraseña para sesiones posteriores. No copiar tokens desde el host ni borrar estos volúmenes al reinstalar dependencias. El login real y una llamada real al modelo funcionaron; solo se comprobó la persistencia del llavero con un valor ficticio, no la del login real tras reiniciar.
+La TUI de Eve dentro del contenedor puede acceder mediante localDev durante desarrollo y se resuelve al mismo dueño validado. No sirve en eve start ni admite conexiones externas como locales. Un Bearer erróneo no tiene ese fallback. Un origen web externo se rechaza; las futuras APIs del panel deben reutilizar el contexto autenticado.
 
-## T05: login local verificado
+IdentidadActiva del repositorio es un objeto **interno** del backend, no un contrato que se acepte desde JSON. Conserva acceso propio del estudiante y acceso familiar solo con servicio vigente y REPORTES_APODERADO. No existe aún un portal familiar ni una autenticación de alumnos.
 
-`comprobar_conexion` devuelve `{ estado: 'ok', fuente: 'prueba_local' }` sin entradas ni acceso a SQL. El usuario completó `/login` y la TUI llamó la herramienta y respondió con su resultado; `eve traces show` confirmó `execute_tool comprobar_conexion` y dos pasos del modelo `gpt-6-luna-fast`. `localDev()` permite sesiones desde el contenedor durante el desarrollo: en Docker Desktop/Windows, una petición al puerto publicado desde Windows recibió 401, mientras que una petición local dentro del contenedor obtuvo 200. Antes de iniciar sesión, `eve remote connect --print` dentro del contenedor falló con `The model connection is unavailable`.
+## Modelo y llavero
 
-Con el servidor detenido y cualquier sesión anterior de Eve cerrada con `/exit`, abrir una terminal interactiva en el host (CMD o PowerShell) y ejecutar:
+~~~bash
+./scripts/chat-local
+~~~
 
-```text
-docker compose run --build --rm --no-deps --service-ports --env SSH_TTY=1 --workdir /workspace/apps/server server sh /workspace/scripts/eve-local /workspace/node_modules/.bin/eve dev --host 0.0.0.0 --port 3000 --no-default-extensions
-```
+El comando detiene server para liberar 3000, ejecuta scripts/eve-local y abre Eve en la terminal. Elegir/desbloquear la contraseña local del llavero y completar /login → ChatGPT Subscription. SSH_TTY=1 activa el flujo de dispositivo de esta versión; seguir en el navegador la dirección indicada por Eve. Mantener esa terminal abierta mientras se utiliza el modelo: el proceso del servidor hereda su D-Bus/llavero desbloqueado. Salir con /exit.
 
-Primero, introducir la contraseña del llavero local, distinta de la de ChatGPT; la terminal oculta lo escrito. Luego, en Eve, escribir `/login` y elegir **ChatGPT Subscription** si no está conectada. `SSH_TTY=1` activa el inicio con código de dispositivo de esta versión de Eve: abrir en el navegador la dirección que indique Eve e introducir allí el código, sin compartirlo. Este modo evita el callback `localhost:1455` que Eve abre dentro del contenedor y al que el navegador de Windows no puede acceder. Puede requerir habilitar device code authorization en ChatGPT Settings > Security. Para repetir la prueba, pedir: «Comprueba la conexión con la herramienta y dime qué devuelve». Detener la terminal con `/exit` al terminar. El servicio `server` estándar no inicia este llavero interactivo: esta receta es para la prueba local de T05.
+B01 verificó una respuesta real y comprobar_conexion por API autenticada en CachyOS, con dos pasos del modelo y la ejecución registrada de la herramienta. El login Windows T05 conserva su evidencia histórica. No se comprobó persistencia del login tras recrear el proceso. El servidor estándar no desbloquea el llavero. Nunca copiar tokens de Codex/ChatGPT al proyecto; MiniMax sigue sin consumo autorizado.
 
-Eve puede advertir que no tiene proveedor de sandbox al compilar. No existen herramientas que requieran ese proveedor; el fallo EXDEV descrito arriba es independiente del aviso. No montar el socket Docker para eliminarlo.
+## Build dentro de Docker
 
-## Documentación usada de la versión instalada
+~~~bash
+./scripts/dev npm run build:server
+# Con server detenido y el puerto 3000 libre:
+docker compose run --rm --no-deps --service-ports server npm run start:server
+~~~
 
-Dentro del contenedor, desde /workspace:
+scripts/build.mjs copia agent, lib, package.json y tsconfig.json a .eve/packaged dentro del volumen Docker. Eve compila allí; staging y .output comparten sistema de archivos. EXDEV queda resuelto sin modificar Eve y sin guardar el compilado en el host. start:server usa ese resultado y conserva autenticación.
 
-- node_modules/eve/docs/README.md
-- node_modules/eve/docs/getting-started.mdx
-- node_modules/eve/docs/agent-config.md
-- node_modules/eve/docs/concepts/built-in-tools.md
-- node_modules/eve/docs/guides/auth-and-route-protection.md
-- node_modules/eve/docs/guides/deployment/self-hosting/index.md
-- node_modules/eve/docs/reference/cli/index.md
+No recompilar mientras se usa ese servidor compilado: el build reemplaza sus fuentes de preparación. Sus sesiones y las del modo dev tienen raíces distintas, ambas persistentes en el volumen; no se comprobó intercambio entre modalidades. Esto no es todavía la imagen de producción: B08 empaquetará fuente/artefactos/dependencias en un runtime reproducible. No se incluyen secretos en la copia de fuentes.
 
-Para inspeccionar la configuración sin invocar al modelo: `./scripts/dev sh -ec 'cd apps/server; ../../node_modules/.bin/eve info --json'`. El diagnóstico se ejecutó sin errores ni advertencias. Los comandos de compilación/tipos y salud son verificaciones técnicas; no validan reglas del negocio ni autenticación.
+La advertencia de sandbox es independiente: no hay bash ni herramientas de archivos y no se monta el socket Docker.
+
+## Persistencia y documentación
+
+eve_state contiene .eve de desarrollo, sesiones y empaquetado; keyring_state conserva el llavero Linux cifrado. No borrar esos volúmenes al reinstalar dependencias. No versionar .env, .eve, llavero o trazas.
+
+Antes de ampliar Eve, consultar en el contenedor node_modules/eve/docs/README.md y la guía relevante. B01 usó guides/auth-and-route-protection.md (incluido allowAgentInfo), reference/cli/index.md y guides/deployment/self-hosting/index.md. Las APIs instaladas prevalecen sobre ejemplos de otra versión.
+
+Resultados ejecutados y pendientes concretos: [ESTADO.md](../../docs/ESTADO.md).

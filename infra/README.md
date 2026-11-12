@@ -31,7 +31,7 @@ Si tu UID/GID difiere de 1000, antes de invocar Compose directamente ejecutar `e
 
 El servicio server hereda la toolchain, volúmenes y usuario de tools; usa el perfil app y se selecciona explícitamente con su nombre. Eve escucha en 0.0.0.0 dentro del contenedor y se publica exclusivamente en 127.0.0.1:3000 del host. Incluye init, chequeo de salud y 20 segundos de margen de parada. [Alcance y comandos](../apps/server/README.md).
 
-La salud está disponible; `localDev()` permite sesiones desde el contenedor en `eve dev`, pero desde Windows el puerto publicado devolvió 401. El login real se verificó con la TUI lanzada mediante `scripts/eve-local` (ver [receta](../apps/server/README.md)); el servicio server estándar no desbloquea el llavero. No se cargan variables de .env automáticamente ni se inicia SQL al arrancar. El Compose desactiva la telemetría opcional de Eve con EVE_TELEMETRY_DISABLED=1.
+La salud es pública. B01 exige token del dueño desde el host y valida DUEÑO activo en SQL; la TUI interna puede usar localDev solo durante desarrollo y se resuelve al mismo dueño. El servidor estándar no desbloquea el llavero: ./scripts/chat-local abre la TUI y el servidor con el mismo D-Bus/llavero. Compose carga SQL y acceso del dueño desde .env para server; tools no recibe esos secretos. El pool conecta al solicitar datos/autenticación, no para salud. Telemetría opcional desactivada con EVE_TELEMETRY_DISABLED=1.
 
 ## Volúmenes y datos
 
@@ -46,7 +46,7 @@ No ejecutar `docker system prune` o borrados globales para limpiar este proyecto
 
 ## SQL Server existente
 
-R01 volvió a CachyOS y encendió sql-server-local: base ONLINE, 14 estudiantes, hora -05:00. No están provisionados aquí .env ni lapredigital_app; host.docker.internal da ENOTFOUND desde Docker. El backend responde salud, pero su conexión SQL requiere B01. Los resultados Windows siguientes no se trasladan automáticamente entre equipos; no ejecutar scripts de creación/población para resolver configuración.
+B01 configuró CachyOS con scripts/provision-sql-app: cuenta lapredigital_app de lectura, .env privado y dueño local. Compose añade host-gateway y db:check/db:t08/db:b01 pasan contra sql-server-local existente. No se recreó la base ni se ejecutaron 01/02; credenciales de cada equipo permanecen locales. infra/sql/app-read-permissions.sql es el conjunto común de permisos de los scripts Linux/Windows, con SELECT de PersonalInterno y sin DML.
 
 En el entorno histórico CachyOS, `sql-server-local` era un contenedor independiente que publicaba 1433. Compose de este proyecto no lo modifica ni lo reemplaza. `127.0.0.1` dentro de un contenedor apunta a ese contenedor, no al host ni a SQL Server.
 
@@ -56,4 +56,4 @@ Los scripts 01/02 no se ejecutan al construir o iniciar la aplicación. La confi
 
 ## Empaquetado y VPS
 
-Este es el entorno de **desarrollo**, con código montado; no una imagen de producción terminada. B01 corregirá EXDEV del build entre .eve y .output, reproducido también en Linux. B08 (antes T29) consolidará targets de compilación/runtime, artefactos, dependencias de producción y comandos para VPS. Salud y volumen de estado ya están configurados para desarrollo. Las imágenes finales no incluirán .env, .eve, tokens, .git, bases ni backups. La IA con suscripción de ChatGPT sigue limitada al acceso local documentado de Eve; una nube requiere revisar esa modalidad.
+Este es el entorno de **desarrollo**, con código montado; no una imagen de producción terminada. B01 corrigió EXDEV: build:server prepara las fuentes mínimas y compila dentro de .eve/packaged, en el volumen Docker. start:server ya pasó salud y autenticación con el resultado compilado. No guardar .output en el host ni recompilar mientras ese servidor está en uso. B08 consolidará imagen/runtime, artefactos, dependencias de producción y comandos para VPS. La imagen final no incluirá .env, estado privado de .eve, tokens, .git, bases ni backups. La suscripción ChatGPT sigue limitada al acceso local documentado de Eve; nube requiere revisar esa modalidad.

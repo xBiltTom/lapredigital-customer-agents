@@ -1,4 +1,4 @@
-# Ejecutar una sola vez en Windows con la cuenta administradora de SQL Server.
+﻿# Ejecutar una sola vez en Windows con la cuenta administradora de SQL Server.
 # Crea una identidad de lectura sin modificar el esquema ni los datos de negocio.
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
@@ -27,19 +27,15 @@ try {
     $create.CommandText = @'
 USE [LaPreDigital_Customers];
 CREATE USER [lapredigital_app] FOR LOGIN [lapredigital_app];
-GRANT SELECT ON OBJECT::dbo.Estudiante TO [lapredigital_app];
-GRANT SELECT ON OBJECT::dbo.Contacto TO [lapredigital_app];
-GRANT SELECT ON OBJECT::dbo.Apoderado TO [lapredigital_app];
-GRANT SELECT ON OBJECT::dbo.Suscripcion TO [lapredigital_app];
-GRANT SELECT ON OBJECT::dbo.PeriodoServicio TO [lapredigital_app];
-GRANT SELECT ON OBJECT::dbo.ModalidadPlan TO [lapredigital_app];
-GRANT SELECT ON OBJECT::dbo.PlanServicio TO [lapredigital_app];
-GRANT SELECT ON OBJECT::dbo.Prestacion TO [lapredigital_app];
-GRANT SELECT ON OBJECT::dbo.PlanPrestacion TO [lapredigital_app];
-GRANT SELECT ON OBJECT::dbo.BajaServicio TO [lapredigital_app];
-GRANT SELECT ON dbo.Pago (PeriodoServicioId, Tipo, Estado, ImportePEN) TO [lapredigital_app];
 '@
     [void]$create.ExecuteNonQuery()
+
+    $create.CommandText = [System.IO.File]::ReadAllText((Join-Path $PSScriptRoot '../infra/sql/app-read-permissions.sql'))
+    [void]$create.ExecuteNonQuery()
+    $create.CommandText = "SELECT MIN(PersonalInternoId) FROM dbo.PersonalInterno WHERE Rol=N'DUEÑO' AND Activo=1"
+    $ownerId = $create.ExecuteScalar()
+    if ($ownerId -is [DBNull]) { throw 'Falta un dueño activo en la base existente.' }
+    $ownerToken = [Guid]::NewGuid().ToString('N') + [Guid]::NewGuid().ToString('N')
 
     $lines = @(
         'SQLSERVER_HOST=host.docker.internal',
@@ -48,7 +44,9 @@ GRANT SELECT ON dbo.Pago (PeriodoServicioId, Tipo, Estado, ImportePEN) TO [lapre
         'SQLSERVER_USER=lapredigital_app',
         "SQLSERVER_PASSWORD=$password",
         'SQLSERVER_ENCRYPT=true',
-        'SQLSERVER_TRUST_SERVER_CERTIFICATE=true'
+        'SQLSERVER_TRUST_SERVER_CERTIFICATE=true',
+        "OWNER_PERSONAL_ID=$ownerId",
+        "OWNER_ACCESS_TOKEN=$ownerToken"
     )
     [System.IO.File]::WriteAllLines($envPath, $lines, (New-Object System.Text.UTF8Encoding($false)))
     'Usuario SQL de solo lectura creado; credencial local guardada en .env (excluido de Git).'
