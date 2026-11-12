@@ -2,7 +2,15 @@
 
 Actualizado: 12/11/2026. Instrucción vigente: terminar un MVP local en una sola pasada de máximo una hora; reemplaza el plan individual B02–B08.
 
-## Último cambio: M05 — historial por estudiante y Markdown progresivo
+## Último cambio: M06 — contexto de LaPreDigital e identidad del agente
+
+Instrucciones principales reescritas para hablar como Agente Académico de LaPreDigital, con Markdown y respuestas centradas en el negocio. Se retiró la afirmación global «Toda comunicación del MVP es SIMULADA». Se conserva la obligación de describir el resultado real de cada acción, incluidas las simulaciones explícitas, sin afirmar envíos o C-4 inexistentes. No se ocultaron resultados ni se cambiaron proveedores, permisos, interfaz o SQL.
+
+Nuevo agent/instructions/10-plataforma.md, cargado siempre como contexto de sistema por Eve: propuesta de valor, público, recursos, roles, planes/precios/modalidades, prueba gratuita, embudo y transiciones, becas, renovaciones, apoderados, actividades C-1–C-7, riesgo, autorizaciones e indicadores/semáforos. Fuente: informe 7.1, secciones 1–7, contrastado con las decisiones posteriores y los catálogos SQL. Distingue conocimiento del servicio de herramientas disponibles; consultas generales no requieren datos personales.
+
+Verificación acotada: revisión del informe y Markdown; build Docker correcto. La primera lectura de /eve/v1/info todavía mostraba el prompt viejo; tocar agent/agent.ts provocó la recarga de Eve sin reiniciar su terminal/llavero. Se verificó después contexto nuevo presente y frase vieja ausente. Una llamada real en la sesión existente explicó correctamente LaPreDigital, Meta UNT Plus (S/ 99.90 mensual / S/ 499.90 semestral) y Explora UNT (14 días, sigue LEAD sin cobros), sin herramientas ni datos personales. No se ejecutaron suites SQL, unitarias ni de navegador. Imagen compilada reconstruida y reiniciada. Siguiente paso: el dueño conversa desde el panel; no ampliar alcance automáticamente.
+
+## M05 — historial por estudiante y Markdown progresivo
 
 La dirección de chat ahora es estable por dueño/alumno y la fija el servidor. GET /api/estudiantes/:id/chat reconstruye mensajes de usuario y respuestas públicas mediante foldEvents/conversation/reply de Eve, sin exponer razonamiento o salidas de herramientas. El panel recupera ese historial al cambiar de alumno o recargar. No se guardan chats ni credenciales en localStorage. Las antiguas sesiones con UUID aleatorio permanecen en Eve; no se fusionan automáticamente con la nueva conversación principal.
 

@@ -10,6 +10,10 @@ Cada conversación del panel se identifica por dueño + alumno + dirección prin
 
 El acceso interno familiar exige REPORTES_APODERADO vigente; no existe un portal familiar ni autenticación multiusuario de producción.
 
+## Conocimiento del servicio
+
+agent/instructions.md fija identidad, permisos y comportamiento. agent/instructions/10-plataforma.md aporta contexto institucional permanente del informe 7.1: planes, embudo, acompañamiento, indicadores y reglas. Eve carga ambos como instrucciones de sistema, también para sesiones existentes al recargar. El catálogo del informe sirve para explicar; los datos actuales de contratación y efectos de operaciones se verifican mediante herramientas. No se presenta toda la plataforma como simulada; cada resultado conserva su estado verificado.
+
 ## Lógica y evidencia
 
 lib/domain.ts calcula umbrales, vigencia, cumplimiento y mejora. lib/diagnostico.ts consulta fuentes parametrizadas con corte GETDATE. Sin tareas/pruebas comparables hay no aplicable/sin datos; pendiente no se fuerza a bajo.

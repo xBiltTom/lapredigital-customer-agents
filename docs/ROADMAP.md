@@ -39,6 +39,7 @@ Actualizado el 12/11/2026. El usuario adelantó el deadline y autorizó terminar
 
 | ID | Estado | Resultado |
 | --- | --- | --- |
+| M06 | Hecha | Contexto institucional del informe 7.1 cargado siempre en Eve; identidad de agente académico y estados de acciones veraces sin etiqueta global de simulación. |
 | M05 | Hecha | Conversación persistente por dueño/alumno, historial desde Eve, respuesta progresiva NDJSON y Markdown con Streamdown. |
 | M04 | Hecha | Ficha visible de contacto del estudiante/apoderado y pestaña de desempeño con todos los intentos, versiones de ruta, actividades, dificultades y revisiones. Reutiliza la API existente; compilación y reconstrucción Docker. |
 
