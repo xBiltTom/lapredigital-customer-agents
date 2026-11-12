@@ -6,9 +6,9 @@ Actualizado: 12 de noviembre de 2026. Este archivo es el plan canónico de tarea
 
 1. Leer [AGENTS.md](../AGENTS.md), [contexto y acuerdos](CONTEXTO.md), [estado de continuidad](ESTADO.md) y [arquitectura](ARQUITECTURA.md).
 2. Revisar `git status`, `git log -5 --oneline` y `git remote -v`. No sobrescribir cambios del usuario.
-3. Continuar con **T07**, primer pendiente. T05 probó el login local de ChatGPT y una llamada real a la herramienta fija; T06 valida la configuración. La conexión SQL y el usuario de aplicación siguen pendientes.
+3. Continuar con **T08**, primer pendiente. T07 conectó SQL Server con una identidad de aplicación que solo puede leer `dbo.Estudiante`; ampliar permisos solo para las consultas necesarias de T08.
 4. Leer los scripts de [database/](../database/README.md) y el [informe 7.1](reference/documento_InteligenciaNegocios.pdf) antes de convertir consultas en herramientas. La base está congelada por decisión del usuario.
-5. El login de ChatGPT está verificado solo en la TUI local; no asumir que funciona en despliegue o desde Windows por el puerto publicado. No asumir créditos API de MiniMax ni permisos SQL.
+5. El login de ChatGPT está verificado solo en la TUI local; no asumir que funciona en despliegue o desde Windows por el puerto publicado. No asumir créditos API de MiniMax ni permisos SQL adicionales a `SELECT` sobre `dbo.Estudiante`.
 
 ## Objetivo y decisiones aceptadas
 
@@ -51,7 +51,7 @@ Los IDs dan una secuencia sugerida, pero mandan las dependencias. T10 y otras ta
 | T04 | Hecha | Crear el backend mínimo de Eve | T03 |
 | T05 | Hecha | Probar ChatGPT local con una herramienta inocua | T04 |
 | T06 | Hecha | Validar la configuración de la aplicación | T04 |
-| T07 | Pendiente | Conectar a SQL Server con un usuario de aplicación | T06 |
+| T07 | Hecha | Conectar a SQL Server con un usuario de aplicación | T06 |
 | T08 | Pendiente | Consultar perfil, servicio y prestaciones | T07 |
 | T09 | Pendiente | Consultar progreso académico y revisiones | T08 |
 | T10 | Pendiente | Implementar las reglas deterministas de riesgo | T06, T08 |
@@ -145,12 +145,12 @@ Los IDs dan una secuencia sugerida, pero mandan las dependencias. T10 y otras ta
 
 ### T07 · Conectar a SQL Server con un usuario de aplicación
 
-- [ ] Tarea completada.
+- [x] Tarea completada.
 - **Depende de:** T06.
 - **Commit:** `feat(T07): conectar sql server con pool compartido`.
 - **Entregable:** Comprobar el puerto del contenedor existente; configurar identidad de aplicación y permisos mínimos para la fase de lectura; implementar mssql con un pool reutilizable y cierre ordenado. Documentar los cambios operativos de usuarios/permisos.
 - **Cierre verificable:** Consulta parametrizada SELECT de prueba; fallo de conexión manejado; GETDATE() mantiene hora de Perú; no cambios de tablas o datos.
-- **Contexto o límite:** No utilizar sa desde las herramientas del modelo. La creación de usuarios/permisos es configuración, no un rediseño del esquema.
+- **Contexto o límite:** La instancia actual es SQL Server nativo en Windows, accesible desde Docker por `host.docker.internal:1433`. La cuenta `lapredigital_app` solo tiene `SELECT` sobre `dbo.Estudiante`, no `sa` ni permisos DML; en T08 se ampliarán solo los SELECT necesarios. `db:check` verificó C001, hora local de `GETDATE()`, offset -05:00 de `SYSDATETIMEOFFSET()` y cierre del pool. La contraseña está en `.env` ignorado, nunca en Git ni en herramientas del modelo. La creación de usuario/permisos fue configuración, no un rediseño del esquema.
 
 ### T08 · Consultar perfil, servicio y prestaciones
 

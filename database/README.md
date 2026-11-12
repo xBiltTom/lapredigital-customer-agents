@@ -11,14 +11,16 @@ Estos cuatro archivos se trasladaron desde la raíz conservando exactamente sus 
 
 ## Conexión existente
 
-- Contenedor conocido: `sql-server-local`.
+- Contenedor histórico en CachyOS: `sql-server-local`. En Windows T07 encontró el servicio local `MSSQLSERVER`, no un contenedor SQL.
 - Base: `LaPreDigital_Customers`.
-- Motor: SQL Server 2022 Developer en Docker, sobre CachyOS.
+- Motor histórico: SQL Server 2022 Developer en Docker, sobre CachyOS. La instancia actual es SQL Server nativo de Windows, accesible desde Docker Desktop por `host.docker.internal:1433`.
 - Hora del servidor: `America/Lima`; las columnas del negocio usan hora peruana y `GETDATE()`.
 - Intercalación: `Latin1_General_100_CI_AS_SC`.
-- No guardar contraseñas ni asumir que el puerto publicado sigue siendo 1433.
+- La cuenta `lapredigital_app` de T07 solo puede leer `dbo.Estudiante`; su contraseña generada está en `.env` local, excluido de Git.
 
 La aplicación debe conectarse a esa base. Arrancar el agente no debe ejecutar DROP DATABASE, los scripts 01/02 ni ninguna reconstrucción automática.
+
+En Windows se confirmó por consulta que la base tiene 14 estudiantes y GETDATE() usa -05:00. El usuario informó que la creó y pobló allí. En T07 no se ejecutaron 01, 02, 03 ni 04 sobre esta instancia: los resultados anteriores de 29 pruebas siguen siendo históricos.
 
 ## Ejecución manual
 

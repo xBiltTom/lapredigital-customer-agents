@@ -19,6 +19,18 @@ Detener el servidor antes de repetir npm ci. Si tu UID/GID difiere de 1000, expo
 
 `lib/config.ts` valida al cargar el agente `TZ=America/Lima` y `AI_PROVIDER=chatgpt`. Compose suministra ambos valores; `.env.example` es una referencia y no se carga automáticamente. Para comprobar la configuración sin invocar al modelo: `./scripts/dev npm test --workspace=@lapredigital/server`. En un host Windows con el volumen `.eve` separado, `build:server` puede fallar con EXDEV al mover el resultado a `.output`; el servidor de desarrollo sí pasó el chequeo de salud. El build correcto queda pendiente de resolver.
 
+## T07: SQL Server local
+
+La instancia actual es SQL Server nativo de Windows en 1433. En este equipo se ejecutó una vez `scripts/provision-sql-app.ps1` desde PowerShell con la cuenta administradora local: creó `lapredigital_app` con permiso SELECT solo sobre `dbo.Estudiante` y escribió la credencial generada en `.env`, que Git excluye. El script se detiene sin sobrescribir un `.env` o un login previo. En otra instalación, configurar el usuario y `.env` localmente siguiendo `.env.example`; nunca usar `sa` ni copiar la contraseña al navegador o al chat.
+
+Compose pasa las variables SQL del `.env` únicamente al servicio `server`, con `host.docker.internal` para llegar al host desde Docker. El pool de `lib/database/pool.ts` es compartido y se conecta únicamente al invocar `getPool()`. `closePool()` lo cierra; el comando manual de verificación llama ambos y no hace escrituras:
+
+```text
+docker compose run --rm --no-deps --workdir /workspace/apps/server server npm run db:check
+```
+
+Comprueba C001 con SQL parametrizado, SELECT sobre `dbo.Estudiante`, ausencia de permisos DML y la hora SQL de Perú. Si no hay conexión, devuelve un error claro sin imprimir el secreto. T08 ampliará solo los permisos de lectura necesarios para consultas de perfil y servicio. No se expone una herramienta SQL al modelo ni un endpoint de base de datos.
+
 ## Alcance actual
 
 - GET /eve/v1/health responde 200 con ok: true.

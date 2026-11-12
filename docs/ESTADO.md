@@ -4,7 +4,17 @@ Actualizado: 12 de noviembre de 2026. Documento de traspaso para otra sesión o 
 
 ## Próxima tarea
 
-**T07 del [roadmap](ROADMAP.md): conectar a SQL Server con un usuario de aplicación.** T05 y T06 están terminadas. Comprobar el puerto y la disponibilidad del contenedor SQL existente, configurar credenciales y permisos mínimos sin usar `sa` en las herramientas. Antes de escribir SQL o reglas de negocio, leer el informe 7.1 y los cuatro scripts de `database/`. No cambiar de stack ni modificar el esquema sin evidencia.
+**T08 del [roadmap](ROADMAP.md): consultar perfil, servicio y prestaciones.** T07 conectó SQL Server con un usuario de aplicación de solo lectura sobre `dbo.Estudiante`. Leer el informe 7.1 y los cuatro scripts de `database/` antes de ampliar consultas; conceder únicamente los SELECT adicionales necesarios, paginar listados y validar la identidad activa en el backend. No cambiar de stack ni modificar el esquema sin evidencia.
+
+## T07: conexión SQL de lectura
+
+El usuario informó que creó y pobló `LaPreDigital_Customers` en SQL Server nativo de Windows. Esta sesión consultó por autenticación integrada local con `sqlcmd -S . -E`: 14 estudiantes, SQL Server con offset -05:00, modo mixto y cuenta administradora disponible solo localmente; la conexión integrada por TCP a `127.0.0.1` devolvió error de dominio no confiable. Desde Docker se confirmó conectividad TCP a `host.docker.internal:1433`. Se leyeron el informe 7.1, los cuatro scripts SQL y la revisión histórica antes de escribir la consulta de prueba. Los scripts 01/02/03/04 no se ejecutaron aquí y las 29 pruebas siguen siendo resultados históricos.
+
+`scripts/provision-sql-app.ps1` creó en la instancia existente `lapredigital_app`, un usuario de base con `GRANT SELECT ON dbo.Estudiante` únicamente, y generó una contraseña fuerte guardada localmente en `.env` ignorado por Git; no se imprimió ni se guardó en el repositorio. `mssql` 12.7.14 y `@types/mssql` 12.3.0 están fijados en el lockfile. `apps/server/lib/database/pool.ts` abre un pool compartido solo cuando se lo solicita, lo reinicia tras fallo y expone cierre; el servidor Eve no conecta ni reconstruye SQL al arrancar. La configuración SQL se valida con Zod y rechaza cuentas distintas de `lapredigital_app` sin mostrar secretos.
+
+Verificación real: `docker compose run --rm --no-deps --workdir /workspace/apps/server server npm run db:check` completó una consulta parametrizada por `Codigo='C001'`, comprobó reutilización y cierre del pool, SELECT permitido, INSERT/UPDATE/DELETE denegados mediante `HAS_PERMS_BY_NAME`, hora local de `GETDATE()` y offset -05:00 de `SYSDATETIMEOFFSET()`. Un puerto erróneo (`SQLSERVER_PORT=1`) terminó con error claro y código no cero sin imprimir contraseña. `npm ci` instaló 103 paquetes desde lockfile y auditó 105 sin vulnerabilidades reportadas; `typecheck`, 4 pruebas de configuración, `npm run check` y salud 200 de Eve pasaron. El contenedor de prueba del servidor se detuvo después.
+
+Límites: no se ejecutaron las pruebas SQL exploratorias sobre esta instancia ni se usaron escrituras de negocio. No se verificó la serialización de columnas DATETIME2 de negocio: solo `GETDATE()` como texto y el offset del servidor. El usuario de aplicación todavía no tiene permisos para leer Contacto, Suscripcion ni las demás tablas que T08 necesitará; ampliar según consultas concretas. `build:server` conserva el EXDEV documentado; no afecta la prueba de conexión.
 
 ## T05: login local y herramienta inocua
 
@@ -14,7 +24,7 @@ Se añadió solo la herramienta fija sin entradas ni servicios externos y `local
 
 El primer `/login` falló por ausencia de Secret Service. Se instaló D-Bus, GNOME Keyring y `libsecret-tools` en la imagen Node, y `scripts/eve-local` arranca una sesión interactiva con llavero cifrado en el volumen `keyring_state`, separado del workspace. El navegador de Windows no llega al callback OAuth `localhost:1455` del contenedor; `SSH_TTY=1` activa el flujo de dispositivo de la versión instalada. El usuario habilitó el inicio de dispositivo en ChatGPT y completó el login. Con un valor ficticio se comprobó almacenamiento/lectura y recuperación después de recrear el contenedor usando un volumen temporal que fue eliminado; **no se comprobó todavía la persistencia del login real después de reiniciar**. Ver [la receta](../apps/server/README.md).
 
-Límites: la TUI interactiva sigue en ejecución durante esta verificación; no detener el contenedor del usuario para ejecutar pruebas. El `server` estándar no arranca el llavero desbloqueado, por lo que un chat desde Windows o un proceso separado aún requiere integración y autenticación propias (T20). El build `EXDEV` documentado en T06 sigue pendiente; el login local no lo resuelve. SQL, el panel y las herramientas de negocio permanecen pendientes.
+Límites de T05: la TUI interactiva siguió en ejecución durante esa prueba y el usuario salió antes de reinstalar dependencias en T07. El `server` estándar no arranca el llavero desbloqueado, por lo que un chat desde Windows o un proceso separado aún requiere integración y autenticación propias (T20). El build `EXDEV` documentado en T06 sigue pendiente; el login local no lo resuelve. SQL se conectó posteriormente en T07; el panel y las herramientas de negocio permanecen pendientes.
 
 ## Trabajo completado en esta inicialización
 
@@ -60,7 +70,7 @@ El `npm ci` de esta sesión instaló 29 paquetes y reportó cero vulnerabilidade
 
 ## Qué existe y qué falta
 
-Existe la base OLTP, sus scripts, la toolchain Docker y el backend mínimo apps/server con configuración Zod. El login local de ChatGPT y una herramienta fija funcionan en la TUI. No existen apps/web, mssql instalado ni herramientas de negocio. Hay comandos de typecheck, build e inicio del servidor; el build actual tiene el fallo EXDEV descrito arriba en Windows. Las pruebas SQL siguen siendo históricas.
+Existe la base OLTP en SQL Server nativo de Windows, sus scripts, la toolchain Docker y el backend mínimo apps/server con configuración Zod y pool SQL de lectura. El login local de ChatGPT y una herramienta fija funcionan en la TUI. No existen apps/web ni herramientas de negocio. Hay comandos de typecheck, build e inicio del servidor; el build actual tiene el fallo EXDEV descrito arriba en Windows. Las pruebas SQL del 03 siguen siendo históricas.
 
 El host conserva Node v26.13.1 y npm 12.2.2. Node del proyecto se ejecuta en Docker: imagen oficial fijada por digest, Node 24.22.3 y npm 11.19.1. Usar `./scripts/dev npm run check`; el chequeo rechaza Node de otra versión. No se instaló ni cambió Node global.
 
@@ -75,7 +85,7 @@ El host conserva Node v26.13.1 y npm 12.2.2. Node del proyecto se ejecuta en Doc
 
 ## Pendientes reales
 
-1. T07: confirmar conectividad SQL, puerto publicado, usuario de aplicación y permisos mínimos. No inferir credenciales del informe ni ejecutar scripts de creación/población.
+1. T08: implementar repositorios parametrizados para perfil y servicio. Conceder solo los SELECT adicionales requeridos por esas consultas y probar casos C006/C011/C013 sin mezclar estudiante con apoderado.
 2. Corregir el fallo EXDEV del build entre el volumen `.eve` y `.output` al abordar el empaquetado de desarrollo; no exponer Docker al agente para eliminar el aviso de sandbox. Verificar persistencia del login real tras reiniciar antes de depender de ella.
 3. Confirmar si los 2.000 créditos MiniMax son de API o de su aplicación; no consumirlos todavía.
 4. Implementar política de contacto con aceptación inicial de términos y revocación posterior; el texto de términos y el registro público de usuarios no están implementados.

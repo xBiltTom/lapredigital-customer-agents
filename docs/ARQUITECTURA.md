@@ -35,7 +35,9 @@ No fijar todavía rutas internas de Nitro ni APIs de Eve desde memoria. Leer doc
 
 Por instrucción posterior del usuario, Node/npm se ejecutan en Docker mediante scripts/dev. El host no necesita el runtime del proyecto. Compose conserva dependencias Linux y caché en volúmenes y monta código para desarrollo; el usuario del contenedor coincide con UID/GID del host. La imagen base se fija por digest y conserva America/Lima.
 
-Este empaquetado de desarrollo precede a las imágenes de runtime para VPS: los builds y artefactos se definirán con la aplicación real. SQL Server continúa en su contenedor existente y no se recrea desde Compose. Su conectividad se configura en T07. No montar el socket Docker ni credenciales del host en el agente de negocio.
+Este empaquetado de desarrollo precede a las imágenes de runtime para VPS: los builds y artefactos se definirán con la aplicación real. Compose no administra SQL Server; T07 verificó la instancia local de Windows. No montar el socket Docker ni credenciales del host en el agente de negocio.
+
+En Windows T07 encontró SQL Server 2022 como servicio nativo del host, accesible desde Docker mediante `host.docker.internal:1433`. `lib/database/pool.ts` usa `mssql`, conexión diferida, pool compartido y cierre explícito; la consulta parametrizada de prueba accede con `lapredigital_app` solo a `dbo.Estudiante`. La contraseña reside en `.env` fuera de Git; el modelo no tiene herramienta SQL. El plan de herramientas del negocio y los permisos sobre sus otras tablas se implementan desde T08.
 
 El servidor publica únicamente 127.0.0.1:3000. CLI y backend comparten el volumen eve_state en apps/server/.eve; para `/login` interactivo T05 añadió un llavero cifrado persistente y D-Bus iniciados por `scripts/eve-local`. El modelo llamó `comprobar_conexion`, la única herramienta fija, y respondió en la TUI. `defaultTools: false` excluye las herramientas generales. El canal usa `localDev()`; desde Windows a través del puerto publicado respondió 401 y desde el contenedor 200. La salud pública sigue disponible. El servidor estándar no inicia el llavero desbloqueado ni se ha probado login real tras reinicio. No se montó el socket Docker para resolver el aviso de sandbox de Eve: actualmente no hay herramientas que lo necesiten.
 
@@ -66,7 +68,7 @@ La deduplicación debe sobrevivir al reinicio con estado persistente y validaci�
 
 SQL Server conserva hechos del negocio; Eve conserva sus sesiones y ejecución en almacenamiento local persistente, excluido de Git. No se asume un adaptador SQL Server para la persistencia interna de Eve: se accede al OLTP mediante mssql desde herramientas propias.
 
-Las fechas de negocio siguen siendo peruanas, con GETDATE en SQL Server. mssql devuelve Date de JavaScript; probar explícitamente su configuración y serialización para evitar introducir un desfase de cinco horas. El contrato HTTP debe documentar cómo representa una fecha peruana sin offset; no convertir silenciosamente las columnas a UTC.
+Las fechas de negocio siguen siendo peruanas, con GETDATE en SQL Server. T07 confirmó offset -05:00 del servidor y configuró `useUTC: false` en `mssql`; queda por probar la serialización de columnas DATETIME2 al exponerlas. El contrato HTTP debe documentar cómo representa una fecha peruana sin offset; no convertir silenciosamente las columnas a UTC.
 
 La trazabilidad técnica incluirá operación, corte, versiones, fuentes, acción y resultado. Una referencia a una fila mutable no basta para afirmar que se conserva su contenido original. Las limitaciones del esquema se declaran y se registra el contexto local necesario; los cierres mensuales siguen fuera de alcance hasta un diseño específico.
 

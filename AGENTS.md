@@ -15,7 +15,7 @@ Leer [README.md](README.md), [docs/ESTADO.md](docs/ESTADO.md), [docs/CONTEXTO.md
 
 ## Stack y código
 
-TypeScript + Node 24; npm workspaces; Eve/Nitro en apps/server; React/Vite en apps/web; mssql; Zod; Vitest. Existe el backend mínimo; frontend, herramientas del negocio y conexión SQL siguen pendientes. No introducir Next.js/NestJS, Python u otro framework de agentes sin una decisión nueva del usuario.
+TypeScript + Node 24; npm workspaces; Eve/Nitro en apps/server; React/Vite en apps/web; mssql; Zod; Vitest. Existe el backend mínimo y la conexión SQL de lectura con usuario propio; frontend y herramientas del negocio siguen pendientes. No introducir Next.js/NestJS, Python u otro framework de agentes sin una decisión nueva del usuario.
 
 Verificar login local ChatGPT temprano. No asumir que una suscripción es una API key ni que sirve para un despliegue. Leer docs de la versión instalada de Eve/AI SDK antes de programar su integración.
 

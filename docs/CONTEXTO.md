@@ -20,8 +20,7 @@ El [informe entregado](reference/documento_InteligenciaNegocios.pdf), identifica
 
 ## Entorno y estado de datos
 
-- CachyOS, shell bash, zona America/Lima.
-- Contenedor conocido: sql-server-local; SQL Server 2022 Developer; base LaPreDigital_Customers.
+- Entorno histórico: CachyOS, shell bash, contenedor sql-server-local. Entorno actual de T07: Windows con SQL Server local (servicio MSSQLSERVER), puerto 1433, Docker Desktop y Node 24 en contenedor. La base sigue siendo LaPreDigital_Customers.
 - Hora de negocio en Perú y GETDATE; no usar sufijos Utc en las columnas actuales.
 - Intercalación Latin1_General_100_CI_AS_SC; código de rol N'DUEÑO'.
 - 40 tablas operativas y 14 de historial; carga de referencia: 501 registros operativos y 39 históricos, con 14 estudiantes (12 CUSTOMER, 1 LEAD, 1 TURNED).

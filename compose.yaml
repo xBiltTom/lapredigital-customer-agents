@@ -28,6 +28,14 @@ services:
     profiles: [app]
     extends:
       service: tools
+    environment:
+      SQLSERVER_HOST: ${SQLSERVER_HOST:-host.docker.internal}
+      SQLSERVER_PORT: ${SQLSERVER_PORT:-1433}
+      SQLSERVER_DATABASE: ${SQLSERVER_DATABASE:-LaPreDigital_Customers}
+      SQLSERVER_USER: ${SQLSERVER_USER:-}
+      SQLSERVER_PASSWORD: ${SQLSERVER_PASSWORD:-}
+      SQLSERVER_ENCRYPT: ${SQLSERVER_ENCRYPT:-true}
+      SQLSERVER_TRUST_SERVER_CERTIFICATE: ${SQLSERVER_TRUST_SERVER_CERTIFICATE:-true}
     command: [npm, run, dev:server]
     ports:
       - "127.0.0.1:3000:3000"
