@@ -1,5 +1,13 @@
 # Estado y continuidad
 
+## M19 — catálogo de cursos y modal de temario (2026-11-13)
+
+Se rediseñó la vista de cursos con tarjetas que muestran el nombre, cantidad de temas y acceso al contenido. Seleccionar un curso abre un modal con su temario y subtemas; el listado se desplaza dentro del modal. Incluye carga/vacío/error, cierre con Escape o clic fuera, foco inicial/restaurado y navegación de teclado contenida. Sin cambios de backend ni datos.
+
+Verificación: `./scripts/dev npm run build:web` correcto (TypeScript y Vite; continúa el aviso de chunk mayor a 500 kB). No se ejecutó prueba de navegador para este ajuste. El DOCX personal sin seguimiento se conservó.
+
+Siguiente paso concreto: revisar la vista Cursos y temario en el panel, tanto en escritorio como en móvil.
+
 ## M18 — scroll y espacio del sidebar (2026-11-13)
 
 El sidebar de escritorio ahora desplaza su contenido completo, incluida la navegación, la lista de estudiantes y el pie. Se quitaron las áreas de scroll internas de la navegación y la lista, que antes tenían alturas independientes y dejaban contenido inferior fuera del alcance. Se ajustó el indicador de scroll y se compactaron el mensaje de acompañamiento, el acceso al portal y el pie. En móvil se mantiene la navegación horizontal existente. Sin cambios de backend ni datos.

@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { secciones, type Vista } from './WorkspaceNav';
 // Campos en PascalCase conservan el nombre del modelo SQL y evitan traducciones duplicadas.
 type Row = Record<string, any>;
@@ -21,6 +21,19 @@ const tipos = [
 ];
 const opciones = (values: string[]) =>
   values.map((value) => ({ value, label: value.replaceAll('_', ' ') }));
+function leerSubtemas(value: unknown): string[] {
+  try {
+    const parsed =
+      typeof value === 'string' ? JSON.parse(value) : (value ?? []);
+    return Array.isArray(parsed)
+      ? parsed.map((item) =>
+          typeof item === 'string' ? item : JSON.stringify(item),
+        )
+      : [];
+  } catch {
+    return [];
+  }
+}
 export function Administration({
   vista,
   token,
@@ -53,6 +66,14 @@ export function Administration({
       title: string;
     } | null>(null),
     [temas, setTemas] = useState<Row[]>([]);
+  const [cursoSeleccionado, setCursoSeleccionado] = useState<string | null>(
+    null,
+  );
+  const [cargandoTemas, setCargandoTemas] = useState(false);
+  const [errorTemario, setErrorTemario] = useState('');
+  const solicitudTemario = useRef(0);
+  const disparadorCurso = useRef<HTMLButtonElement | null>(null);
+  const cerrarTemario = useRef<HTMLButtonElement | null>(null);
   async function api(path: string, body?: Row) {
     const r = await fetch('/api/admin/' + path, {
       method: body ? 'POST' : 'GET',
@@ -66,6 +87,37 @@ export function Administration({
     if (!r.ok) throw new Error(result.error ?? 'No se pudo cargar');
     return result;
   }
+  function abrirCurso(curso: string, trigger: HTMLButtonElement) {
+    disparadorCurso.current = trigger;
+    const solicitud = ++solicitudTemario.current;
+    setCursoSeleccionado(curso);
+    setTemas([]);
+    setCargandoTemas(true);
+    setErrorTemario('');
+    api('temas?buscar=' + encodeURIComponent(curso))
+      .then((d) => {
+        if (solicitud === solicitudTemario.current) setTemas(d.items);
+      })
+      .catch((e) => {
+        if (solicitud === solicitudTemario.current) {
+          setErrorTemario(e.message);
+        }
+      })
+      .finally(() => {
+        if (solicitud === solicitudTemario.current) setCargandoTemas(false);
+      });
+  }
+  function cerrarCurso() {
+    solicitudTemario.current++;
+    setCursoSeleccionado(null);
+    setTemas([]);
+    setCargandoTemas(false);
+    setErrorTemario('');
+    requestAnimationFrame(() => disparadorCurso.current?.focus());
+  }
+  useEffect(() => {
+    if (cursoSeleccionado) cerrarTemario.current?.focus();
+  }, [cursoSeleccionado]);
   useEffect(() => {
     let active = true;
     setLoading(true);
@@ -474,44 +526,46 @@ export function Administration({
           )}
           {vista === 'cursos' && (
             <>
-              <div className="admin-metrics">
-                <strong>{data.items.length} cursos</strong>
-                <strong>{data.total} temas preparados</strong>
+              <div className="admin-metrics course-summary">
+                <strong>
+                  <span>{data.items.length}</span>
+                  <small>Cursos disponibles</small>
+                </strong>
+                <strong>
+                  <span>{data.total}</span>
+                  <small>Temas preparados</small>
+                </strong>
               </div>
-              <div className="admin-grid">
+              <div className="admin-grid course-grid">
                 {data.items.map((c: Row) => (
                   <button
-                    className="admin-card"
+                    className="course-card"
                     key={c.Curso}
-                    onClick={() => {
-                      setError('');
-                      api('temas?buscar=' + encodeURIComponent(c.Curso))
-                        .then((d) => setTemas(d.items))
-                        .catch((e) => setError(e.message));
-                    }}
+                    aria-haspopup="dialog"
+                    aria-label={`Ver temario de ${c.Curso}, ${c._count.ContenidoId} temas`}
+                    onClick={(event) =>
+                      abrirCurso(c.Curso, event.currentTarget)
+                    }
                   >
-                    <h3>{c.Curso}</h3>
-                    <p>{c._count.ContenidoId} temas · Ver contenido →</p>
+                    <span className="course-card-top">
+                      <span className="course-icon" aria-hidden="true">
+                        ▤
+                      </span>
+                      <span className="course-count">
+                        {c._count.ContenidoId}
+                        <small>temas</small>
+                      </span>
+                    </span>
+                    <strong className="course-card-title">{c.Curso}</strong>
+                    <span className="course-card-foot">
+                      <span>UNT · 2027</span>
+                      <span>
+                        Explorar temario <b aria-hidden="true">↗</b>
+                      </span>
+                    </span>
                   </button>
                 ))}
               </div>
-              {temas.length > 0 && (
-                <section className="admin-card">
-                  <h2>Contenido del curso</h2>
-                  {temas.map((t) => (
-                    <details key={t.ContenidoId}>
-                      <summary>{t.Tema}</summary>
-                      <ul>
-                        {(JSON.parse(t.Subtemas) as string[]).map((s, i) => (
-                          <li key={i}>
-                            {typeof s === 'string' ? s : JSON.stringify(s)}
-                          </li>
-                        ))}
-                      </ul>
-                    </details>
-                  ))}
-                </section>
-              )}
             </>
           )}
           {vista === 'recursos' && (
@@ -852,6 +906,113 @@ export function Administration({
                 </button>
               </div>
             </form>
+          </section>
+        </div>
+      )}
+      {cursoSeleccionado && (
+        <div
+          className="admin-overlay course-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) cerrarCurso();
+          }}
+        >
+          <section
+            className="admin-dialog course-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="course-dialog-title"
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') {
+                event.preventDefault();
+                cerrarCurso();
+              }
+              if (event.key === 'Tab') {
+                const focusable = event.currentTarget.querySelectorAll<HTMLElement>(
+                  'button:not(:disabled), summary, a[href], [tabindex]:not([tabindex="-1"])',
+                );
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (event.shiftKey && document.activeElement === first) {
+                  event.preventDefault();
+                  last?.focus();
+                } else if (!event.shiftKey && document.activeElement === last) {
+                  event.preventDefault();
+                  first?.focus();
+                }
+              }
+            }}
+          >
+            <header className="course-dialog-header">
+              <div>
+                <span className="course-dialog-eyebrow">TEMARIO UNT · 2027</span>
+                <h2 id="course-dialog-title">{cursoSeleccionado}</h2>
+                <p>
+                  {cargandoTemas
+                    ? 'Cargando los temas del curso…'
+                    : `${temas.length} temas en este curso`}
+                </p>
+              </div>
+              <button
+                ref={cerrarTemario}
+                className="course-close"
+                type="button"
+                aria-label="Cerrar temario"
+                onClick={cerrarCurso}
+              >
+                ×
+              </button>
+            </header>
+            <div className="course-dialog-content">
+              {cargandoTemas && (
+                <p className="course-loading" role="status">
+                  <span aria-hidden="true">◌</span> Preparando el temario…
+                </p>
+              )}
+              {errorTemario && (
+                <p className="admin-error" role="alert">
+                  {errorTemario}
+                </p>
+              )}
+              {!cargandoTemas && !errorTemario && temas.length === 0 && (
+                <p className="course-empty">
+                  Este curso todavía no tiene temas disponibles.
+                </p>
+              )}
+              {!cargandoTemas && temas.length > 0 && (
+                <div className="course-topic-list">
+                  {temas.map((tema, index) => {
+                    const subtemas = leerSubtemas(tema.Subtemas);
+                    return (
+                      <article className="course-topic" key={tema.ContenidoId}>
+                        <span className="course-topic-number">
+                          {String(index + 1).padStart(2, '0')}
+                        </span>
+                        <details className="course-topic-details">
+                          <summary>
+                            <span>{tema.Tema}</span>
+                            <small>
+                              {subtemas.length}{' '}
+                              {subtemas.length === 1 ? 'subtema' : 'subtemas'}
+                            </small>
+                          </summary>
+                          {subtemas.length > 0 ? (
+                            <ul>
+                              {subtemas.map((subtema, subtemaIndex) => (
+                                <li key={`${tema.ContenidoId}-${subtemaIndex}`}>
+                                  {subtema}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p>Sin subtemas registrados.</p>
+                          )}
+                        </details>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </section>
         </div>
       )}
