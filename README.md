@@ -176,3 +176,12 @@ La nueva opción del sidebar permite ajustar seis parámetros de riesgo de aband
 Los nuevos diagnósticos usan los valores guardados. Las evaluaciones anteriores conservan los suyos, y las propuestas basadas en reglas anteriores requieren reevaluación. Las reglas de pagos, acceso, autorizaciones y KPI no se modifican desde este formulario. El agente puede consultar la configuración vigente o histórica, pero solo el dueño la cambia desde la aplicación.
 
 En una base nueva, ejecutar 01 y 02 actualizados como siempre. Para incorporar esta extensión a una instalación existente sin borrar datos, ejecutar una vez `./scripts/instalar-reglas` (SQL Server Docker local). El instalador lee el DDL y la semilla de esos mismos scripts; no es una segunda fuente del esquema. La instalación actual ya lo tiene aplicado. Las pruebas de publicación solo escriben en LaPreDigital_Customers_MvpTest.
+
+
+## Consultas e incidencias
+
+Pulsa **Ver caso** para consultar historial, reporte de origen y ayuda del agente. El análisis explica el problema y propone pasos; no ejecuta reparaciones ni resuelve el caso. El dueño registra atención, solución o reapertura. En casos reportados desde mensajería puede comunicar después la solución al estudiante/apoderado.
+
+Los problemas claros reportados en MENSAJERIA pueden registrarse automáticamente como incidencias. El agente deriva al chat global del Dashboard cuando necesita una decisión; responder allí permite que comunique la decisión y registre el caso si corresponde. Los asuntos económicos se derivan al dueño/PAYERS. El canal académico se mantiene separado.
+
+La instalación actual ya incorpora AtencionMensaje. En otro equipo con base existente ejecutar `./scripts/instalar-atencion`; toma el DDL de 01 y conserva datos. Los casos antiguos sin origen mantienen sus eventos; no se inventan vínculos de mensajería. `apps/server/scripts/check-atencion.mjs` solo escribe en MvpTest.

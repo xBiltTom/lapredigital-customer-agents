@@ -10,6 +10,7 @@ export default defineTool({
     recomendacion: z.string().min(10).max(1500),
   }),
   async execute({ tipo, recomendacion }, ctx) {
+    if(ctx.session.auth.current?.attributes?.soloLectura==='true')throw new Error('El análisis del caso es de solo lectura');
     const { id, estudianteId } = identidadHerramienta(ctx.session.auth.current);
     return proponer(id, estudianteId, tipo, recomendacion);
   },

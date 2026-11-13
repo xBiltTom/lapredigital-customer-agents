@@ -213,3 +213,9 @@ model PoliticaRiesgo {
  CreadaPorId Int?
  Motivo String @db.NVarChar(500)
 }
+model AtencionMensaje {
+ MensajeLocalId Int @id
+ CasoAtencionId Int?
+ ConsultaId Int?
+ FechaRegistro DateTime @default(dbgenerated("getdate()")) @db.DateTime2
+}

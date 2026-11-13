@@ -18,3 +18,4 @@ GRANT SELECT, INSERT ON dbo.EventoCaso TO lapredigital_app;
 GRANT SELECT ON dbo.PlanServicio TO lapredigital_app;
 GRANT SELECT ON dbo.ModalidadPlan TO lapredigital_app;
 GRANT SELECT, INSERT ON dbo.PoliticaRiesgo TO lapredigital_app;
+GRANT SELECT, INSERT, UPDATE ON dbo.AtencionMensaje TO lapredigital_app;

@@ -58,3 +58,6 @@ Los KPI y herramientas actuales mantienen sus consultas SQL parametrizadas; no s
 
 
 `servicios/politicas.ts` obtiene la configuración de riesgo actual o por versión y guarda cambios con Prisma. La aplicación envía automáticamente la versión que estaba editando para detectar cambios concurrentes; el usuario solo edita parámetros. Si no envía motivo se genera el detalle a partir de los valores modificados. Cada guardado crea una fila inmutable en PoliticaRiesgo, utilizada por EvaluacionRiesgo.VersionReglas. Las funciones puras de academico/reglas.ts reciben estos parámetros; sus valores predeterminados solo conservan la referencia inicial y las pruebas del informe.
+
+
+`servicios/casos.ts` consulta detalle/eventos/origen, registra o deriva reportes autenticados y comunica resoluciones. `AtencionMensaje` relaciona un mensaje con su caso o consulta; el bloqueo del mensaje hace idempotente su procesamiento. `gestionar_caso` deriva la identidad y el origen del contexto del servidor, nunca de un ID de alumno elegido por el participante. `channels/casos.ts` ofrece detalle, análisis de lectura con hechos preparados y comunicación manual. El estado se modifica mediante administracion/academico.ts con bloqueo y comprobación de estado anterior. Las guardas soloLectura bloquean herramientas con efectos durante un análisis.

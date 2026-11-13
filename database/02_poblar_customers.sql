@@ -3432,3 +3432,7 @@ SELECT DISTINCT ap.ContactoId,'PLATAFORMA','REPORTES',1,GETDATE(),N'Aceptación 
 FROM dbo.Apoderado ap WHERE EXISTS(SELECT 1 FROM dbo.AutorizacionContacto a WHERE a.ContactoId=ap.ContactoId AND a.Finalidad='REPORTES' AND a.Autorizado=1)
 AND NOT EXISTS(SELECT 1 FROM dbo.AutorizacionContacto a WHERE a.ContactoId=ap.ContactoId AND a.Canal='PLATAFORMA' AND a.Finalidad='REPORTES');
 GO
+
+-- AtencionMensaje inicia vacia: los casos de la carga previa son administrativos.
+-- Sus vinculos se registran con mensajes reales del portal al reportar o derivar;
+-- no se inventan mensajes de origen para los casos preexistentes.

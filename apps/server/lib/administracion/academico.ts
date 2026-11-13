@@ -144,14 +144,15 @@ export async function abrirCaso(owner: number, entrada: unknown) {
 export const atenderCasoSchema = z.object({
   Estado: z.enum(["EN_ATENCION", "RESUELTA", "REABIERTA"]),
   Detalle: z.string().trim().min(1).max(1000),
+  EstadoAnterior: z.enum(["ABIERTA","EN_ATENCION","RESUELTA","REABIERTA"]).optional(),
 });
 export async function atenderCaso(owner: number, id: number, entrada: unknown) {
   const d = atenderCasoSchema.parse(entrada),
     p = getPrisma();
   return p.$transaction(async (tx) => {
-    const c = await tx.casoAtencion.findUniqueOrThrow({
-      where: { CasoAtencionId: id },
-    });
+    const [c] = await tx.$queryRaw<{Ambito:string;Estado:string}[]>`SELECT Ambito,Estado FROM dbo.CasoAtencion WITH(UPDLOCK,HOLDLOCK) WHERE CasoAtencionId=${id}`;
+    if (!c) throw new Error("Caso inexistente");
+    if (d.EstadoAnterior && c.Estado !== d.EstadoAnterior) throw new Error("El caso cambió. Actualiza antes de continuar.");
     if (c.Ambito === "PAGO")
       throw new Error(
         "Los casos económicos solo se consultan; corresponden a PAYERS",

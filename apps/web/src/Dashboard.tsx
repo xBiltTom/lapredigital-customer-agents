@@ -52,7 +52,7 @@ export function Dashboard({
 
   useEffect(() => {
     finalChat.current?.scrollIntoView({ block: 'nearest' });
-  }, [chat]);
+  }, [chat, consultas.length]);
 
   async function api(path: string, body?: unknown) {
     const response = await fetch(path, {
@@ -344,6 +344,7 @@ export function Dashboard({
           Consulta el panorama general, coordina seguimiento y atiende
           derivaciones.
         </p>
+
         <div
           className="global-log chatbot-global-log"
           role="log"
@@ -371,6 +372,7 @@ export function Dashboard({
               />
             </div>
           ))}
+        {pendientes.map(q=><div className="notice" key={'chat-consulta-'+q.ConsultaId}><strong>El agente necesita tu decisión · #{q.ConsultaId}</strong><small>Estudiante #{q.EstudianteId} · {q.Rol}</small><p>{q.Pregunta}</p><textarea aria-label={'Decisión en chat para consulta '+q.ConsultaId} value={respuestas[q.ConsultaId]??''} onChange={e=>setRespuestas(prev=>({...prev,[q.ConsultaId]:e.target.value}))}/><button className="primary" disabled={busy||!respuestas[q.ConsultaId]?.trim()} onClick={()=>void responder(q)}>Responder al agente y comunicar</button></div>)}
           <div ref={finalChat} />
         </div>
         {busy && <p className="thinking">El agente está trabajando…</p>}

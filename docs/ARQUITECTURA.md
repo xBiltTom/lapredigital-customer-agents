@@ -66,3 +66,8 @@ Se conservan transacciones, triggers de historial y consultas SQL complejas exis
 ## Configuración del riesgo
 
 PoliticaRiesgo conserva una fila inmutable por cambio, con valores, fecha y responsable. La mayor secuencia representa la configuración actual; EvaluacionRiesgo.VersionReglas conserva la clave usada al calcular. La interfaz presenta parámetros e historial, sin exponer gestión de políticas ni pedir justificación. El backend genera el detalle automático y detecta ediciones concurrentes. Diagnóstico y aprobación de intervenciones revalidan la configuración; el trigger de señales consulta la versión de la evaluación. Los registros anteriores no se recalculan al cambiar parámetros.
+
+
+## Reportes de servicio desde mensajería
+
+El portal guarda el mensaje entrante y entrega su ID al contexto autenticado del agente. gestionar_caso registra una incidencia clara o una ConsultaDueno para decisión humana. AtencionMensaje conserva el origen y evita reinsertarlo; al confirmar el dueño se conserva también la consulta inicial. El Dashboard muestra las decisiones pendientes en su chat global y la respuesta regresa al hilo del participante. El detalle de caso muestra eventos y origen, ofrece análisis sin efectos y mantiene cierre/reapertura humanos. La notificación de resolución es separada del cambio de estado y utiliza las validaciones del transporte local.

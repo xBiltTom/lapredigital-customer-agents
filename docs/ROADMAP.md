@@ -81,3 +81,5 @@ Reutilizar node:test y trazas de Eve. Tipos y pruebas dirigidas por funcionalida
 - [x] M26 — Bandeja de mensajería del dueño: hilos estudiante/apoderado, lectura y respuestas manuales en el mismo canal del portal, sin mover chats de agentes.
 
 - [x] M27 — Reglas de riesgo editables: guardar sin motivo ni selección de política; historial automático, diagnóstico/agente con parámetros actuales y evaluaciones históricas preservadas.
+
+- [x] M28 — Detalle y análisis asistido de casos; reportes automáticos desde mensajería con origen, derivación al chat global, respuesta del dueño y cierre/comunicación manual.

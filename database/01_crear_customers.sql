@@ -1448,3 +1448,18 @@ GO
 CREATE TRIGGER dbo.TR_ProgresoTemaUNT_Historial ON dbo.ProgresoTemaUNT AFTER UPDATE,DELETE AS
 BEGIN SET NOCOUNT ON; INSERT dbo.ProgresoTemaUNTHistorial(EstudianteId,ContenidoId,Estado,FechaCambio,Origen,Operacion) SELECT d.EstudianteId,d.ContenidoId,d.Estado,d.FechaCambio,d.Origen,CASE WHEN i.EstudianteId IS NULL THEN 'D' ELSE 'U' END FROM deleted d LEFT JOIN inserted i ON i.EstudianteId=d.EstudianteId AND i.ContenidoId=d.ContenidoId; END;
 GO
+
+-- INICIO ATENCION MENSAJERIA
+-- Cada mensaje entrante puede originar un caso o una consulta al dueño.
+-- Si el dueño confirma el registro, se conservan ambas referencias.
+CREATE TABLE dbo.AtencionMensaje (
+    MensajeLocalId                  INT NOT NULL PRIMARY KEY REFERENCES dbo.MensajeCanalLocal(MensajeLocalId),
+    CasoAtencionId                  INT NULL REFERENCES dbo.CasoAtencion(CasoAtencionId),
+    ConsultaId                      INT NULL REFERENCES dbo.ConsultaDueno(ConsultaId),
+    FechaRegistro                   DATETIME2(0) NOT NULL DEFAULT GETDATE(),
+    CHECK (CasoAtencionId IS NOT NULL OR ConsultaId IS NOT NULL)
+);
+CREATE INDEX IX_AtencionMensaje_Caso ON dbo.AtencionMensaje(CasoAtencionId) WHERE CasoAtencionId IS NOT NULL;
+CREATE INDEX IX_AtencionMensaje_Consulta ON dbo.AtencionMensaje(ConsultaId) WHERE ConsultaId IS NOT NULL;
+-- FIN ATENCION MENSAJERIA
+GO

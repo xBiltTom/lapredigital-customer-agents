@@ -1,3 +1,4 @@
+import {CaseDetails} from './CaseDetails';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { secciones, type Vista } from './WorkspaceNav';
 // Campos en PascalCase conservan el nombre del modelo SQL y evitan traducciones duplicadas.
@@ -69,6 +70,7 @@ export function Administration({
       title: string;
     } | null>(null),
     [temas, setTemas] = useState<Row[]>([]);
+  const [casoSeleccionado,setCasoSeleccionado]=useState<number|null>(null);
   const [cursoSeleccionado, setCursoSeleccionado] = useState<string | null>(
     null,
   );
@@ -90,6 +92,7 @@ export function Administration({
     if (!r.ok) throw new Error(result.error ?? 'No se pudo cargar');
     return result;
   }
+  useEffect(()=>{if(vista!=='casos')return;let active=true;const timer=setInterval(()=>{const q=new URLSearchParams({buscar,pagina:String(pagina),tipo:filtroTipo,ambito:filtroAmbito,estado:filtroEstado});api('casos?'+q).then(d=>{if(active)setData(d);}).catch(()=>{});},6000);return()=>{active=false;clearInterval(timer);};},[vista,buscar,pagina,filtroTipo,filtroAmbito,filtroEstado,token]);
   function abrirCurso(curso: string, trigger: HTMLButtonElement) {
     disparadorCurso.current = trigger;
     const solicitud = ++solicitudTemario.current;
@@ -369,11 +372,11 @@ export function Administration({
       resource: 'casos',
       id: row.CasoAtencionId,
       title: 'Actualizar atención · ' + Estado.replaceAll('_', ' '),
-      values: { Estado },
+      values: { Estado, EstadoAnterior: row.Estado },
       fields: [
         {
           key: 'Detalle',
-          label: 'Detalle de la atención',
+          label: Estado==='RESUELTA'?'Solución aplicada y resultado verificado':Estado==='REABIERTA'?'Motivo de reapertura':'Detalle de la atención',
           type: 'textarea',
           required: true,
         },
@@ -433,6 +436,7 @@ export function Administration({
   };
   return (
     <main className="admin-page">
+      {casoSeleccionado!==null&&<CaseDetails id={casoSeleccionado} token={token} onClose={()=>setCasoSeleccionado(null)} onBusy={onBusy} onChanged={()=>{setRefresh(n=>n+1);onChanged();}}/>}
       <div className="admin-heading">
         <div>
           <span className="eyebrow">ADMINISTRACIÓN · CUSTOMERS</span>
@@ -859,7 +863,7 @@ export function Administration({
                 <tbody>
                   {data.items.map((c: Row) => (
                     <tr key={c.CasoAtencionId}>
-                      <td className="case-id">#{c.CasoAtencionId}</td>
+                      <td className="case-id"><button onClick={()=>setCasoSeleccionado(c.CasoAtencionId)}>#{c.CasoAtencionId} · Ver caso</button></td>
                       <td className="case-student">
                         {studentName(c.EstudianteId)}
                       </td>
@@ -905,7 +909,7 @@ export function Administration({
                                 <button
                                   onClick={() => caseState(c, 'EN_ATENCION')}
                                 >
-                                  Atender
+                                  {c.Estado==='EN_ATENCION'?'Registrar avance':'Atender'}
                                 </button>
                                 <button
                                   className="case-resolve"

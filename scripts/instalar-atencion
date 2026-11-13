@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$root"
+source_file=$(mktemp)
+trap 'rm -f "$source_file"' EXIT HUP INT TERM
+docker compose run --rm --no-deps tools node scripts/setup-atencion.mjs > "$source_file"
+docker exec -i sql-server-local sh -c 'export SQLCMDPASSWORD="$MSSQL_SA_PASSWORD"; exec /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -b -i /dev/stdin' < "$source_file"

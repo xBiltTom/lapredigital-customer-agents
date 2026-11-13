@@ -1,3 +1,4 @@
+import {getPrisma} from '../../lib/database/prisma.ts';
 import { defineChannel, GET, POST } from 'eve/channels';
 import { z } from 'zod';
 import { createHmac, timingSafeEqual } from 'node:crypto';
@@ -150,7 +151,7 @@ export default defineChannel({
         const b = z
           .object({ texto: z.string().trim().min(1).max(2000) })
           .parse(await r.json());
-        await mensajeLocal(a.e, a.rol, canal, b.texto, 'ENTRANTE');
+        const recibido = await mensajeLocal(a.e, a.rol, canal, b.texto, 'ENTRANTE');
         const auth = await autenticarDueno(
           new Request('http://localhost', {
             headers: {
@@ -170,6 +171,7 @@ export default defineChannel({
               estudianteId: String(a.e),
               rol: a.rol,
               canal,
+              mensajeOrigenId: String(recibido.id),
             },
           },
           turnPolicy: 'queue',
@@ -217,6 +219,7 @@ export default defineChannel({
           )
             throw new Error('El apoderado ya no tiene acceso vigente');
         }
+        const origen = await getPrisma().atencionMensaje.findFirst({where:{ConsultaId:q.ConsultaId}});
         const delivery = await from(
           `participante:${q.EstudianteId}:${q.Rol}:${q.Canal}`,
         ).send(
@@ -231,6 +234,7 @@ export default defineChannel({
                 rol: q.Rol,
                 canal: q.Canal,
                 respuestaDueno: b.texto,
+                ...(origen?{mensajeOrigenId:String(origen.MensajeLocalId)}:{}),
               },
             },
             turnPolicy: 'queue',

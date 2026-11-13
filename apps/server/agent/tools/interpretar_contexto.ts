@@ -19,6 +19,7 @@ export default defineTool({
     insatisfaccion: ids,
   }),
   async execute({ huella, estudianteId: solicitado, ...contexto }, ctx) {
+    if(ctx.session.auth.current?.attributes?.soloLectura==='true')throw new Error('El análisis del caso es de solo lectura');
     const auth = ctx.session.auth.current;
     const { id, estudianteId } =
       auth?.attributes?.modo === 'global' && solicitado

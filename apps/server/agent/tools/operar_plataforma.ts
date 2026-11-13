@@ -1,7 +1,9 @@
+import {tramitarReporte} from '../../lib/servicios/casos.ts';
 import { defineTool } from 'eve/tools';
 import { z } from 'zod';
 import {
   general,
+  destinatario,
   curriculum,
   validarContacto,
   mensajeLocal,
@@ -34,6 +36,7 @@ export default defineTool({
     const a = ctx.session.auth.current?.attributes;
     const owner = Number(a?.personalInternoId);
     if (!owner) throw new Error('Identidad requerida');
+    if(a?.soloLectura==='true'&&!['RESUMEN','ESTUDIANTE','TEMARIO'].includes(b.accion))throw new Error('El análisis del caso es de solo lectura');
     const participante = a?.modo === 'participante';
     const e = participante
       ? Number(a?.estudianteId)
@@ -94,6 +97,7 @@ export default defineTool({
       return jsonSeguro({ ...d, conversacionesLocales: locales });
     }
     if (!b.texto) throw new Error('Texto requerido');
+    if(b.accion==='CONSULTAR_DUENO'&&participante&&canal==='MENSAJERIA'&&a?.mensajeOrigenId){const contacto=await destinatario(e,rol);return tramitarReporte({estudianteId:e,contactoId:contacto,rol:rol as 'ESTUDIANTE'|'APODERADO',mensajeId:Number(a.mensajeOrigenId),decision:'DERIVAR',descripcion:b.texto,ambito:'SERVICIO'});}
     if (b.accion === 'CONSULTAR_DUENO' || b.accion === 'NO_CONTACTO')
       return consulta(
         e,
