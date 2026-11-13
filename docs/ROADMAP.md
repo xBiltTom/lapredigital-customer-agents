@@ -79,3 +79,5 @@ Reutilizar node:test y trazas de Eve. Tipos y pruebas dirigidas por funcionalida
 - [x] M23 — Recuperar conversaciones principales archivadas y mantener historial por dueño/ámbito aunque cambie la sesión activa de Eve; validar continuidad real y conservar chats flotantes.
 
 - [x] M26 — Bandeja de mensajería del dueño: hilos estudiante/apoderado, lectura y respuestas manuales en el mismo canal del portal, sin mover chats de agentes.
+
+- [x] M27 — Reglas de riesgo editables: guardar sin motivo ni selección de política; historial automático, diagnóstico/agente con parámetros actuales y evaluaciones históricas preservadas.

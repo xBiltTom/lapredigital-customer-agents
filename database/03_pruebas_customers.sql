@@ -81,8 +81,13 @@ IF @@ROWCOUNT<>1 THROW 51900,''No se encontro conversacion sin permiso.'',1;',0,
 INSERT @Pruebas(Caso,Comando,ErrorEsperado,EsHallazgo) VALUES(N'Evidencia de uso permite alterar su estudiante',N'UPDATE dbo.EventoUso SET EstudianteId=(SELECT EstudianteId FROM dbo.Estudiante WHERE Codigo=''C013'') WHERE EventoUsoId=(SELECT MIN(EventoUsoId) FROM dbo.SenalRiesgo WHERE EventoUsoId IS NOT NULL);',0,1);
 INSERT @Pruebas(Caso,Comando,ErrorEsperado,EsHallazgo) VALUES(N'Etapa CUSTOMER sin habilitacion admitida',N'UPDATE dbo.Estudiante SET EtapaActual=''CUSTOMER'' WHERE Codigo=''C013'';',0,1);
 
+-- Versiones de politica: nunca sobrescribir la evidencia historica.
+INSERT @Pruebas(Caso,Comando,ErrorEsperado,EsHallazgo) VALUES
+(N'Politica publicada inmutable',N'UPDATE dbo.PoliticaRiesgo SET Motivo=N''Alterado'' WHERE VersionReglas=''INFORME_7.1'';',51051,0),
+(N'Politica rechaza umbrales invertidos',N'INSERT dbo.PoliticaRiesgo(VersionReglas,Numero,InactividadMediaHoras,InactividadAltaHoras,IncidenciaMediaHoras,IncidenciaAltaHoras,VigenciaDias,MaxEstrellasInsatisfaccion,CreadaPorId,Motivo) VALUES(''PRUEBA_INVALIDA'',99999,168,72,48,96,7,2,1,N''Debe fallar por umbrales invertidos'');',547,0);
+
 -- Limites exactos de las comparaciones usadas en las consultas exploratorias.
--- No equivalen a ejecutar un clasificador: todavia no existe uno implementado.
+-- Estos casos fijan los limites del informe base; las politicas nuevas se prueban en la aplicacion.
 INSERT @Pruebas(Caso,Comando,ErrorEsperado,EsHallazgo) VALUES
 (N'Umbrales exactos de inactividad',N'
 DECLARE @Corte DATETIME2(0)=''2026-11-11T12:00:00'';

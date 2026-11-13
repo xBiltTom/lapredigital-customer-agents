@@ -1,4 +1,4 @@
-/*
+﻿/*
 LaPreDigital | Campo de pruebas de consultas CUSTOMERS | Informe 7.1
 
 COMO USAR
@@ -435,19 +435,21 @@ GO
 /* T08. Incidencias de servicio/acceso y resolucion del mes (C-2.3).
    No incluye consultas ni incidencias de PAGO. Una reapertura conserva el reloj
    desde FechaAperturaOriginal, incluidas las horas intermedias.
-   Exactamente 48 h no dispara medio; exactamente 96 h sigue siendo medio.
+   Los umbrales actuales proceden de PoliticaRiesgo; el limite medio es estricto y el alto tambien.
    Esperado: Mateo REABIERTA y Diego ABIERTA con señal alta; Bruno media.
 */
 PRINT N'T08 | Incidencias del servicio';
 DECLARE @Corte DATETIME2(0) = GETDATE();
+DECLARE @MedioHoras INT, @AltoHoras INT;
+SELECT TOP(1) @MedioHoras=IncidenciaMediaHoras,@AltoHoras=IncidenciaAltaHoras FROM dbo.PoliticaRiesgo ORDER BY Numero DESC;
 DECLARE @Inicio DATE = DATEFROMPARTS(YEAR(@Corte), MONTH(@Corte), 1);
 SELECT e.Codigo, c.CasoAtencionId, c.Ambito, c.Estado, c.Descripcion,
        c.FechaAperturaOriginal, c.FechaResolucionDefinitiva, pi.Nombre AS Responsable,
        CONVERT(DECIMAL(10,2), DATEDIFF_BIG(SECOND, c.FechaAperturaOriginal,
            COALESCE(c.FechaResolucionDefinitiva, @Corte)) / 3600.0) AS HorasDesdeApertura,
        CASE WHEN c.Estado = 'RESUELTA' THEN N'Resuelta'
-            WHEN c.FechaAperturaOriginal < DATEADD(HOUR, -96, @Corte) THEN N'ALTO'
-            WHEN c.FechaAperturaOriginal < DATEADD(HOUR, -48, @Corte) THEN N'MEDIO'
+            WHEN c.FechaAperturaOriginal < DATEADD(HOUR, -@AltoHoras, @Corte) THEN N'ALTO'
+            WHEN c.FechaAperturaOriginal < DATEADD(HOUR, -@MedioHoras, @Corte) THEN N'MEDIO'
             ELSE N'Sin umbral horario de riesgo' END AS SenalPorAntiguedad
 FROM dbo.CasoAtencion c
 JOIN dbo.Estudiante e ON e.EstudianteId = c.EstudianteId
@@ -464,7 +466,7 @@ WHERE Tipo = 'INCIDENCIA' AND Ambito IN ('SERVICIO','ACCESO')
 GO
 
 /* T09. Ultima evaluacion de riesgo guardada por customer (C-3).
-   Una pendiente reciente se muestra PENDIENTE, no BAJO. Antiguedad maxima: 7 dias.
+   Una pendiente reciente se muestra PENDIENTE, no BAJO. La vigencia se consulta en la version de reglas guardada.
    Esperado: Gabriela pendiente y Hugo vencida. Esto NO recalcula la clasificacion.
    Antes de publicar C-3.1, acordar si pendiente integra cobertura: mostrarla
    separada evita tratar una falta de clasificacion como evaluacion resuelta.
@@ -474,7 +476,7 @@ DECLARE @Corte DATETIME2(0) = GETDATE();
 SELECT e.Codigo, er.EvaluacionRiesgoId, er.Estado, er.Nivel, er.FechaEvaluacion,
        er.VersionReglas, er.Motivo,
        CASE WHEN er.EvaluacionRiesgoId IS NULL THEN N'SIN EVALUACION'
-            WHEN er.FechaEvaluacion < DATEADD(DAY, -7, @Corte) THEN N'VENCIDA'
+            WHEN er.FechaEvaluacion < DATEADD(DAY, -reglasEvaluadas.VigenciaDias, @Corte) THEN N'VENCIDA'
             WHEN er.Estado = 'PENDIENTE' THEN N'PENDIENTE'
             ELSE N'CLASIFICADA VIGENTE' END AS Situacion
 FROM dbo.Estudiante e
@@ -484,6 +486,7 @@ OUTER APPLY (
     WHERE r.EstudianteId = e.EstudianteId AND r.FechaEvaluacion <= @Corte
     ORDER BY r.FechaEvaluacion DESC, r.EvaluacionRiesgoId DESC
 ) er
+LEFT JOIN dbo.PoliticaRiesgo reglasEvaluadas ON reglasEvaluadas.VersionReglas=er.VersionReglas
 WHERE e.EtapaActual = 'CUSTOMER'
 ORDER BY e.Codigo;
 GO
@@ -648,6 +651,8 @@ GO
 */
 PRINT N'A01 | Evolucion del uso';
 DECLARE @Corte DATETIME2(0) = GETDATE();
+DECLARE @MedioHoras INT, @AltoHoras INT;
+SELECT TOP(1) @MedioHoras=InactividadMediaHoras,@AltoHoras=InactividadAltaHoras FROM dbo.PoliticaRiesgo ORDER BY Numero DESC;
 SELECT e.Codigo, servicio.InicioEpisodio, u.UltimaActividad,
        u.EventosSemanaAnterior, u.EventosSemanaActual,
        u.EventosSemanaActual - u.EventosSemanaAnterior AS DiferenciaEventos,
@@ -656,8 +661,8 @@ SELECT e.Codigo, servicio.InicioEpisodio, u.UltimaActividad,
             WHEN servicio.InicioEpisodio > DATEADD(DAY, -14, @Corte) THEN N'Exposicion insuficiente para comparar 14 dias'
             ELSE N'Dos ventanas completas de servicio' END AS ComparabilidadTemporal,
        CASE WHEN u.UltimaActividad IS NULL THEN N'SIN DATOS DE USO'
-            WHEN u.UltimaActividad <= DATEADD(HOUR, -168, @Corte) THEN N'ALTO'
-            WHEN u.UltimaActividad <= DATEADD(HOUR, -72, @Corte) THEN N'MEDIO'
+            WHEN u.UltimaActividad <= DATEADD(HOUR, -@AltoHoras, @Corte) THEN N'ALTO'
+            WHEN u.UltimaActividad <= DATEADD(HOUR, -@MedioHoras, @Corte) THEN N'MEDIO'
             ELSE N'Sin umbral de inactividad' END AS SenalSoloPorInactividad
 FROM dbo.Estudiante e
 OUTER APPLY (
@@ -766,7 +771,8 @@ SELECT e.Codigo, pl.Nombre AS PlanActual, er.EvaluacionRiesgoId, er.Nivel,
        msg.FechaEnvio AS UltimoMensajeSaliente,
        CASE WHEN p.PeriodoServicioId IS NULL THEN N'Revisar servicio vigente'
             WHEN er.EvaluacionRiesgoId IS NULL OR er.Estado = 'PENDIENTE'
-              OR er.FechaEvaluacion < DATEADD(DAY, -7, @Corte) THEN N'Reevaluar riesgo'
+              OR er.FechaEvaluacion < DATEADD(DAY, -reglasEvaluadas.VigenciaDias, @Corte)
+              OR er.VersionReglas<>(SELECT TOP(1) VersionReglas FROM dbo.PoliticaRiesgo ORDER BY Numero DESC) THEN N'Reevaluar riesgo'
             WHEN er.Nivel = 'BAJO' THEN N'Sin seguimiento por riesgo medio/alto'
             WHEN NOT EXISTS (
                 SELECT 1 FROM dbo.PlanPrestacion pp JOIN dbo.Prestacion pr ON pr.PrestacionId = pp.PrestacionId
@@ -789,10 +795,11 @@ LEFT JOIN dbo.ModalidadPlan mp ON mp.ModalidadPlanId = p.ModalidadPlanId
 LEFT JOIN dbo.PlanServicio pl ON pl.PlanServicioId = mp.PlanServicioId
 LEFT JOIN dbo.AutorizacionContacto ac ON ac.ContactoId = e.ContactoId AND ac.Finalidad = 'ACADEMICA'
 OUTER APPLY (
-    SELECT TOP (1) r.EvaluacionRiesgoId, r.Estado, r.Nivel, r.FechaEvaluacion
+    SELECT TOP (1) r.EvaluacionRiesgoId, r.Estado, r.Nivel, r.FechaEvaluacion, r.VersionReglas
     FROM dbo.EvaluacionRiesgo r WHERE r.EstudianteId = e.EstudianteId AND r.FechaEvaluacion <= @Corte
     ORDER BY r.FechaEvaluacion DESC, r.EvaluacionRiesgoId DESC
 ) er
+LEFT JOIN dbo.PoliticaRiesgo reglasEvaluadas ON reglasEvaluadas.VersionReglas=er.VersionReglas
 OUTER APPLY (
     SELECT TOP (1) i.IntervencionId, i.EvaluacionRiesgoId, i.Estado, i.Tipo,
            i.RequiereAprobacion, i.AprobadoPorId, i.FechaAprobacion,

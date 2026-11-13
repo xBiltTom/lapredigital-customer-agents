@@ -8,6 +8,7 @@ export const secciones = [
   ['recursos', '▣', 'Recursos', 'Materiales de estudio'],
   ['rutas', '↗', 'Rutas de estudio', 'Versiones y actividades'],
   ['casos', '☷', 'Consultas e incidencias', 'Atención y seguimiento'],
+  ['reglas', '⚙', 'Reglas del negocio', 'Configuración e historial'],
   ['planes', '◇', 'Planes y servicios', 'Catálogo y precios'],
 ] as const;
 export type Vista = (typeof secciones)[number][0];

@@ -1,3 +1,4 @@
+import {getPrisma} from '../lib/database/prisma.ts';
 import assert from 'node:assert/strict';
 import {diagnostico,guardarContexto} from '../lib/academico/diagnostico.ts';
 import {proponer,decidir} from '../lib/academico/intervenciones.ts';
@@ -37,4 +38,4 @@ try {
  assert.equal((await pool.request().input('id',seguimiento.id).query('SELECT MensajeSeguimientoId FROM dbo.Intervencion WHERE IntervencionId=@id')).recordset[0].MensajeSeguimientoId,null);
  assert.equal(await cantidad('Mensaje'),mensajes,'Seguimiento simulado tampoco crea mensajes.');
  console.log('MVP SQL OK: progreso, riesgo, permisos, evidencia ajena, rollback, deduplicación, aprobación y simulación sin envíos.');
-}finally{await closePool();}
+}finally{await closePool();await getPrisma().$disconnect();}

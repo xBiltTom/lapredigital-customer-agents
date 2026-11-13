@@ -1,3 +1,4 @@
+import { politicaActual, politicaVersion } from '../servicios/politicas.ts';
 import {
   CONSULTAR_DIAGNOSTICO,
   CONSULTAR_TEMARIO_DIAGNOSTICO,
@@ -86,6 +87,7 @@ type Evaluacion = {
   fecha: Date;
   estado: string;
   nivel: string | null;
+  versionReglas: string;
 };
 const directorio = `.eve/contextos/${process.env.SQLSERVER_DATABASE}`;
 
@@ -99,6 +101,7 @@ export async function diagnostico(
     estudianteId,
   );
   if (!ficha) throw new Error('Estudiante no disponible para esta identidad.');
+  const politica = await politicaActual();
   const pool = await getPool();
   const result = await pool
     .request()
@@ -146,7 +149,15 @@ export async function diagnostico(
     const saved = JSON.parse(
       await readFile(`${directorio}/${estudianteId}.json`, 'utf8'),
     );
-    if (saved.huella === huella) contexto = saved.contexto;
+    if (saved.huella === huella) {
+      contexto = saved.contexto;
+      const anteriorMax = saved.maxEstrellas ?? 2;
+      if (politica.MaxEstrellasInsatisfaccion > anteriorMax) {
+        // Reinterpretar solo estrellas recién incluidas; conservar peticiones de no contacto.
+        contexto.valoracionesRevisadas = contexto.valoracionesRevisadas.filter(id =>
+          !valoraciones.some(v => v.id === id && v.estrellas > anteriorMax && v.estrellas <= politica.MaxEstrellasInsatisfaccion));
+      }
+    }
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
   }
@@ -155,10 +166,10 @@ export async function diagnostico(
   if (uso[0])
     senales.push({
       codigo:
-        inactividad((+corte - +uso[0].fecha) / 1000) === 'BAJO'
+        inactividad((+corte - +uso[0].fecha) / 1000, politica) === 'BAJO'
           ? 'ACTIVIDAD_RECIENTE'
           : 'INACTIVIDAD',
-      nivel: inactividad((+corte - +uso[0].fecha) / 1000),
+      nivel: inactividad((+corte - +uso[0].fecha) / 1000, politica),
       fuente: 'EventoUso',
       id: uso[0].id,
       fecha: uso[0].fecha,
@@ -168,11 +179,11 @@ export async function diagnostico(
       c.tipo === 'INCIDENCIA' &&
       c.ambito !== 'PAGO' &&
       c.estado !== 'RESUELTA' &&
-      incidencia((+corte - +c.apertura) / 1000) !== 'BAJO'
+      incidencia((+corte - +c.apertura) / 1000, politica) !== 'BAJO'
     )
       senales.push({
         codigo: 'INCIDENCIA_ABIERTA',
-        nivel: incidencia((+corte - +c.apertura) / 1000),
+        nivel: incidencia((+corte - +c.apertura) / 1000, politica),
         fuente: 'CasoAtencion',
         id: c.id,
         fecha: c.apertura,
@@ -199,7 +210,7 @@ export async function diagnostico(
         fecha: m.fecha,
       });
   for (const v of valoraciones)
-    if (v.estrellas <= 2 && contexto.insatisfaccion.includes(v.id))
+    if (v.estrellas <= politica.MaxEstrellasInsatisfaccion && contexto.insatisfaccion.includes(v.id))
       senales.push({
         codigo: 'INSATISFACCION',
         nivel: 'ALTO',
@@ -210,7 +221,7 @@ export async function diagnostico(
   const narrativaPendiente =
     mensajes.some((m) => !contexto.revisados.includes(m.id)) ||
     valoraciones.some(
-      (v) => v.estrellas <= 2 && !contexto.valoracionesRevisadas.includes(v.id),
+      (v) => v.estrellas <= politica.MaxEstrellasInsatisfaccion && !contexto.valoracionesRevisadas.includes(v.id),
     );
   const riesgo = clasificar(senales, !!uso[0] && !narrativaPendiente);
   const ruta = rutas.find((r) => r.vigente) ?? null;
@@ -230,6 +241,7 @@ export async function diagnostico(
   if (!canales.length) causas.push('Sin canal académico autorizado');
   const calificaciones = valoraciones.filter((v) => v.fecha >= inicio);
   const ultima = evaluaciones[0] ?? null;
+  const politicaGuardada = ultima ? await politicaVersion(ultima.versionReglas) : null;
   const temario = (
     await pool
       .request()
@@ -241,7 +253,8 @@ export async function diagnostico(
     estudianteId,
     corte,
     inicio,
-    versionReglas: 'INFORME_7.1',
+    versionReglas: politica.VersionReglas,
+    reglas: politica,
     huella,
     ficha,
     ruta,
@@ -271,7 +284,8 @@ export async function diagnostico(
       ? {
           ...ultima,
           vigente:
-            ultima.estado === 'CLASIFICADA' && vigente(ultima.fecha, corte),
+            ultima.estado === 'CLASIFICADA' && vigente(ultima.fecha, corte, politicaGuardada!.VigenciaDias),
+          politicaActual: ultima.versionReglas === politica.VersionReglas,
         }
       : null,
   };
@@ -298,7 +312,7 @@ export async function guardarContexto(
       throw new Error('Mensaje ajeno o inexistente.');
   if (
     contexto.insatisfaccion.some(
-      (id) => !d.valoraciones.some((v) => v.id === id && v.estrellas <= 2),
+      (id) => !d.valoraciones.some((v) => v.id === id && v.estrellas <= d.reglas.MaxEstrellasInsatisfaccion),
     )
   )
     throw new Error('Valoración inválida para insatisfacción.');
@@ -310,7 +324,7 @@ export async function guardarContexto(
     throw new Error('Valoración ajena o inexistente.');
   await mkdir(directorio, { recursive: true, mode: 0o700 });
   const temp = `${directorio}/${estudianteId}.${randomUUID()}.tmp`;
-  await writeFile(temp, JSON.stringify({ huella, contexto }), { mode: 0o600 });
+  await writeFile(temp, JSON.stringify({ huella, contexto, maxEstrellas: d.reglas.MaxEstrellasInsatisfaccion }), { mode: 0o600 });
   await rename(temp, `${directorio}/${estudianteId}.json`);
   return diagnostico(personalInternoId, estudianteId);
 }

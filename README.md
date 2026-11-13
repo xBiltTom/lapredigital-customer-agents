@@ -167,3 +167,12 @@ En Windows ejecutar `infra/sql/admin-permissions.sql` con la cuenta administrado
 **Mensajería** en el sidebar permite leer los hilos del portal y responder directamente como equipo LaPreDigital. Los hilos se distinguen por estudiante, contacto y rol; un mismo apoderado conserva un hilo por estudiante. Incluye búsqueda, filtro de rol, mensajes anteriores y sincronización periódica. El historial académico ACADEMIA permanece separado.
 
 Las respuestas manuales aparecen en la zona MENSAJERIA del portal, sin llamar al agente ni a proveedores externos. La recepción se confirma cuando el participante lee su bandeja. El asistente automático sigue activo; esta vista no representa una toma de control exclusiva ni cierra automáticamente consultas pendientes del Dashboard. Para delegar respuestas se conservan el chat global del Dashboard y el acompañamiento individual de Agente IA.
+
+
+## Reglas del negocio
+
+La nueva opción del sidebar permite ajustar seis parámetros de riesgo de abandono. Basta editar valores y pulsar **Guardar cambios**. Incluye historial automático por fecha/responsable; no solicita motivo ni selección de política.
+
+Los nuevos diagnósticos usan los valores guardados. Las evaluaciones anteriores conservan los suyos, y las propuestas basadas en reglas anteriores requieren reevaluación. Las reglas de pagos, acceso, autorizaciones y KPI no se modifican desde este formulario. El agente puede consultar la configuración vigente o histórica, pero solo el dueño la cambia desde la aplicación.
+
+En una base nueva, ejecutar 01 y 02 actualizados como siempre. Para incorporar esta extensión a una instalación existente sin borrar datos, ejecutar una vez `./scripts/instalar-reglas` (SQL Server Docker local). El instalador lee el DDL y la semilla de esos mismos scripts; no es una segunda fuente del esquema. La instalación actual ya lo tiene aplicado. Las pruebas de publicación solo escriben en LaPreDigital_Customers_MvpTest.

@@ -57,6 +57,15 @@ BEGIN TRY
     INSERT dbo.PersonalInterno (Nombre, Rol, Activo)
     VALUES (N'Dueño de demostracion', N'DUEÑO', 1);
     DECLARE @Dueno INT = CONVERT(INT, SCOPE_IDENTITY());
+    -- INICIO SEMILLA POLITICA RIESGO
+    INSERT dbo.PoliticaRiesgo (
+        VersionReglas, Numero, InactividadMediaHoras, InactividadAltaHoras,
+        IncidenciaMediaHoras, IncidenciaAltaHoras, VigenciaDias,
+        MaxEstrellasInsatisfaccion, CreadaPorId, Motivo
+    ) VALUES ('INFORME_7.1', 1, 72, 168, 48, 96, 7, 2, NULL,
+              N'Politica inicial del informe 7.1; los cambios posteriores se publican como nuevas versiones.');
+    -- FIN SEMILLA POLITICA RIESGO
+
     INSERT dbo.PersonalInterno (Nombre, Rol, Activo)
     VALUES (N'Soporte academico de demostracion', N'SOPORTE', 1);
     DECLARE @Soporte INT = CONVERT(INT, SCOPE_IDENTITY());
@@ -1662,7 +1671,7 @@ SELECT e.Codigo, c.NombreCompleto, pl.Nombre AS PlanVigente,
        ps.Inicio, ps.Fin, s.RenovacionAutomatica, u.UltimaActividad,
        er.Nivel AS UltimoRiesgoGuardado, er.FechaEvaluacion,
        CASE WHEN er.EvaluacionRiesgoId IS NULL THEN 'SIN EVALUACION'
-            WHEN er.FechaEvaluacion<DATEADD(DAY,-7,@Corte) THEN 'SIN EVALUACION VIGENTE'
+            WHEN er.FechaEvaluacion<DATEADD(DAY,-politica.VigenciaDias,@Corte) THEN 'SIN EVALUACION VIGENTE'
             WHEN er.Estado='PENDIENTE' THEN 'PENDIENTE'
             ELSE er.Nivel END AS SituacionRiesgo
 FROM dbo.Estudiante e
@@ -1673,6 +1682,7 @@ JOIN dbo.ModalidadPlan mp ON mp.ModalidadPlanId=ps.ModalidadPlanId
 JOIN dbo.PlanServicio pl ON pl.PlanServicioId=mp.PlanServicioId
 OUTER APPLY (SELECT MAX(FechaEvento) AS UltimaActividad FROM dbo.EventoUso WHERE EstudianteId=e.EstudianteId AND FechaEvento<=@Corte) u
 OUTER APPLY (SELECT TOP (1) * FROM dbo.EvaluacionRiesgo WHERE EstudianteId=e.EstudianteId AND FechaEvaluacion<=@Corte ORDER BY FechaEvaluacion DESC, EvaluacionRiesgoId DESC) er
+LEFT JOIN dbo.PoliticaRiesgo politica ON politica.VersionReglas=er.VersionReglas
 WHERE e.EtapaActual='CUSTOMER' AND ps.EstadoAcceso IN ('HABILITADO','CON_INCIDENCIA')
   AND ps.Inicio<=@Corte AND ps.Fin>@Corte
 ORDER BY e.Codigo;
@@ -1737,9 +1747,11 @@ GO
 Los casos de PAGO no intervienen en este criterio de riesgo de C-3.
 Comparar con DATEADD respeta umbrales exactos, sin redondear horas con DATEDIFF. */
 DECLARE @AhoraCaso DATETIME2(0)=GETDATE();
+DECLARE @MedioHoras INT, @AltoHoras INT;
+SELECT TOP(1) @MedioHoras=IncidenciaMediaHoras,@AltoHoras=IncidenciaAltaHoras FROM dbo.PoliticaRiesgo ORDER BY Numero DESC;
 SELECT e.Codigo,c.CasoAtencionId,c.Ambito,c.Estado,c.FechaAperturaOriginal,
-       CASE WHEN c.FechaAperturaOriginal<DATEADD(HOUR,-96,@AhoraCaso) THEN 'ALTO'
-            WHEN c.FechaAperturaOriginal<DATEADD(HOUR,-48,@AhoraCaso) THEN 'MEDIO'
+       CASE WHEN c.FechaAperturaOriginal<DATEADD(HOUR,-@AltoHoras,@AhoraCaso) THEN 'ALTO'
+            WHEN c.FechaAperturaOriginal<DATEADD(HOUR,-@MedioHoras,@AhoraCaso) THEN 'MEDIO'
             ELSE 'SIN UMBRAL DE RIESGO POR ANTIGUEDAD' END AS SenalPorIncidencia
 FROM dbo.CasoAtencion c JOIN dbo.Estudiante e ON e.EstudianteId=c.EstudianteId
 WHERE c.Tipo='INCIDENCIA' AND c.Ambito IN ('SERVICIO','ACCESO') AND c.Estado<>'RESUELTA'

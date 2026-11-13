@@ -13,12 +13,19 @@ export const contextoVacio = (): Contexto => ({
   noContacto: [],
   insatisfaccion: [],
 });
-export const inactividad = (segundos: number): Nivel =>
-  segundos >= 604800 ? 'ALTO' : segundos >= 259200 ? 'MEDIO' : 'BAJO';
-export const incidencia = (segundos: number): Nivel =>
-  segundos > 345600 ? 'ALTO' : segundos > 172800 ? 'MEDIO' : 'BAJO';
-export const vigente = (fecha: Date, corte: Date) =>
-  fecha <= corte && +corte - +fecha <= 604800000;
+export const reglasInforme = {
+  InactividadMediaHoras: 72, InactividadAltaHoras: 168,
+  IncidenciaMediaHoras: 48, IncidenciaAltaHoras: 96,
+  VigenciaDias: 7, MaxEstrellasInsatisfaccion: 2,
+} as const;
+export type ParametrosRiesgo = { [K in keyof typeof reglasInforme]: number };
+// Los valores por defecto conservan las pruebas del informe; producción pasa la política publicada.
+export const inactividad = (segundos: number, p: ParametrosRiesgo = reglasInforme): Nivel =>
+  segundos >= p.InactividadAltaHoras * 3600 ? 'ALTO' : segundos >= p.InactividadMediaHoras * 3600 ? 'MEDIO' : 'BAJO';
+export const incidencia = (segundos: number, p: ParametrosRiesgo = reglasInforme): Nivel =>
+  segundos > p.IncidenciaAltaHoras * 3600 ? 'ALTO' : segundos > p.IncidenciaMediaHoras * 3600 ? 'MEDIO' : 'BAJO';
+export const vigente = (fecha: Date, corte: Date, dias: number = reglasInforme.VigenciaDias) =>
+  fecha <= corte && +corte - +fecha <= dias * 86400000;
 export type Senal = {
   codigo: string;
   nivel: Nivel;

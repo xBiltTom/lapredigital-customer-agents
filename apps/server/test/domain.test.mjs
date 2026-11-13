@@ -26,3 +26,17 @@ test('mejora expresa puntos porcentuales y exige grupo y secuencia temporal',()=
   assert.equal(mejoras([i,{...i,id:2,grupoId:2,fecha:corte}])[0].mejoraPP,null);
   assert.equal(mejoras([{...i,grupoId:null}]).length,0);
 });
+
+test('los parámetros publicados conservan límites exactos y cambian el resultado',()=>{
+ const custom={InactividadMediaHoras:96,InactividadAltaHoras:192,IncidenciaMediaHoras:60,IncidenciaAltaHoras:120,VigenciaDias:14,MaxEstrellasInsatisfaccion:3};
+ assert.equal(inactividad(80*3600,custom),'BAJO');
+ assert.equal(inactividad(96*3600,custom),'MEDIO');
+ assert.equal(inactividad(192*3600,custom),'ALTO');
+ assert.equal(incidencia(60*3600,custom),'BAJO');
+ assert.equal(incidencia(60*3600+1,custom),'MEDIO');
+ assert.equal(incidencia(120*3600,custom),'MEDIO');
+ assert.equal(incidencia(120*3600+1,custom),'ALTO');
+ const corte=new Date('2026-11-13T12:00:00Z');
+ assert.equal(vigente(new Date(+corte-14*86400000),corte,14),true);
+ assert.equal(vigente(new Date(+corte-14*86400000-1),corte,14),false);
+});

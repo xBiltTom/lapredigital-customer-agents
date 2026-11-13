@@ -438,13 +438,45 @@ CREATE INDEX IX_CasoAtencion_EstudianteEstado ON dbo.CasoAtencion(EstudianteId, 
 GO
 -- 6. RIESGO Y ACCIONES DE ACOMPANAMIENTO
 
+-- INICIO TABLA POLITICA RIESGO
+-- Cada publicacion es una fila inmutable; la mayor version es la politica actual.
+CREATE TABLE dbo.PoliticaRiesgo (
+    VersionReglas                   VARCHAR(20) NOT NULL PRIMARY KEY,
+    Numero                          INT NOT NULL UNIQUE CHECK (Numero > 0),
+    InactividadMediaHoras            INT NOT NULL,
+    InactividadAltaHoras             INT NOT NULL,
+    IncidenciaMediaHoras             INT NOT NULL,
+    IncidenciaAltaHoras              INT NOT NULL,
+    VigenciaDias                    TINYINT NOT NULL CHECK (VigenciaDias BETWEEN 1 AND 30),
+    MaxEstrellasInsatisfaccion       TINYINT NOT NULL CHECK (MaxEstrellasInsatisfaccion BETWEEN 1 AND 4),
+    FechaPublicacion                DATETIME2(0) NOT NULL DEFAULT GETDATE(),
+    CreadaPorId                     INT NULL REFERENCES dbo.PersonalInterno(PersonalInternoId),
+    Motivo                          NVARCHAR(500) NOT NULL,
+    CHECK (InactividadMediaHoras >= 1 AND InactividadAltaHoras > InactividadMediaHoras AND InactividadAltaHoras <= 8760),
+    CHECK (IncidenciaMediaHoras >= 1 AND IncidenciaAltaHoras > IncidenciaMediaHoras AND IncidenciaAltaHoras <= 8760),
+    CHECK (Numero = 1 OR CreadaPorId IS NOT NULL),
+    CHECK (LEN(LTRIM(RTRIM(Motivo))) > 0)
+);
+-- FIN TABLA POLITICA RIESGO
+GO
+-- INICIO PROTECCION POLITICA RIESGO
+CREATE TRIGGER dbo.TR_PoliticaRiesgo_Inmutable ON dbo.PoliticaRiesgo
+AFTER UPDATE, DELETE AS
+BEGIN
+    SET NOCOUNT ON;
+    THROW 51051, N'Las reglas publicadas no se modifican ni eliminan. Publique una nueva version.', 1;
+END;
+-- FIN PROTECCION POLITICA RIESGO
+GO
+
 CREATE TABLE dbo.EvaluacionRiesgo (
     EvaluacionRiesgoId              INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     EstudianteId                    INT NOT NULL REFERENCES dbo.Estudiante(EstudianteId),
     FechaEvaluacion                 DATETIME2(0) NOT NULL,
     Estado                          VARCHAR(12) NOT NULL CHECK (Estado IN ('PENDIENTE','CLASIFICADA')),
     Nivel                           VARCHAR(5) NULL CHECK (Nivel IN ('BAJO','MEDIO','ALTO')),
-    VersionReglas                   VARCHAR(20) NOT NULL DEFAULT 'INFORME_7.1',
+    VersionReglas                   VARCHAR(20) NOT NULL DEFAULT 'INFORME_7.1'
+        CONSTRAINT FK_EvaluacionRiesgo_Politica REFERENCES dbo.PoliticaRiesgo(VersionReglas),
     Motivo                          NVARCHAR(1000) NOT NULL,
     Origen                          VARCHAR(12) NOT NULL CHECK (Origen IN (N'DUEÑO','SISTEMA','IA_ACADEMICO','DEMO')),
     FechaRegistro                   DATETIME2(0) NOT NULL DEFAULT GETDATE(),
@@ -1341,15 +1373,16 @@ BEGIN
         THROW 51047, N'La incidencia no corresponde al estudiante, a la fecha o al ambito de servicio.', 1;
 
     -- Valoraciones: deben ser validas y de 1 o 2 estrellas; el agente ademas
-    -- debe confirmar que evidencian insatisfaccion al interpretar el contexto.
+    -- debe confirmar insatisfaccion contextual; el limite procede de la version evaluada.
     IF EXISTS (
         SELECT 1 FROM inserted AS senal
         JOIN dbo.EvaluacionRiesgo AS riesgo ON riesgo.EvaluacionRiesgoId = senal.EvaluacionRiesgoId
         JOIN dbo.Valoracion AS valor ON valor.ValoracionId = senal.ValoracionId
+        JOIN dbo.PoliticaRiesgo AS politica ON politica.VersionReglas = riesgo.VersionReglas
         JOIN dbo.SolicitudValoracion AS solicitud ON solicitud.SolicitudValoracionId = valor.SolicitudValoracionId
         WHERE solicitud.EstudianteId <> riesgo.EstudianteId
            OR valor.FechaRespuesta > riesgo.FechaEvaluacion
-           OR valor.Valida = 0 OR valor.Estrellas > 2
+           OR valor.Valida = 0 OR valor.Estrellas > politica.MaxEstrellasInsatisfaccion
     )
         THROW 51048, N'La valoracion no es evidencia valida de insatisfaccion para esta evaluacion.', 1;
 

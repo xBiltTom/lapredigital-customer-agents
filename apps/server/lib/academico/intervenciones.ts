@@ -1,3 +1,4 @@
+import { politicaVersion } from '../servicios/politicas.ts';
 import sql from 'mssql';
 import { createHash } from 'node:crypto';
 import { getPool } from '../database/pool.ts';
@@ -20,6 +21,12 @@ async function bloquear(tx: sql.Transaction, estudianteId: number) {
     SET XACT_ABORT ON;
     DECLARE @rc INT; EXEC @rc=sys.sp_getapplock @Resource=@recurso,@LockMode='Exclusive',@LockOwner='Transaction',@LockTimeout=5000;
     IF @rc<0 THROW 51940,N'No se pudo bloquear la operación. Reintentar.',1;`);
+}
+// Mantiene la misma política desde el diagnóstico hasta confirmar la escritura.
+async function validarPolitica(tx: sql.Transaction, version: string) {
+  const r = await new sql.Request(tx).query('SELECT TOP(1) VersionReglas FROM dbo.PoliticaRiesgo WITH(HOLDLOCK) ORDER BY Numero DESC');
+  if (r.recordset[0]?.VersionReglas !== version)
+    throw new Error('Las reglas cambiaron. Actualiza el diagnóstico antes de continuar.');
 }
 // Revalida dentro de la transacción: dueño, vigencia, prestaciones y permisos.
 async function validarServicio(
@@ -53,6 +60,7 @@ async function validarSenal(
   tx: sql.Transaction,
   estudianteId: number,
   s: Senal,
+  maxEstrellas: number,
 ) {
   const fuentes: Record<string, string> = {
     EventoUso:
@@ -64,12 +72,13 @@ async function validarSenal(
     Mensaje:
       'SELECT c.EstudianteId FROM dbo.Mensaje m WITH (HOLDLOCK) JOIN dbo.Conversacion c ON c.ConversacionId=m.ConversacionId WHERE m.MensajeId=@id AND m.FechaRecepcion=@fecha',
     Valoracion:
-      'SELECT sv.EstudianteId FROM dbo.Valoracion v WITH (HOLDLOCK) JOIN dbo.SolicitudValoracion sv ON sv.SolicitudValoracionId=v.SolicitudValoracionId WHERE v.ValoracionId=@id AND v.FechaRespuesta=@fecha AND v.Valida=1 AND v.Estrellas<=2',
+      'SELECT sv.EstudianteId FROM dbo.Valoracion v WITH (HOLDLOCK) JOIN dbo.SolicitudValoracion sv ON sv.SolicitudValoracionId=v.SolicitudValoracionId WHERE v.ValoracionId=@id AND v.FechaRespuesta=@fecha AND v.Valida=1 AND v.Estrellas<=@maxEstrellas',
   };
   const query = fuentes[s.fuente];
   if (!query) throw new Error('Fuente no permitida.');
   const r = await new sql.Request(tx)
     .input('id', sql.Int, s.id)
+    .input('maxEstrellas', sql.TinyInt, maxEstrellas)
     .input('fecha', sql.DateTime2(0), s.fecha)
     .query(query);
   if (r.recordset.length !== 1 || r.recordset[0].EstudianteId !== estudianteId)
@@ -82,20 +91,24 @@ async function validarEvaluacion(
   evaluacionId: number | null,
   huella: string,
   corte: Date,
+  versionActual: string,
 ) {
   if (evaluacionId === null) return;
   const evalR = await new sql.Request(tx)
     .input('id', sql.Int, evaluacionId)
     .input('e', sql.Int, estudianteId)
     .query(
-      'SELECT FechaEvaluacion,Estado,Nivel,Motivo,Origen FROM dbo.EvaluacionRiesgo WITH(HOLDLOCK) WHERE EvaluacionRiesgoId=@id AND EstudianteId=@e',
+      'SELECT FechaEvaluacion,Estado,Nivel,Motivo,Origen,VersionReglas FROM dbo.EvaluacionRiesgo WITH(HOLDLOCK) WHERE EvaluacionRiesgoId=@id AND EstudianteId=@e',
     );
   const evaluacion = evalR.recordset[0];
   if (!evaluacion)
     throw new Error('La evaluación ya no pertenece al estudiante.');
+  const politica = await politicaVersion(evaluacion.VersionReglas);
+  if (evaluacion.VersionReglas !== versionActual)
+    throw new Error('La política cambió. Rechaza la propuesta anterior y solicita una reevaluación.');
   if (
     evaluacion.Estado === 'CLASIFICADA' &&
-    !vigente(evaluacion.FechaEvaluacion, corte)
+    !vigente(evaluacion.FechaEvaluacion, corte, politica.VigenciaDias)
   )
     throw new Error(
       'La evaluación venció. Rechaza la propuesta anterior y solicita una reevaluación.',
@@ -118,13 +131,13 @@ async function validarEvaluacion(
     COALESCE(EventoUsoId,CasoAtencionId,DificultadAcademicaId,MensajeId,ValoracionId) id FROM dbo.SenalRiesgo WITH(HOLDLOCK) WHERE EvaluacionRiesgoId=@id`);
   const senales = r.recordset as Senal[];
   for (const s of senales) {
-    await validarSenal(tx, estudianteId, s);
+    await validarSenal(tx, estudianteId, s, politica.MaxEstrellasInsatisfaccion);
     const segundos = (+evaluacion.FechaEvaluacion - +s.fecha) / 1000;
     const esperado =
       s.fuente === 'EventoUso'
-        ? inactividad(segundos)
+        ? inactividad(segundos, politica)
         : s.fuente === 'CasoAtencion'
-          ? incidencia(segundos)
+          ? incidencia(segundos, politica)
           : s.fuente === 'DificultadAcademica'
             ? 'MEDIO'
             : 'ALTO';
@@ -161,6 +174,7 @@ export async function proponer(
     .update(
       JSON.stringify({
         tipo,
+        versionReglas: d.versionReglas,
         nivel: d.riesgo.nivel,
         fuentes: d.riesgo.senales.map((s) => [s.fuente, s.id, s.nivel]),
       }),
@@ -172,6 +186,7 @@ export async function proponer(
   await tx.begin();
   try {
     await bloquear(tx, estudianteId);
+    await validarPolitica(tx, d.versionReglas);
     await validarServicio(tx, estudianteId, personalInternoId, tipo);
     const previa = await new sql.Request(tx)
       .input('e', sql.Int, estudianteId)
@@ -185,7 +200,7 @@ export async function proponer(
       await tx.commit();
       return { id: previa.recordset[0].id as number, reutilizada: true };
     }
-    for (const s of d.riesgo.senales) await validarSenal(tx, estudianteId, s);
+    for (const s of d.riesgo.senales) await validarSenal(tx, estudianteId, s, d.reglas.MaxEstrellasInsatisfaccion);
     const e = await new sql.Request(tx)
       .input('e', sql.Int, estudianteId)
       .input('estado', sql.VarChar(12), d.riesgo.estado)
@@ -199,9 +214,10 @@ export async function proponer(
           version: d.versionReglas,
         }),
       )
+      .input('version', sql.VarChar(20), d.versionReglas)
       .input('corte', sql.DateTime2(0), d.corte)
       .query(`INSERT dbo.EvaluacionRiesgo(EstudianteId,FechaEvaluacion,Estado,Nivel,VersionReglas,Motivo,Origen)
-        VALUES(@e,@corte,@estado,@nivel,'INFORME_7.1',@motivo,'IA_ACADEMICO'); SELECT CONVERT(INT,SCOPE_IDENTITY()) id;`);
+        VALUES(@e,@corte,@estado,@nivel,@version,@motivo,'IA_ACADEMICO'); SELECT CONVERT(INT,SCOPE_IDENTITY()) id;`);
     const evaluacionId = e.recordset[0].id as number;
     for (const s of d.riesgo.senales) {
       const columnas: Record<string, string> = {
@@ -270,6 +286,7 @@ export async function decidir(
   await tx.begin();
   try {
     await bloquear(tx, estudianteId);
+    if (accion !== 'rechazar') await validarPolitica(tx, d.versionReglas);
     const locked = await new sql.Request(tx)
       .input('id', sql.Int, id)
       .input('e', sql.Int, estudianteId)
@@ -291,6 +308,7 @@ export async function decidir(
         actual.evaluacionId,
         d.huella,
         d.corte,
+        d.versionReglas,
       );
     if (
       accion === 'aprobar' &&

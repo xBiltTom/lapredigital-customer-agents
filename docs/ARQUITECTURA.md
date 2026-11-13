@@ -61,3 +61,8 @@ Sidebar con Dashboard/chat global y Agente IA/acompañamiento individual separad
 Prisma 7.10.1 y adapter-mssql simplifican las operaciones ordinarias. El mapa parcial de `prisma/schema.prisma` se genera en arranque/build, sin aplicar DDL ni migraciones. GETDATE sigue originando los tiempos operativos peruanos. El adapter Prisma usa useUTC:true para representar los valores SQL sin desplazar fechas en las copias; mssql mantiene su configuración y serialización anteriores.
 
 Se conservan transacciones, triggers de historial y consultas SQL complejas existentes. `updateMany` evita el OUTPUT directo incompatible con triggers de SQL Server. La API administrativa no concede nuevas herramientas al agente. Los nuevos permisos se encuentran en `infra/sql/admin-permissions.sql`, sin DELETE ni DDL.
+
+
+## Configuración del riesgo
+
+PoliticaRiesgo conserva una fila inmutable por cambio, con valores, fecha y responsable. La mayor secuencia representa la configuración actual; EvaluacionRiesgo.VersionReglas conserva la clave usada al calcular. La interfaz presenta parámetros e historial, sin exponer gestión de políticas ni pedir justificación. El backend genera el detalle automático y detecta ediciones concurrentes. Diagnóstico y aprobación de intervenciones revalidan la configuración; el trigger de señales consulta la versión de la evaluación. Los registros anteriores no se recalculan al cambiar parámetros.

@@ -183,7 +183,8 @@ SELECT
   TOP (1) EvaluacionRiesgoId id,
   FechaEvaluacion fecha,
   Estado estado,
-  Nivel nivel
+  Nivel nivel,
+  VersionReglas versionReglas
 FROM
   dbo.EvaluacionRiesgo
 WHERE

@@ -1,7 +1,7 @@
 export type Alumno={estudianteId:number;codigo:string;nombreCompleto:string;etapaActual:string;carreraObjetivo:string|null};
 export type Diagnostico={
  temario:{id:number;curso:string;tema:string;subtemas:string;estado:string;origen:string|null}[];
- estudianteId:number;corte:string;inicio:string;narrativaPendiente:boolean;
+ versionReglas:string;estudianteId:number;corte:string;inicio:string;narrativaPendiente:boolean;
  ficha:{estudiante:{codigo:string;nombreCompleto:string;correo:string|null;telefono:string|null;etapaActual:string;carreraObjetivo:string|null;universidadObjetivo:string;disponibilidadSemanalHoras:number|null;fechaExamen:string|null;parentesco:string|null;fechaRegistro:string};apoderado:{nombreCompleto:string;correo:string|null;telefono:string|null}|null;servicioActual:{plan:string;fin:string;becaPorcentaje:number;cobrosConfirmados:number;importeCobradoPEN:number;renovacionAutomatica:boolean}|null;historial:{periodoServicioId:number;plan:string;tipo:string;inicio:string;fin:string}[];prestaciones:{codigo:string;descripcion:string}[]};
  ruta:{id:number;version:number}|null;rutas:{id:number;version:number;vigente:boolean}[];cumplimiento:{planificadas:number;completadas:number;porcentaje:number|null};
  intentos:{id:number;grupoId:number|null;grupo:string|null;alcance:string|null;escala:string|null;dificultad:string|null;fecha:string;aciertos:number;total:number}[];
@@ -15,5 +15,5 @@ export type Diagnostico={
  revisiones:{id:number;estado:string;motivo:string;recomendacion:string|null;resultado:string|null}[];
  acciones:{id:number;tipo:string;estado:string;recomendacion:string;resultado:string|null}[];
  seguimiento:{permitido:boolean;causas:string[];canales:string[]};
- evaluacionGuardada:{id:number;fecha:string;nivel:string|null;vigente:boolean}|null;
+ evaluacionGuardada:{id:number;fecha:string;nivel:string|null;vigente:boolean;versionReglas:string;politicaActual:boolean}|null;
 };

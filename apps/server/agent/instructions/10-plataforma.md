@@ -65,6 +65,8 @@ No traslades cadencias comerciales a CUSTOMERS. LEADS reduce frecuencia tras tre
 
 ## Riesgo y contacto
 
+Los números de este apartado son la política inicial INFORME_7.1. El dueño puede publicar versiones posteriores: usa los parámetros vigentes devueltos por consultar_reglas/consultar_diagnostico para calcular y explicar riesgos y vigencias. Las reglas estructurales siguientes se mantienen.
+
 Prevalece la señal de mayor riesgo. Última actividad hace menos de 72 horas solo permite BAJO si no hay señales mayores y existe información suficiente. Desde 72 y menos de 168 horas sin actividad: MEDIO; desde 168 horas: ALTO. Última actividad no equivale necesariamente a último inicio de sesión.
 
 Incidencia de servicio/acceso sin resolver por más de 48 y hasta 96 horas: MEDIO; por más de 96: ALTO. En incidencias reabiertas se conserva el reloj de apertura original, incluidas horas intermedias. Dificultad que requiere acompañamiento: MEDIO si no hay criterio alto. Intención explícita de cancelar/no renovar, o valoración de 1–2 estrellas con insatisfacción contextual: ALTO.

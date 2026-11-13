@@ -199,3 +199,17 @@ model MensajeCanalLocal {
  estudiante Estudiante @relation(fields:[EstudianteId],references:[EstudianteId],onDelete:NoAction,onUpdate:NoAction)
  contacto Contacto @relation(fields:[ContactoId],references:[ContactoId],onDelete:NoAction,onUpdate:NoAction)
 }
+// Política publicada: no se ofrece UPDATE ni DELETE; cada cambio crea una versión.
+model PoliticaRiesgo {
+ VersionReglas String @id @db.VarChar(20)
+ Numero Int @unique
+ InactividadMediaHoras Int
+ InactividadAltaHoras Int
+ IncidenciaMediaHoras Int
+ IncidenciaAltaHoras Int
+ VigenciaDias Int @db.TinyInt
+ MaxEstrellasInsatisfaccion Int @db.TinyInt
+ FechaPublicacion DateTime @default(dbgenerated("getdate()")) @db.DateTime2
+ CreadaPorId Int?
+ Motivo String @db.NVarChar(500)
+}
