@@ -13,7 +13,28 @@ Si la terminal de Eve sigue abierta:
 
 Panel y dashboard: **http://localhost:5173**. Portal academia/mensajería, servicio Docker separado: **http://localhost:5180**. open-panel toma el acceso local de .env sin imprimirlo, lo pasa por fragmento y el panel lo elimina del URL. El token solo permanece en sessionStorage.
 
-Si apagaste todo, primero en una terminal:
+En Windows con SQL Server nativo, si `.env` ya contiene la cuenta SQL y el acceso del dueño, abre PowerShell en la raíz del proyecto y ejecuta:
+
+~~~powershell
+docker compose up -d --wait server web
+$token = (Get-Content .env | Where-Object { $_ -match '^OWNER_ACCESS_TOKEN=' }) -replace '^OWNER_ACCESS_TOKEN=', ''
+Start-Process "http://localhost:5173/#token=$token"
+~~~
+
+La primera vez en ese equipo, instalar dependencias con `docker compose run --rm --no-deps tools npm ci` y conceder los permisos necesarios con `scripts/grant-sql-read.ps1` e `infra/sql/mvp-permissions.sql` mediante una cuenta administradora. No ejecutar los SQL de creación o población sobre la base activa.
+
+En esta instalación Windows el bloque M07 ya se aplicó a la instancia SQL nativa, sin reconstruir la base existente. `scripts/import-temario` usa el contenedor SQL de CachyOS y no es el comando de arranque en Windows. Tras iniciar Eve interactivamente con el llavero, el portal se abre con `docker compose up -d portal` en http://localhost:5180.
+
+Si en Windows `eve dev` termina con «Timed out waiting for the Nitro dev build to emit a worker», el build compilado evita ese límite del modo desarrollo. El build ya se realizó en este equipo; repetirlo solo después de cambiar el backend. Desde CMD, después de confirmar que ningún otro Eve ocupa el puerto 3000:
+
+~~~cmd
+docker compose run --rm --no-deps --workdir /workspace/apps/server tools npm run build
+docker compose run --rm --no-deps --use-aliases --service-ports -e SSH_TTY=1 --workdir /workspace/apps/server/.eve/packaged server sh /workspace/scripts/eve-local /workspace/node_modules/.bin/eve start --host 0.0.0.0 --port 3000
+~~~
+
+La primera línea solo es necesaria una vez por versión del código. Mantener abierta la terminal de la segunda línea. Se comprobaron salud, API y SQL en modo compilado **sin** llavero; la conexión real del modelo tras desbloquearlo en ese modo aún requiere verificación del usuario.
+
+En CachyOS, si apagaste todo, primero en una terminal:
 
 ~~~bash
 docker start sql-server-local
@@ -71,7 +92,7 @@ Requisitos: Docker Engine/Compose, Git y shell POSIX. Node 24 está aislado en D
 ./scripts/open-panel
 ~~~
 
-Nunca ejecutar 01/02 para arrancar la aplicación. El aprovisionamiento no sobrescribe .env/logins. Windows conserva los scripts PowerShell; aplicar también infra/sql/mvp-permissions.sql con una cuenta administradora. El arranque completo se verificó en CachyOS; los scripts Windows se revisaron estáticamente.
+Nunca ejecutar 01/02 para arrancar la aplicación. El aprovisionamiento no sobrescribe .env/logins. Windows conserva los scripts PowerShell; aplicar también infra/sql/mvp-permissions.sql con una cuenta administradora. El arranque y la UI de solo lectura se verificaron en Windows; el chat real y el flujo completo de escrituras se verificaron en CachyOS.
 
 ## Comprobaciones
 

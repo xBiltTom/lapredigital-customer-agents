@@ -9,7 +9,7 @@ import {leerRespuesta} from './chat-stream';
 const fecha=(value:string|null|undefined)=>value?new Date(value).toLocaleString('es-PE',{timeZone:'America/Lima',dateStyle:'medium',timeStyle:'short'}):'Sin registro';
 const numero=(value:number|null|undefined,sufijo='')=>value==null?'Sin datos':value.toLocaleString('es-PE',{maximumFractionDigits:1})+sufijo;
 const etiqueta=(s:string)=>s.replaceAll('_',' ').toLowerCase();
-function initialToken(){const token=new URLSearchParams(location.hash.slice(1)).get('token');if(token){sessionStorage.setItem('lapredigital.token',token);history.replaceState(null,'',location.pathname+location.search);}return token??sessionStorage.getItem('lapredigital.token')??'';}
+function initialToken(){const token=new URLSearchParams(location.hash.slice(1).replaceAll('+','%2B')).get('token');if(token){sessionStorage.setItem('lapredigital.token',token);history.replaceState(null,'',location.pathname+location.search);}return token??sessionStorage.getItem('lapredigital.token')??'';}
 type Linea={rol:'user'|'agent';texto:string;herramientas?:string[];sesionId?:string};
 
 export default function App(){
