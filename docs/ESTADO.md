@@ -1,5 +1,17 @@
 # Estado y continuidad
 
+## M29 — población ampliada a 30 estudiantes (2026-11-13)
+
+Se agregaron C015-C030 a la base activa conservando personas, conversaciones y casos anteriores. La ampliación es un bloque de 02_poblar_customers.sql, con extracción/aplicación mediante scripts/poblar-ampliacion (.mjs + shell), transacción y protección contra repetición. No hubo cambios de esquema: 01 permanece vigente. Las reglas, los planes y las prestaciones existentes se reutilizan; no se inventaron versiones de configuración ni beneficios comerciales.
+
+Resultado activo: 30 estudiantes, 8 apoderados, 31 suscripciones, 87 periodos, 474 eventos de uso, 4698 registros de progreso de temas, 12 casos y 73 mensajes del portal. Incluye historia desde febrero de 2026, renovaciones mensuales y semestrales, hermanos con el mismo apoderado, becas completas sin pagos, beca parcial con saldo, clientes recientes, inactividad, no contacto, bajas y reactivación tras interrupción. Nuevos cursos/temas del temario importado y recursos como metadatos sin enlaces inventados; evaluaciones comparables, rutas/revisiones, actividades, valoraciones, propuestas, seguimiento, referidos y trazas históricas mediante triggers.
+
+C017/C018/C025 tienen incidencias con origen en mensajería y estados distintos; C028 tiene derivación pendiente del apoderado; C026 tiene renovación futura pendiente con intento de pago fallido y consulta económica, conservando su acceso actual. C024 desactivó renovación y revocó contacto proactivo; se conserva servicio hasta fin del periodo y no se agregan envíos posteriores a la revocación. Propuestas aceptadas siguen sin aplicar. Algunos diagnósticos requieren interpretar narrativas: pendiente no se fuerza a bajo. Los datos relativos envejecen.
+
+Verificación ejecutada: 01/02 completos y permisos en MvpTest, carga aditiva en la base académica y comprobaciones SQL de 30 estudiantes, servicios CUSTOMER vigentes, becas sin pagos, ausencia de usos/pruebas/completados futuros, periodos sin superposición y bajas al vencimiento. API de listado y Dashboard devuelve 30; los IDs no equivalen a los códigos Cxxx y pueden tener saltos. No se llamó al modelo ni se enviaron comunicaciones a proveedores. Las filas y mensajes añadidos son datos ficticios de población, no resultados de acciones ejecutadas por un agente. No se añadieron tests de frontend ni se reconstruyeron servicios por un cambio exclusivo de datos.
+
+Siguiente paso: recargar panel y elegir escenarios por código (tabla en docs/database/ESCENARIOS_AMPLIADOS.md). No reejecutar el bloque inicial de 02 sobre la base activa; el script de ampliación ya fue aplicado.
+
 ## M28 — atención asistida y reportes desde mensajería (2026-11-13)
 
 Consultas e incidencias permite abrir el detalle del caso: cronología EventoCaso, fecha/hora y antigüedad, responsable, resolución, mensajes de origen y botón Analizar caso. El mismo agente explica hechos, hipótesis y pasos con datos consultados por backend; contexto de estudiante/caso fijado y escrituras/contacto/propuestas bloqueados en el análisis. Se conserva resolución humana, atención rápida sin paso intermedio obligatorio y reapertura con apertura original. EstadoAnterior y bloqueo de fila impiden cambios de estado basados en una ventana obsoleta. Resolver pide solución y resultado en un solo campo. Si hay mensaje de origen, se puede comunicar la solución al contacto elegido como acción separada; fallo de envío no revierte ni oculta la resolución.

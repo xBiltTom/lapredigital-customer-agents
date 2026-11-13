@@ -33,6 +33,8 @@ C013 Paula   : LEAD referido que completo formulario; sin pago ni acceso.
 C014 Ruben   : Meta UNT semestral; referido fijado al primer pago confirmado.
 
 Al final hay consultas de exploracion (no tablas de hechos ni DataMart).
+La ampliacion final C015-C030 deja 30 estudiantes; el bloque puede aplicarse
+por separado mediante scripts/poblar-ampliacion, sin repetir la carga inicial.
 Las evaluaciones de riesgo envejecen: las consultas usan la hora de ejecucion.
 */
 -- Los indices filtrados requieren esta opcion tambien durante INSERT/UPDATE/DELETE.
@@ -3436,3 +3438,404 @@ GO
 -- AtencionMensaje inicia vacia: los casos de la carga previa son administrativos.
 -- Sus vinculos se registran con mensajes reales del portal al reportar o derivar;
 -- no se inventan mensajes de origen para los casos preexistentes.
+
+-- INICIO AMPLIACION 30 ESTUDIANTES
+-- C015-C030: escenarios adicionales. Se puede aplicar este bloque sin borrar datos.
+-- Los catálogos y las reglas vigentes se reutilizan; fechas de negocio en hora peruana.
+SET QUOTED_IDENTIFIER ON;
+SET XACT_ABORT ON;
+SET NOCOUNT ON;
+DECLARE @Hoy DATETIME2(0)=GETDATE();
+IF EXISTS(SELECT 1 FROM dbo.Estudiante WHERE Codigo BETWEEN 'C015' AND 'C030')
+BEGIN
+    IF (SELECT COUNT(*) FROM dbo.Estudiante WHERE Codigo BETWEEN 'C015' AND 'C030')<>16
+        THROW 51200,N'Hay códigos C015-C030 existentes: revisar antes de cargar para no mezclar personas.',1;
+    PRINT N'Ampliación C015-C030 ya cargada; no se duplica.';
+END
+ELSE
+BEGIN TRY
+BEGIN TRANSACTION;
+DECLARE @Owner INT=(SELECT MIN(PersonalInternoId) FROM dbo.PersonalInterno WHERE Rol=N'DUEÑO' AND Activo=1);
+IF @Owner IS NULL THROW 51201,N'Falta dueño activo.',1;
+DECLARE @BaseMes DATETIME2(0)=CONVERT(DATETIME2(0),DATEFROMPARTS(YEAR(@Hoy),MONTH(@Hoy),1));
+DECLARE @Config VARCHAR(20),@InacMedia INT,@InacAlta INT;
+SELECT TOP(1) @Config=VersionReglas,@InacMedia=InactividadMediaHoras,@InacAlta=InactividadAltaHoras FROM dbo.PoliticaRiesgo ORDER BY Numero DESC;
+
+-- Completar el catálogo operativo con cursos/temas reales del temario ya importado.
+INSERT dbo.Curso(Nombre)
+SELECT DISTINCT t.Curso FROM dbo.ContenidoUNT t WHERE NOT EXISTS(SELECT 1 FROM dbo.Curso c WHERE c.Nombre=t.Curso);
+;WITH Temas AS (
+ SELECT Curso,Tema,ROW_NUMBER() OVER(PARTITION BY Curso ORDER BY ContenidoId) rn
+ FROM dbo.ContenidoUNT WHERE LEN(Tema)<=120
+)
+INSERT dbo.Tema(CursoId,Nombre)
+SELECT c.CursoId,t.Tema FROM Temas t JOIN dbo.Curso c ON c.Nombre=t.Curso
+WHERE t.rn<=2 AND NOT EXISTS(SELECT 1 FROM dbo.Tema x WHERE x.CursoId=c.CursoId AND x.Nombre=t.Tema);
+INSERT dbo.RecursoAcademico(TemaId,Titulo,Tipo,DuracionEstimadaMin)
+SELECT t.TemaId,'Guía de '+t.Nombre,'PDF',35 FROM dbo.Tema t
+WHERE NOT EXISTS(SELECT 1 FROM dbo.RecursoAcademico r WHERE r.TemaId=t.TemaId);
+-- La carga agrega metadatos; no inventa archivos alojados ni enlaces funcionales.
+DECLARE @Recurso INT=(SELECT MIN(RecursoAcademicoId) FROM dbo.RecursoAcademico);
+DECLARE @Tema INT=(SELECT TemaId FROM dbo.RecursoAcademico WHERE RecursoAcademicoId=@Recurso);
+DECLARE @EvaA INT=(SELECT MIN(EvaluacionId) FROM dbo.Evaluacion WHERE Tipo='DIAGNOSTICO' AND TotalPreguntas=20);
+DECLARE @Grupo INT=(SELECT GrupoComparabilidadId FROM dbo.Evaluacion WHERE EvaluacionId=@EvaA);
+DECLARE @EvaB INT=(SELECT MIN(EvaluacionId) FROM dbo.Evaluacion WHERE Tipo='EVALUACION' AND GrupoComparabilidadId=@Grupo AND TotalPreguntas=20);
+DECLARE @Aspecto INT=(SELECT MIN(AspectoValoracionId) FROM dbo.AspectoValoracion);
+DECLARE @Familias TABLE(Numero INT PRIMARY KEY,ApoderadoId INT,ContactoId INT);
+DECLARE @g INT=1,@gc INT,@ga INT;
+WHILE @g<=6
+BEGIN
+ INSERT dbo.Contacto(NombreCompleto,Correo,Telefono,CanalOrigen,FechaRegistro)
+ VALUES(CHOOSE(@g,'Mariela Salazar','Óscar Mendoza','Patricia Aguilar','Carlos Huamán','Rosa Cárdenas','Jorge Paredes'),CONCAT('familia.ampliada',@g,'@example.test'),CONCAT('+5196100000',@g),'WEB',DATEADD(MONTH,-12,@Hoy));
+ SET @gc=CONVERT(INT,SCOPE_IDENTITY());
+ INSERT dbo.Apoderado(ContactoId) VALUES(@gc); SET @ga=CONVERT(INT,SCOPE_IDENTITY());
+ INSERT @Familias VALUES(@g,@ga,@gc);
+ INSERT dbo.AutorizacionContacto(ContactoId,Canal,Finalidad,Autorizado,FechaDecision,Evidencia)
+ SELECT @gc,v.Canal,'REPORTES',1,DATEADD(MONTH,-12,@Hoy),N'Aceptación de términos y comunicaciones de reportes al registrarse'
+ FROM (VALUES('PLATAFORMA'),('EMAIL'),('WHATSAPP'))v(Canal);
+ SET @g+=1;
+END;
+DECLARE @Escenarios TABLE(N INT PRIMARY KEY,Nombre VARCHAR(160),PlanCodigo VARCHAR(20),Ciclos INT,Meses INT,HorasSinUso INT,Beca INT,Familia INT,EstadoFinal VARCHAR(10),Inicial INT,Final INT,Escenario NVARCHAR(250));
+INSERT @Escenarios VALUES
+(15,'Valeria Salazar','META_UNT_PLUS',10,1,4,0,1,'CUSTOMER',7,17,N'Constante desde hace diez meses, mejora sostenida y familia involucrada'),
+(16,'Sebastián Salazar','META_UNT_PLUS',6,1,90,0,1,'CUSTOMER',9,12,N'Hermano de Valeria; caída reciente de frecuencia'),
+(17,'Camila Torres','META_UNT',8,1,240,0,NULL,'CUSTOMER',12,10,N'Pago continuo, diez días sin estudiar y actividades pendientes'),
+(18,'Nicolás Mendoza','META_UNT_PLUS',4,1,8,0,2,'CUSTOMER',15,7,N'Usa la plataforma, pero empeora y reporta dificultades'),
+(19,'Adriana Aguilar','META_UNT',7,1,6,0,3,'CUSTOMER',8,16,N'Apoderado vinculado sin cuenta Plus; cambio de objetivo'),
+(20,'Diego Fernández','META_UNT',1,6,12,0,NULL,'CUSTOMER',9,14,N'Plan semestral contratado hace dos meses'),
+(21,'Luciana Huamán','META_UNT_PLUS',3,1,30,100,4,'CUSTOMER',6,13,N'Beca completa autorizada, sin pagos ficticios'),
+(22,'Mateo Castillo','RUTA_UNT',5,1,360,0,NULL,'TURNED',8,9,N'Finalizó el servicio sin renovar, sin tolerancia adicional'),
+(23,'Renata Vargas','META_UNT',1,1,3,0,NULL,'CUSTOMER',8,10,N'Ingreso reciente, primeras actividades'),
+(24,'Gabriel Silva','META_UNT',3,1,180,0,NULL,'CUSTOMER',10,8,N'No desea contacto proactivo; inactividad e intención de no renovar'),
+(25,'Andrea Cárdenas','META_UNT_PLUS',9,1,10,0,5,'CUSTOMER',11,17,N'Antigua, satisfecha; puede recomendar la plataforma'),
+(26,'Bruno Rojas','RUTA_UNT',2,1,100,0,NULL,'CUSTOMER',7,8,N'Plan básico; necesita atención humana sin seguimiento IA'),
+(27,'Daniela Sánchez','META_UNT',6,1,400,0,NULL,'TURNED',12,6,N'Baja tras no renovar; descenso de desempeño'),
+(28,'Joaquín Paredes','META_UNT_PLUS',1,1,20,0,6,'CUSTOMER',9,13,N'Reactivación después de tres meses de interrupción'),
+(29,'Isabella León','META_UNT_PLUS',2,6,6,50,NULL,'CUSTOMER',6,18,N'Dos periodos semestrales; beca parcial y cobro del saldo'),
+(30,'Emiliano Cruz','META_UNT',1,1,NULL,0,NULL,'CUSTOMER',0,0,N'Cliente habilitado ayer, sin uso ni pruebas suficientes');
+DECLARE @n INT=15,@e INT,@c INT,@ap INT,@cp INT,@fam INT,@nombre VARCHAR(160),@codigo VARCHAR(20),@plan VARCHAR(20),@ciclos INT,@meses INT,@horas INT,@beca INT,@etapa VARCHAR(10),@a0 INT,@a1 INT,@nota NVARCHAR(250);
+DECLARE @inicio DATETIME2(0),@primero DATETIME2(0),@registro DATETIME2(0),@uso DATETIME2(0),@s INT,@p INT,@prev INT,@pago INT,@primerPago INT,@modalidad INT,@precio DECIMAL(10,2),@importe DECIMAL(10,2),@j INT,@desde DATETIME2(0),@hasta DATETIME2(0),@ruta INT,@rutaAnterior INT,@conv INT,@msg INT,@out INT,@sol INT,@val INT,@caso INT,@local INT,@ev INT,@nivel VARCHAR(5),@usoId INT,@inter INT;
+DECLARE @Nuevos TABLE(EstudianteId INT,Codigo VARCHAR(20),PrimerPagoId INT,Inicio DATETIME2(0),UltimoPeriodo INT,MensajeSaliente INT);
+WHILE @n<=30
+BEGIN
+ SELECT @nombre=Nombre,@plan=PlanCodigo,@ciclos=Ciclos,@meses=Meses,@horas=HorasSinUso,@beca=Beca,@fam=Familia,@etapa=EstadoFinal,@a0=Inicial,@a1=Final,@nota=Escenario FROM @Escenarios WHERE N=@n;
+ SET @codigo=CONCAT('C0',@n); SET @inicio=@BaseMes;
+ IF @n IN(23,30) SET @inicio=DATEADD(DAY,-1,@Hoy);
+ IF @n=20 SET @inicio=DATEADD(MONTH,-2,@BaseMes);
+ IF @n=29 SET @inicio=DATEADD(MONTH,-1,@BaseMes);
+ SET @primero=DATEADD(MONTH,-(@ciclos-1)*@meses,@inicio);
+ IF @etapa='TURNED' SET @primero=DATEADD(MONTH,-@ciclos,@BaseMes);
+ SET @registro=DATEADD(DAY,-3,@primero);
+ IF @n=28 SET @registro=DATEADD(MONTH,-6,@BaseMes);
+ SELECT @modalidad=m.ModalidadPlanId,@precio=m.PrecioPEN FROM dbo.ModalidadPlan m JOIN dbo.PlanServicio pl ON pl.PlanServicioId=m.PlanServicioId WHERE pl.Codigo=@plan AND m.Meses=@meses;
+ SET @importe=ROUND(@precio*(100-@beca)/100,2); SET @ap=NULL; SET @cp=NULL;
+ SELECT @ap=ApoderadoId,@cp=ContactoId FROM @Familias WHERE Numero=@fam;
+ INSERT dbo.Contacto(NombreCompleto,Correo,Telefono,CanalOrigen,FechaRegistro) VALUES(@nombre,CONCAT('estudiante',@n,'@example.test'),CONCAT('+519620000',@n),'WEB',@registro);
+ SET @c=CONVERT(INT,SCOPE_IDENTITY());
+ INSERT dbo.Estudiante(Codigo,ContactoId,ApoderadoId,Parentesco,CarreraObjetivo,FechaExamen,DisponibilidadSemanalHoras,EtapaActual,FechaRegistro)
+ VALUES(@codigo,@c,@ap,CASE WHEN @ap IS NOT NULL THEN 'MADRE/PADRE' END,CHOOSE(1+@n%4,'Ingeniería de Sistemas','Medicina','Derecho','Administración'),CONVERT(DATE,DATEADD(DAY,100,@Hoy)),10+@n%12,'LEAD',@registro);
+ SET @e=CONVERT(INT,SCOPE_IDENTITY());
+ INSERT dbo.FormularioContacto(ContactoId,RolDeclarado,FechaEnvio,CanalOrigen,Valido,FechaRegistro) VALUES(@c,'ESTUDIANTE',@registro,'WEB',1,@registro);
+ INSERT dbo.AutorizacionContacto(ContactoId,Canal,Finalidad,Autorizado,FechaDecision,Evidencia)
+ SELECT @c,v.Canal,f.Finalidad,1,@registro,N'Aceptación de términos y comunicaciones al registro'
+ FROM (VALUES('PLATAFORMA'),('EMAIL'),('WHATSAPP'))v(Canal) CROSS JOIN(VALUES('ACADEMICA'),('COMERCIAL'))f(Finalidad);
+ -- Reactivación: la suscripción anterior termina realmente y la nueva es otro episodio.
+ IF @n=28
+ BEGIN
+  INSERT dbo.Suscripcion(EstudianteId,ResponsableEconomicoId,FechaContratacion,RenovacionAutomatica,Estado,FechaRegistro) VALUES(@e,COALESCE(@cp,@c),DATEADD(MONTH,-5,@BaseMes),0,'FINALIZADA',DATEADD(MONTH,-5,@BaseMes));
+  SET @s=CONVERT(INT,SCOPE_IDENTITY()); SET @prev=NULL; SET @j=0;
+  WHILE @j<2
+  BEGIN
+   SET @desde=DATEADD(MONTH,@j-5,@BaseMes); SET @hasta=DATEADD(MONTH,1,@desde);
+   INSERT dbo.PeriodoServicio(SuscripcionId,ModalidadPlanId,PeriodoAnteriorId,Tipo,Inicio,Fin,PrecioAcordadoPEN,ImporteExigiblePEN,CondicionesAceptadas,EstadoAcceso,FechaRegistro)
+   VALUES(@s,@modalidad,@prev,CASE WHEN @j=0 THEN 'INICIAL' ELSE 'RENOVACION' END,@desde,@hasta,@precio,@precio,'Servicio mensual y renovación aceptados','PENDIENTE',@desde);
+   SET @p=CONVERT(INT,SCOPE_IDENTITY());
+   INSERT dbo.Pago(PeriodoServicioId,PagadorContactoId,CodigoOperacion,Proveedor,Canal,Tipo,Estado,ImportePEN,FechaOperacion,FechaConfirmacion,FechaRegistro)
+   VALUES(@p,COALESCE(@cp,@c),CONCAT('AMP-',@codigo,'-ANT-',@j),'Pasarela académica','YAPE','COBRO','CONFIRMADO',@precio,@desde,@desde,@desde);
+   UPDATE dbo.PeriodoServicio SET EstadoAcceso='HABILITADO',FechaHabilitacion=@desde WHERE PeriodoServicioId=@p;
+   UPDATE dbo.PeriodoServicio SET EstadoAcceso='FINALIZADO' WHERE PeriodoServicioId=@p;
+   SET @prev=@p; SET @j+=1;
+  END;
+  INSERT dbo.BajaServicio(PeriodoServicioId,FechaBaja,Tipo,MotivoComunicado,ElegibleReactivacion) VALUES(@p,@hasta,'VENCIMIENTO',N'Pausa por motivos familiares',1);
+  INSERT dbo.CambioEtapa(EstudianteId,EtapaOrigen,EtapaDestino,FechaCambio,Motivo,SuscripcionId) VALUES(@e,'LEAD','PAYER',DATEADD(MONTH,-5,@BaseMes),'Pago inicial confirmado',@s),(@e,'PAYER','CUSTOMER',DATEADD(MONTH,-5,@BaseMes),'Primer servicio habilitado',@s),(@e,'CUSTOMER','TURNED',@hasta,'Finalización del servicio',@s);
+ END;
+ INSERT dbo.Suscripcion(EstudianteId,ResponsableEconomicoId,FechaContratacion,RenovacionAutomatica,Estado,FechaRegistro) VALUES(@e,COALESCE(@cp,@c),@primero,CASE WHEN @etapa='TURNED' THEN 0 ELSE 1 END,'VIGENTE',@primero);
+ SET @s=CONVERT(INT,SCOPE_IDENTITY()); SET @prev=NULL; SET @primerPago=NULL; SET @j=0;
+ WHILE @j<@ciclos
+ BEGIN
+  SET @desde=DATEADD(MONTH,@j*@meses,@primero); SET @hasta=DATEADD(MONTH,@meses,@desde);
+  INSERT dbo.PeriodoServicio(SuscripcionId,ModalidadPlanId,PeriodoAnteriorId,Tipo,Inicio,Fin,PrecioAcordadoPEN,BecaPorcentaje,ImporteExigiblePEN,AutorizadoPorId,FechaAutorizacion,CondicionesAceptadas,EstadoAcceso,FechaRegistro)
+  VALUES(@s,@modalidad,@prev,CASE WHEN @j>0 THEN 'RENOVACION' WHEN @n=28 THEN 'REACTIVACION' ELSE 'INICIAL' END,@desde,@hasta,@precio,@beca,@importe,CASE WHEN @beca>0 THEN @Owner END,CASE WHEN @beca>0 THEN @desde END,'Plan, duración, precio y condiciones de renovación aceptados','PENDIENTE',@desde);
+  SET @p=CONVERT(INT,SCOPE_IDENTITY());
+  IF @importe>0
+  BEGIN
+   INSERT dbo.Pago(PeriodoServicioId,PagadorContactoId,CodigoOperacion,Proveedor,Canal,Tipo,Estado,ImportePEN,ComisionPEN,FechaOperacion,FechaConfirmacion,FechaRegistro)
+   VALUES(@p,COALESCE(@cp,@c),CONCAT('AMP-',@codigo,'-',@j),'Pasarela académica',CASE WHEN @n%2=0 THEN 'YAPE' ELSE 'TARJETA' END,'COBRO','CONFIRMADO',@importe,1,@desde,@desde,@desde);
+   SET @pago=CONVERT(INT,SCOPE_IDENTITY()); IF @primerPago IS NULL SET @primerPago=@pago;
+  END;
+  UPDATE dbo.PeriodoServicio SET EstadoAcceso='HABILITADO',FechaHabilitacion=@desde WHERE PeriodoServicioId=@p;
+  IF @hasta<=@Hoy UPDATE dbo.PeriodoServicio SET EstadoAcceso='FINALIZADO' WHERE PeriodoServicioId=@p;
+  SET @prev=@p; SET @j+=1;
+ END;
+ IF @beca<100 INSERT dbo.CambioEtapa(EstudianteId,EtapaOrigen,EtapaDestino,FechaCambio,Motivo,SuscripcionId) VALUES(@e,CASE WHEN @n=28 THEN 'TURNED' ELSE 'LEAD' END,'PAYER',@primero,'Pago confirmado del servicio',@s);
+ INSERT dbo.CambioEtapa(EstudianteId,EtapaOrigen,EtapaDestino,FechaCambio,Motivo,SuscripcionId) VALUES(@e,CASE WHEN @beca=100 THEN 'LEAD' ELSE 'PAYER' END,'CUSTOMER',@primero,CASE WHEN @beca=100 THEN 'Beca completa autorizada y servicio habilitado' ELSE 'Primer acceso habilitado al servicio' END,@s);
+ IF @etapa='TURNED'
+ BEGIN
+  INSERT dbo.BajaServicio(PeriodoServicioId,FechaBaja,Tipo,MotivoComunicado,ElegibleReactivacion) VALUES(@p,@hasta,'VENCIMIENTO',N'No renovó al finalizar su periodo',1);
+  UPDATE dbo.Suscripcion SET Estado='FINALIZADA' WHERE SuscripcionId=@s;
+  INSERT dbo.CambioEtapa(EstudianteId,EtapaOrigen,EtapaDestino,FechaCambio,Motivo,SuscripcionId) VALUES(@e,'CUSTOMER','TURNED',@hasta,'Venció el periodo sin renovación efectiva',@s);
+ END;
+ UPDATE dbo.Estudiante SET EtapaActual=@etapa WHERE EstudianteId=@e;
+ IF @n=24
+ BEGIN
+  UPDATE dbo.Suscripcion SET RenovacionAutomatica=0,FechaDesactivacionRenovacion=DATEADD(HOUR,-24,@Hoy) WHERE SuscripcionId=@s;
+  UPDATE dbo.AutorizacionContacto SET Autorizado=0,FechaDecision=DATEADD(HOUR,-24,@Hoy),Evidencia=N'Revocación expresa del seguimiento proactivo' WHERE ContactoId=@c AND Finalidad='ACADEMICA';
+  INSERT dbo.ConsultaDueno(EstudianteId,ContactoId,Rol,Canal,Pregunta,Estado,Respuesta) VALUES(@e,@c,'ESTUDIANTE','MENSAJERIA',N'NO_CONTACTO: solicita no recibir seguimiento proactivo','RESPONDIDA',N'Revocación registrada; no se realizará seguimiento proactivo.');
+ END;
+ -- Preparación y actividades. Sin planes de estudio ficticios anteriores al registro.
+ INSERT dbo.RutaEstudio(EstudianteId,VersionNumero,Objetivo,FechaExamenObjetivo,Inicio,Vigente,ActualizadaPorId,FechaActualizacion,FechaRegistro)
+ VALUES(@e,1,'Preparación UNT con avance y acompañamiento por competencias',CONVERT(DATE,DATEADD(DAY,100,@Hoy)),@primero,CASE WHEN @etapa='CUSTOMER' THEN 1 ELSE 0 END,@Owner,@primero,@primero);
+ SET @ruta=CONVERT(INT,SCOPE_IDENTITY());
+ IF @n IN(15,19)
+ BEGIN
+  SET @rutaAnterior=@ruta; UPDATE dbo.RutaEstudio SET Vigente=0 WHERE RutaEstudioId=@ruta;
+  INSERT dbo.RutaEstudio(EstudianteId,VersionNumero,Objetivo,FechaExamenObjetivo,Inicio,Vigente,ActualizadaPorId,FechaActualizacion)
+  VALUES(@e,2,'Refuerzo actualizado tras revisar resultados comparables',CONVERT(DATE,DATEADD(DAY,100,@Hoy)),DATEADD(DAY,-4,@Hoy),1,@Owner,DATEADD(DAY,-4,@Hoy));
+  SET @ruta=CONVERT(INT,SCOPE_IDENTITY());
+  INSERT dbo.RevisionRuta(RutaEstudioId,Motivo,FechaIdentificacion,Estado,RevisadaPorId,FechaRevision,Resultado,RutaResultanteId)
+  VALUES(@rutaAnterior,'DIFICULTAD_ACADEMICA',DATEADD(DAY,-6,@Hoy),'REVISADA',@Owner,DATEADD(DAY,-4,@Hoy),N'Ruta ajustada por el dueño tras revisar las evaluaciones',@ruta);
+ END;
+ SET @j=0;
+ WHILE @j<6
+ BEGIN
+  SET @desde=CASE WHEN @n IN(23,30) THEN DATEADD(DAY,@j,@inicio) WHEN @n IN(15,19) THEN DATEADD(DAY,@j-3,@Hoy) ELSE DATEADD(DAY,@j-10,@Hoy) END;
+  IF @etapa='TURNED' SET @desde=DATEADD(DAY,@j-12,@hasta);
+  INSERT dbo.ActividadRuta(RutaEstudioId,RecursoAcademicoId,Orden,FechaPlanificada,FechaLimite,Estado)
+  VALUES(@ruta,@Recurso,@j+1,@desde,DATEADD(DAY,2,@desde),'PENDIENTE');
+  IF @desde<@Hoy AND @horas IS NOT NULL AND @horas<72 AND @j<4
+   UPDATE dbo.ActividadRuta SET Estado='COMPLETADA',FechaCompletada=DATEADD(HOUR,1,@desde) WHERE ActividadRutaId=CONVERT(INT,SCOPE_IDENTITY());
+  SET @j+=1;
+ END;
+ IF @n IN(18,26)
+ BEGIN
+  INSERT dbo.DificultadAcademica(EstudianteId,TemaId,Descripcion,Origen,FechaIdentificacion,Estado)
+  VALUES(@e,@Tema,N'Confunde el planteamiento de ecuaciones y requiere refuerzo guiado','EVALUACION',DATEADD(HOUR,-20,@Hoy),'IDENTIFICADA');
+  UPDATE dbo.DificultadAcademica SET Estado='EN_SEGUIMIENTO' WHERE DificultadAcademicaId=CONVERT(INT,SCOPE_IDENTITY());
+  INSERT dbo.RevisionRuta(RutaEstudioId,Motivo,FechaIdentificacion,Recomendacion,Estado) VALUES(@ruta,'DIFICULTAD_ACADEMICA',DATEADD(HOUR,-18,@Hoy),N'Revisar secuencia y carga de actividades','PENDIENTE');
+ END;
+ IF @horas IS NOT NULL
+ BEGIN
+  SET @uso=DATEADD(HOUR,-@horas,@Hoy); IF @etapa='TURNED' SET @uso=DATEADD(DAY,-1,@hasta);
+  SET @j=0;
+  WHILE @j<24
+  BEGIN
+   SET @desde=DATEADD(DAY,-@j,@uso);
+   IF @desde>=@primero INSERT dbo.EventoUso(EstudianteId,RecursoAcademicoId,Tipo,FechaEvento,DuracionSegundos,FechaRegistro)
+    VALUES(@e,@Recurso,CASE WHEN @j%3=0 THEN 'ACCESO' ELSE 'ESTUDIO' END,@desde,CASE WHEN @j%3=0 THEN 120 ELSE 1200+@n*10 END,@desde);
+   SET @j+=1;
+  END;
+  -- Sesiones en meses anteriores, siempre dentro de la contratación y antes del último uso.
+  SET @j=0;
+  WHILE @j<@ciclos*@meses
+  BEGIN
+   SET @desde=DATEADD(DAY,2,DATEADD(MONTH,@j,@primero));
+   IF @desde<=@uso INSERT dbo.EventoUso(EstudianteId,RecursoAcademicoId,Tipo,FechaEvento,DuracionSegundos,FechaRegistro) VALUES(@e,@Recurso,'ESTUDIO',@desde,1800,@desde);
+   SET @j+=1;
+  END;
+  INSERT dbo.EventoUso(EstudianteId,Tipo,FechaEvento,DuracionSegundos) VALUES(@e,'EVALUACION',@uso,900);
+  SET @usoId=CONVERT(INT,SCOPE_IDENTITY());
+  INSERT dbo.IntentoEvaluacion(EstudianteId,EvaluacionId,FechaInicio,FechaFin,TotalPreguntas,Aciertos)
+  VALUES(@e,@EvaA,DATEADD(HOUR,2,@primero),DATEADD(HOUR,3,@primero),20,@a0),(@e,@EvaB,DATEADD(MINUTE,-40,@uso),@uso,20,@a1);
+  ;WITH Temas AS(SELECT ContenidoId,ROW_NUMBER() OVER(ORDER BY ContenidoId) rn FROM dbo.ContenidoUNT)
+  INSERT dbo.ProgresoTemaUNT(EstudianteId,ContenidoId,Estado,FechaCambio,Origen)
+  SELECT @e,ContenidoId,CASE WHEN rn<=CASE WHEN @ciclos>5 THEN 95 WHEN @n=23 THEN 2 ELSE 35 END THEN 'COMPLETADA' WHEN rn<=110 THEN 'EN_CURSO' ELSE 'PENDIENTE' END,@uso,'CARGA_DEMO' FROM Temas;
+  UPDATE dbo.ProgresoTemaUNT SET Estado='EN_CURSO' WHERE EstudianteId=@e AND ContenidoId=(SELECT MAX(ContenidoId) FROM dbo.ContenidoUNT);
+ END;
+ -- Conversaciones, valoraciones mensuales y seguimiento.
+ INSERT dbo.Conversacion(EstudianteId,ContactoId,Canal,Finalidad,FechaInicio) VALUES(@e,@c,'PLATAFORMA','ACADEMICA',@primero);
+ SET @conv=CONVERT(INT,SCOPE_IDENTITY()); SET @msg=NULL;
+ IF @n%4<>3
+ BEGIN
+  SET @desde=CASE WHEN @etapa='TURNED' THEN DATEADD(DAY,-2,@hasta) WHEN @n=30 THEN DATEADD(HOUR,-2,@Hoy) ELSE DATEADD(HOUR,-12,@Hoy) END;
+  INSERT dbo.Mensaje(ConversacionId,Direccion,Emisor,Contenido,Estado,FechaRecepcion,IntencionExpresa)
+  VALUES(@conv,'ENTRANTE','CONTACTO',CASE WHEN @n=24 THEN N'No quiero renovar y prefiero que no me envíen recordatorios.' WHEN @n=18 THEN N'Estudio seguido pero mis resultados han bajado; necesito ayuda.' ELSE N'¿Cómo puedo aprovechar mejor mi preparación y organizar mis actividades?' END,'RECIBIDO',@desde,CASE WHEN @n=24 THEN 'NO_RENOVAR' ELSE 'PEDIR_APOYO' END);
+  SET @msg=CONVERT(INT,SCOPE_IDENTITY());
+ END;
+ SET @desde=CASE WHEN @etapa='TURNED' THEN DATEADD(DAY,-1,@hasta) WHEN @n=24 THEN DATEADD(HOUR,-30,@Hoy) ELSE DATEADD(HOUR,-1,@Hoy) END;
+ INSERT dbo.Mensaje(ConversacionId,RespuestaAMensajeId,Direccion,Emisor,Contenido,Estado,FechaEnvio,FechaEntrega)
+ VALUES(@conv,@msg,'SALIENTE',N'DUEÑO',N'Revisa las actividades de tu ruta; podemos orientar el refuerzo según tu plan.','ENTREGADO',@desde,DATEADD(MINUTE,5,@desde));
+ SET @out=CONVERT(INT,SCOPE_IDENTITY()); SET @j=0;
+ WHILE @j<CASE WHEN @ciclos>3 THEN 4 ELSE 1 END
+ BEGIN
+  SET @desde=CASE WHEN @j=0 THEN DATEADD(HOUR,-10,@Hoy) ELSE DATEADD(MONTH,-@j,@Hoy) END;
+  IF @etapa='TURNED' SET @desde=DATEADD(DAY,-@j-3,@hasta);
+  IF @desde>=@primero
+  BEGIN
+   INSERT dbo.SolicitudValoracion(EstudianteId,AspectoValoracionId,FechaEmision,Motivo) VALUES(@e,@Aspecto,@desde,'Opinión sobre preparación y acompañamiento');
+   SET @sol=CONVERT(INT,SCOPE_IDENTITY());
+   IF @n NOT IN(23,30) AND NOT(@n%3=0 AND @j=0)
+    INSERT dbo.Valoracion(SolicitudValoracionId,Estrellas,Comentario,FechaRespuesta,Valida)
+    VALUES(@sol,CASE WHEN @n IN(17,18) THEN 2 WHEN @n=26 THEN 3 ELSE 5 END,CASE WHEN @n IN(17,18) THEN N'No estoy conforme; necesito ayuda con el servicio y mis dificultades.' ELSE N'La preparación me resulta útil y puedo organizar mi avance.' END,DATEADD(HOUR,1,@desde),1);
+  END;
+  SET @j+=1;
+ END;
+ IF @horas IS NOT NULL
+ BEGIN
+  SET @nivel=CASE WHEN @horas>=@InacAlta THEN 'ALTO' WHEN @horas>=@InacMedia THEN 'MEDIO' ELSE 'BAJO' END;
+  DECLARE @CorteUso DATETIME2(0)=CASE WHEN @etapa='TURNED' THEN DATEADD(HOUR,12,@uso) ELSE @Hoy END;
+  IF @etapa='TURNED' SET @nivel='BAJO';
+  INSERT dbo.EvaluacionRiesgo(EstudianteId,FechaEvaluacion,Estado,Nivel,VersionReglas,Motivo,Origen) VALUES(@e,@CorteUso,CASE WHEN @nivel='ALTO' OR @n%4=3 THEN 'CLASIFICADA' ELSE 'PENDIENTE' END,CASE WHEN @nivel='ALTO' OR @n%4=3 THEN @nivel END,@Config,N'Señal de uso al corte; interpretar narrativas antes del acompañamiento','DEMO');
+  SET @ev=CONVERT(INT,SCOPE_IDENTITY());
+  INSERT dbo.SenalRiesgo(EvaluacionRiesgoId,Codigo,Nivel,FechaObservacion,Detalle,EventoUsoId) VALUES(@ev,CASE WHEN @nivel='BAJO' THEN 'ACTIVIDAD_RECIENTE' ELSE 'INACTIVIDAD' END,@nivel,@uso,N'Último evento de uso al corte',@usoId);
+  IF @etapa='CUSTOMER' AND @n IN(17,18,26)
+  BEGIN
+  INSERT dbo.Intervencion(EstudianteId,EvaluacionRiesgoId,Tipo,Motivo,Recomendacion,FechaCreacion,RequiereAprobacion,Estado)
+  VALUES(@e,@ev,CASE WHEN @plan='RUTA_UNT' THEN 'DERIVACION_HUMANA' ELSE 'ACOMPANAMIENTO' END,N'Revisar progreso y contexto',@nota,@Hoy,1,'PROPUESTA');
+  SET @inter=CONVERT(INT,SCOPE_IDENTITY());
+  INSERT dbo.EventoIntervencion(IntervencionId,FechaEvento,Estado,Detalle) VALUES(@inter,@Hoy,'PROPUESTA',N'Revisar evidencias antes de aprobar el acompañamiento');
+  END;
+ END
+ ELSE INSERT dbo.EvaluacionRiesgo(EstudianteId,FechaEvaluacion,Estado,Nivel,VersionReglas,Motivo,Origen) VALUES(@e,@Hoy,'PENDIENTE',NULL,@Config,N'Cliente nuevo sin eventos de uso ni pruebas','DEMO');
+ INSERT @Nuevos VALUES(@e,@codigo,@primerPago,@primero,@p,@out);
+ SET @n+=1;
+END;
+-- FIN DATOS PRINCIPALES AMPLIADOS
+-- Incidencias con origen, recepción y respuestas; una derivación pendiente al dueño.
+DECLARE @Casos TABLE(N INT,Estado VARCHAR(12),Horas INT,Descripcion NVARCHAR(1500));
+INSERT @Casos VALUES
+(17,'ABIERTA',130,N'El video de repaso no abre y muestra contenido no disponible.'),
+(18,'EN_ATENCION',60,N'No puede descargar la práctica de ecuaciones de su ruta.'),
+(19,'RESUELTA',30,N'El enlace del material apuntaba a una ubicación incorrecta.'),
+(25,'REABIERTA',110,N'El material vuelve a fallar después de una primera corrección.');
+DECLARE @estadoCaso VARCHAR(12),@edadCaso INT,@descripcionCaso NVARCHAR(1500),@contactoLocal INT,@rolLocal VARCHAR(10),@fechaCaso DATETIME2(0);
+SET @n=15;
+WHILE @n<=30
+BEGIN
+ SELECT @e=EstudianteId,@out=MensajeSaliente FROM @Nuevos WHERE Codigo=CONCAT('C0',@n);
+ SELECT @c=ContactoId,@ap=ApoderadoId FROM dbo.Estudiante WHERE EstudianteId=@e;
+ SET @contactoLocal=@c; SET @rolLocal='ESTUDIANTE';
+ IF @n IN(18,25,28) BEGIN SELECT @contactoLocal=ContactoId FROM dbo.Apoderado WHERE ApoderadoId=@ap; SET @rolLocal='APODERADO'; END;
+ SET @estadoCaso=NULL; SET @caso=NULL;
+ SELECT @estadoCaso=Estado,@edadCaso=Horas,@descripcionCaso=Descripcion FROM @Casos WHERE N=@n;
+ SET @fechaCaso=CASE WHEN @estadoCaso IS NOT NULL THEN DATEADD(HOUR,-@edadCaso,@Hoy) ELSE DATEADD(HOUR,-8,@Hoy) END;
+ INSERT dbo.MensajeCanalLocal(EstudianteId,ContactoId,Rol,Canal,Direccion,Contenido,Fecha)
+ VALUES(@e,@contactoLocal,@rolLocal,'MENSAJERIA','ENTRANTE',CASE WHEN @estadoCaso IS NOT NULL THEN @descripcionCaso WHEN @n=28 THEN N'¿Cómo va el regreso de mi hijo a su preparación?' WHEN @n=30 THEN N'Acabo de ingresar, ¿por dónde empiezo con mis actividades?' WHEN @n=24 THEN N'No quiero recordatorios ni seguimiento; conservaré acceso hasta finalizar mi periodo.' ELSE N'Quisiera orientación sobre las actividades y mi progreso.' END,@fechaCaso);
+ SET @local=CONVERT(INT,SCOPE_IDENTITY());
+ IF @estadoCaso IS NOT NULL
+ BEGIN
+  INSERT dbo.CasoAtencion(EstudianteId,Tipo,Ambito,Descripcion,FechaAperturaOriginal,Estado,ResponsableId,FechaRegistro)
+  VALUES(@e,'INCIDENCIA','ACCESO',@descripcionCaso,@fechaCaso,'ABIERTA',@Owner,@fechaCaso);
+  SET @caso=CONVERT(INT,SCOPE_IDENTITY());
+  INSERT dbo.EventoCaso(CasoAtencionId,FechaEvento,Estado,Detalle) VALUES(@caso,@fechaCaso,'ABIERTA',N'Reporte recibido por mensajería');
+  INSERT dbo.AtencionMensaje(MensajeLocalId,CasoAtencionId,FechaRegistro) VALUES(@local,@caso,@fechaCaso);
+  IF @estadoCaso<>'ABIERTA'
+  BEGIN
+   UPDATE dbo.CasoAtencion SET Estado='EN_ATENCION' WHERE CasoAtencionId=@caso;
+   INSERT dbo.EventoCaso(CasoAtencionId,FechaEvento,Estado,Detalle,ResponsableId) VALUES(@caso,DATEADD(HOUR,2,@fechaCaso),'EN_ATENCION',N'Se revisa el enlace y el recurso registrado',@Owner);
+  END;
+  IF @estadoCaso IN('RESUELTA','REABIERTA')
+  BEGIN
+   UPDATE dbo.CasoAtencion SET Estado='RESUELTA',FechaResolucionDefinitiva=DATEADD(HOUR,8,@fechaCaso),Resolucion=N'Se corrigió el enlace y se verificó la apertura del material' WHERE CasoAtencionId=@caso;
+   INSERT dbo.EventoCaso(CasoAtencionId,FechaEvento,Estado,Detalle,ResponsableId) VALUES(@caso,DATEADD(HOUR,8,@fechaCaso),'RESUELTA',N'Enlace corregido y acceso verificado',@Owner);
+  END;
+  IF @estadoCaso='REABIERTA'
+  BEGIN
+   UPDATE dbo.CasoAtencion SET Estado='REABIERTA',FechaResolucionDefinitiva=NULL,Resolucion=NULL WHERE CasoAtencionId=@caso;
+   INSERT dbo.EventoCaso(CasoAtencionId,FechaEvento,Estado,Detalle,ResponsableId) VALUES(@caso,DATEADD(HOUR,24,@fechaCaso),'REABIERTA',N'El apoderado reporta que persiste el problema; se mantiene la apertura original',@Owner);
+  END;
+ END;
+ IF @estadoCaso IS NOT NULL AND @estadoCaso<>'RESUELTA'
+ BEGIN
+  DECLARE @IncM INT,@IncA INT;
+  SELECT @IncM=IncidenciaMediaHoras,@IncA=IncidenciaAltaHoras FROM dbo.PoliticaRiesgo WHERE VersionReglas=@Config;
+  SET @nivel=CASE WHEN @edadCaso>@IncA THEN 'ALTO' WHEN @edadCaso>@IncM THEN 'MEDIO' ELSE 'BAJO' END;
+  IF @nivel<>'BAJO'
+  BEGIN
+   INSERT dbo.EvaluacionRiesgo(EstudianteId,FechaEvaluacion,Estado,Nivel,VersionReglas,Motivo,Origen)
+   VALUES(@e,@Hoy,CASE WHEN @nivel='ALTO' THEN 'CLASIFICADA' ELSE 'PENDIENTE' END,CASE WHEN @nivel='ALTO' THEN @nivel END,@Config,N'Reevaluación tras incorporar la incidencia; revisar también el contexto narrativo','DEMO');
+   SET @ev=CONVERT(INT,SCOPE_IDENTITY());
+   INSERT dbo.SenalRiesgo(EvaluacionRiesgoId,Codigo,Nivel,FechaObservacion,Detalle,CasoAtencionId)
+   VALUES(@ev,'INCIDENCIA_ABIERTA',@nivel,@fechaCaso,N'Antigüedad desde la apertura original; incluye reaperturas',@caso);
+  END;
+ END;
+ IF @n=28
+ BEGIN
+  INSERT dbo.ConsultaDueno(EstudianteId,ContactoId,Rol,Canal,Pregunta,Fecha)
+  VALUES(@e,@contactoLocal,@rolLocal,'MENSAJERIA',N'El apoderado solicita revisar el acompañamiento tras la reactivación. ¿Qué prioridad y actividades desea indicar el dueño?',@fechaCaso);
+  INSERT dbo.AtencionMensaje(MensajeLocalId,ConsultaId,FechaRegistro) VALUES(@local,CONVERT(INT,SCOPE_IDENTITY()),@fechaCaso);
+ END
+ ELSE IF @n<>24 INSERT dbo.MensajeCanalLocal(EstudianteId,ContactoId,Rol,Canal,Direccion,Contenido,Fecha,FechaEntrega)
+ VALUES(@e,@contactoLocal,@rolLocal,'MENSAJERIA','SALIENTE',CASE WHEN @estadoCaso='RESUELTA' THEN N'Se corrigió el enlace y se verificó que el material abre.' WHEN @caso IS NOT NULL THEN CONCAT(N'Tu incidencia #',@caso,N' está registrada. Revisaremos el recurso y te comunicaremos el resultado.') ELSE N'Podemos revisar las actividades de tu ruta y orientar los siguientes pasos según tu servicio.' END,CASE WHEN @estadoCaso='RESUELTA' THEN DATEADD(HOUR,9,@fechaCaso) ELSE DATEADD(MINUTE,10,@fechaCaso) END,CASE WHEN @n%2=0 THEN DATEADD(MINUTE,20,@fechaCaso) END);
+ -- Canal académico separado del hilo de recordatorios/soporte.
+ IF @n IN(15,19,23)
+  INSERT dbo.MensajeCanalLocal(EstudianteId,ContactoId,Rol,Canal,Direccion,Contenido,Fecha)
+  VALUES(@e,@c,'ESTUDIANTE','ACADEMIA','ENTRANTE',N'¿Cómo planteo una ecuación a partir de un problema?',DATEADD(HOUR,-6,@Hoy)),(@e,@c,'ESTUDIANTE','ACADEMIA','SALIENTE',N'Identifica la incógnita, expresa los datos como relaciones y comprueba el resultado en el enunciado.',DATEADD(HOUR,-5,@Hoy));
+ -- Propuesta aceptada no significa aplicada. No se habilita un plan sin contratación.
+ IF @n IN(19,26)
+ BEGIN
+  INSERT dbo.PropuestaCambioPlan(PeriodoActualId,ModalidadSugeridaId,Necesidad,SolicitadoPorCliente,FechaSolicitudCliente,FechaPresentacion,Estado,FechaRespuesta,Respuesta)
+  SELECT x.UltimoPeriodo,m.ModalidadPlanId,N'Solicita acompañamiento y seguimiento del progreso',1,DATEADD(HOUR,-18,@Hoy),DATEADD(HOUR,-16,@Hoy),'PRESENTADA',NULL,NULL
+  FROM @Nuevos x CROSS JOIN dbo.ModalidadPlan m JOIN dbo.PlanServicio pl ON pl.PlanServicioId=m.PlanServicioId WHERE x.EstudianteId=@e AND pl.Codigo=CASE WHEN @n=19 THEN 'META_UNT_PLUS' ELSE 'META_UNT' END AND m.Meses=1;
+  IF @n=19 UPDATE dbo.PropuestaCambioPlan SET Estado='ACEPTADA',FechaRespuesta=DATEADD(HOUR,-12,@Hoy),Respuesta=N'Acepta la propuesta; pendiente de contratación y aplicación' WHERE PropuestaCambioPlanId=CONVERT(INT,SCOPE_IDENTITY());
+ END;
+ SET @n+=1;
+END;
+-- Referido de una estudiante antigua: selección previa al PRIMER cobro confirmado.
+DECLARE @Ref INT=(SELECT EstudianteId FROM @Nuevos WHERE Codigo='C015'),@Referido INT=(SELECT EstudianteId FROM @Nuevos WHERE Codigo='C023'),@PagoRef INT=(SELECT PrimerPagoId FROM @Nuevos WHERE Codigo='C023'),@FechaRef DATETIME2(0)=(SELECT Inicio FROM @Nuevos WHERE Codigo='C023'),@Inv INT;
+INSERT dbo.InvitacionReferido(EstudianteReferenteId,FechaInvitacion,Codigo) VALUES(@Ref,DATEADD(DAY,-4,@FechaRef),'AMP-VALERIA-UNT');
+SET @Inv=CONVERT(INT,SCOPE_IDENTITY());
+INSERT dbo.Referido(InvitacionReferidoId,EstudianteReferenteId,NombreReferido,FechaRegistroReferido,EstudianteReferidoId,FechaSeleccionReferente,PrimerPagoId,FechaFijacion)
+VALUES(@Inv,@Ref,'Renata Vargas',DATEADD(DAY,-3,@FechaRef),@Referido,DATEADD(DAY,-3,@FechaRef),NULL,NULL);
+UPDATE dbo.Referido SET PrimerPagoId=@PagoRef,FechaFijacion=@FechaRef WHERE ReferidoId=CONVERT(INT,SCOPE_IDENTITY());
+INSERT dbo.Referido(InvitacionReferidoId,EstudianteReferenteId,NombreReferido,FechaRegistroReferido,FechaSeleccionReferente) VALUES(@Inv,@Ref,'Sofía Cabrera',DATEADD(HOUR,-6,@Hoy),DATEADD(HOUR,-6,@Hoy));
+-- Más variedad de evaluaciones comparables y aspectos, sin alterar planes ni reglas.
+DECLARE @GrupoFis INT,@FisA INT,@FisB INT,@TemaFis INT;
+INSERT dbo.GrupoComparabilidad(Codigo,Alcance,Escala,Dificultad,ValidadoPorId) VALUES('AMP_FIS_BASICA','Movimiento rectilíneo y magnitudes físicas','Porcentaje de aciertos; 20 preguntas','Básica equivalente',@Owner);
+SET @GrupoFis=CONVERT(INT,SCOPE_IDENTITY());
+INSERT dbo.Evaluacion(Nombre,Tipo,GrupoComparabilidadId,TotalPreguntas) VALUES('Diagnóstico de física básica','DIAGNOSTICO',@GrupoFis,20);
+SET @FisA=CONVERT(INT,SCOPE_IDENTITY());
+INSERT dbo.Evaluacion(Nombre,Tipo,GrupoComparabilidadId,TotalPreguntas) VALUES('Progreso comparable de física básica','EVALUACION',@GrupoFis,20);
+SET @FisB=CONVERT(INT,SCOPE_IDENTITY());
+INSERT dbo.IntentoEvaluacion(EstudianteId,EvaluacionId,FechaInicio,FechaFin,TotalPreguntas,Aciertos)
+SELECT EstudianteId,@FisA,DATEADD(DAY,2,Inicio),DATEADD(HOUR,1,DATEADD(DAY,2,Inicio)),20,8 FROM @Nuevos WHERE Codigo IN('C020','C025');
+INSERT dbo.IntentoEvaluacion(EstudianteId,EvaluacionId,FechaInicio,FechaFin,TotalPreguntas,Aciertos)
+SELECT EstudianteId,@FisB,DATEADD(HOUR,-22,@Hoy),DATEADD(HOUR,-21,@Hoy),20,15 FROM @Nuevos WHERE Codigo IN('C020','C025');
+INSERT dbo.AspectoValoracion(Nombre) VALUES('Claridad de materiales complementarios');
+SET @Aspecto=CONVERT(INT,SCOPE_IDENTITY());
+INSERT dbo.SolicitudValoracion(EstudianteId,AspectoValoracionId,FechaEmision,Motivo)
+SELECT EstudianteId,@Aspecto,DATEADD(HOUR,-5,@Hoy),'Opinión tras estudiar los materiales complementarios' FROM @Nuevos WHERE Codigo IN('C015','C020','C025');
+INSERT dbo.Valoracion(SolicitudValoracionId,Estrellas,Comentario,FechaRespuesta,Valida)
+SELECT sv.SolicitudValoracionId,4,N'Los ejemplos ayudan; podría haber más ejercicios de aplicación.',DATEADD(HOUR,-4,@Hoy),1 FROM dbo.SolicitudValoracion sv WHERE sv.AspectoValoracionId=@Aspecto;
+-- Cambios de contacto y revisión con su estado anterior conservado por los triggers.
+UPDATE c SET Telefono='+51963000018' FROM dbo.Contacto c JOIN dbo.Estudiante e ON e.ContactoId=c.ContactoId WHERE e.Codigo='C018';
+UPDATE b SET MotivoComunicado=N'Finalizó el periodo y comunicó que no puede mantener el horario de estudio',FechaMotivo=DATEADD(DAY,1,b.FechaBaja) FROM dbo.BajaServicio b JOIN dbo.PeriodoServicio p ON p.PeriodoServicioId=b.PeriodoServicioId JOIN dbo.Suscripcion ss ON ss.SuscripcionId=p.SuscripcionId JOIN dbo.Estudiante e ON e.EstudianteId=ss.EstudianteId WHERE e.Codigo='C022';
+UPDATE rr SET Resultado=N'Ruta ajustada y secuencia de refuerzo verificada por el dueño' FROM dbo.RevisionRuta rr JOIN dbo.RutaEstudio r ON r.RutaEstudioId=rr.RutaEstudioId JOIN dbo.Estudiante e ON e.EstudianteId=r.EstudianteId WHERE e.Codigo='C015' AND rr.Estado='REVISADA';
+-- Seguimiento histórico completado, con mensaje efectivamente registrado y aprobación.
+SELECT @e=EstudianteId,@out=MensajeSaliente FROM @Nuevos WHERE Codigo='C016';
+INSERT dbo.Intervencion(EstudianteId,Tipo,Motivo,Recomendacion,FechaCreacion,RequiereAprobacion,AprobadoPorId,FechaAprobacion,Estado,MensajeSeguimientoId,FechaCompletada,Resultado)
+VALUES(@e,'ACOMPANAMIENTO',N'Caída de frecuencia de estudio',N'Revisar obstáculos y organizar sesiones breves',DATEADD(HOUR,-3,@Hoy),1,@Owner,DATEADD(HOUR,-2,@Hoy),'PROPUESTA',NULL,NULL,NULL);
+SET @inter=CONVERT(INT,SCOPE_IDENTITY());
+INSERT dbo.EventoIntervencion(IntervencionId,FechaEvento,Estado,Detalle) VALUES(@inter,DATEADD(HOUR,-3,@Hoy),'PROPUESTA',N'Acompañamiento propuesto'),(@inter,DATEADD(HOUR,-2,@Hoy),'PROGRAMADA',N'Aprobado por el dueño');
+UPDATE dbo.Intervencion SET Estado='COMPLETADA',MensajeSeguimientoId=@out,FechaCompletada=DATEADD(MINUTE,-30,@Hoy),Resultado=N'Se entregó orientación y se acordó retomar sesiones cortas' WHERE IntervencionId=@inter;
+INSERT dbo.EventoIntervencion(IntervencionId,FechaEvento,Estado,Detalle) VALUES(@inter,DATEADD(MINUTE,-30,@Hoy),'COMPLETADA',N'Orientación registrada; revisar evolución en el próximo seguimiento');
+-- Intento fallido de renovación: mantiene acceso al periodo ya pagado, no habilita el nuevo.
+SELECT @e=EstudianteId,@p=UltimoPeriodo FROM @Nuevos WHERE Codigo='C026';
+SELECT @s=SuscripcionId,@desde=Fin,@modalidad=ModalidadPlanId,@precio=PrecioAcordadoPEN FROM dbo.PeriodoServicio WHERE PeriodoServicioId=@p;
+INSERT dbo.PeriodoServicio(SuscripcionId,ModalidadPlanId,PeriodoAnteriorId,Tipo,Inicio,Fin,PrecioAcordadoPEN,ImporteExigiblePEN,CondicionesAceptadas,EstadoAcceso)
+VALUES(@s,@modalidad,@p,'RENOVACION',@desde,DATEADD(MONTH,1,@desde),@precio,@precio,'Solicitud de renovación pendiente de cobro efectivo','PENDIENTE');
+SET @p=CONVERT(INT,SCOPE_IDENTITY());
+SELECT @c=ContactoId FROM dbo.Estudiante WHERE EstudianteId=@e;
+INSERT dbo.Pago(PeriodoServicioId,PagadorContactoId,CodigoOperacion,Proveedor,Canal,Tipo,Estado,ImportePEN,FechaOperacion)
+VALUES(@p,@c,'AMP-C026-FALLIDO','Pasarela académica','YAPE','COBRO','FALLIDO',@precio,DATEADD(HOUR,-2,@Hoy));
+INSERT dbo.CasoAtencion(EstudianteId,Tipo,Ambito,Descripcion,FechaAperturaOriginal,Estado,ResponsableId) VALUES(@e,'CONSULTA','PAGO',N'El intento de pago de la próxima renovación falló; solicita orientación sin perder el periodo vigente',DATEADD(HOUR,-2,@Hoy),'ABIERTA',@Owner);
+SET @caso=CONVERT(INT,SCOPE_IDENTITY());
+INSERT dbo.EventoCaso(CasoAtencionId,FechaEvento,Estado,Detalle,ResponsableId) VALUES(@caso,DATEADD(HOUR,-2,@Hoy),'ABIERTA',N'Consulta económica para el personal autorizado; no es incidencia de servicio',@Owner);
+COMMIT;
+PRINT N'Ampliación completada: 16 estudiantes adicionales, con historia de contratación, estudio y atención.';
+END TRY
+BEGIN CATCH
+ IF @@TRANCOUNT>0 ROLLBACK;
+ THROW;
+END CATCH;
+-- FIN AMPLIACION 30 ESTUDIANTES
+GO

@@ -185,3 +185,7 @@ Pulsa **Ver caso** para consultar historial, reporte de origen y ayuda del agent
 Los problemas claros reportados en MENSAJERIA pueden registrarse automáticamente como incidencias. El agente deriva al chat global del Dashboard cuando necesita una decisión; responder allí permite que comunique la decisión y registre el caso si corresponde. Los asuntos económicos se derivan al dueño/PAYERS. El canal académico se mantiene separado.
 
 La instalación actual ya incorpora AtencionMensaje. En otro equipo con base existente ejecutar `./scripts/instalar-atencion`; toma el DDL de 01 y conserva datos. Los casos antiguos sin origen mantienen sus eventos; no se inventan vínculos de mensajería. `apps/server/scripts/check-atencion.mjs` solo escribe en MvpTest.
+
+## Población ampliada
+
+La base incluye **30 estudiantes** y escenarios desde meses anteriores. La guía [Escenarios ampliados](docs/database/ESCENARIOS_AMPLIADOS.md) permite elegir casos para la demostración. C015–C030 ya están cargados en este equipo; recarga el panel para verlos. En otra instalación con C001–C014, `./scripts/poblar-ampliacion` añade únicamente el bloque final de 02 sin reconstruir la base.
