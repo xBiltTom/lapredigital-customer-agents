@@ -1,8 +1,14 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { Chatbot } from './Chatbot';
-import { ChatMarkdown } from './ChatMarkdown';
-import { leerRespuesta } from './chat-stream';
-import { CustomersKpis, type DatosKpi } from './CustomersKpis';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
+import { Chatbot } from "./Chatbot";
+import { ChatMarkdown } from "./ChatMarkdown";
+import { leerRespuesta } from "./chat-stream";
+import { CustomersKpis, type DatosKpi } from "./CustomersKpis";
 
 type Fila = {
   id: number;
@@ -23,7 +29,7 @@ type Consulta = {
   Pregunta: string;
   Estado: string;
 };
-type Linea = { rol: 'user' | 'agent'; texto: string };
+type Linea = { rol: "user" | "agent"; texto: string };
 
 export function Dashboard({
   token,
@@ -40,10 +46,12 @@ export function Dashboard({
   const [consultas, setConsultas] = useState<Consulta[]>([]);
   const [chat, setChat] = useState<Linea[]>([]);
   const [cargandoChat, setCargandoChat] = useState(true);
-  const [texto, setTexto] = useState('');
+  const [texto, setTexto] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [respuestas, setRespuestas] = useState<Record<number, string>>({});
+  const ciclo = useRef<AbortController | null>(null);
+  const pendiente = useRef<Promise<void> | null>(null);
 
   useEffect(() => {
     onBusy(busy);
@@ -51,74 +59,104 @@ export function Dashboard({
   }, [busy, onBusy]);
 
   useEffect(() => {
-    finalChat.current?.scrollIntoView({ block: 'nearest' });
+    finalChat.current?.scrollIntoView({ block: "nearest" });
   }, [chat, consultas.length]);
 
-  async function api(path: string, body?: unknown) {
-    const response = await fetch(path, {
-      method: body ? 'POST' : 'GET',
-      headers: {
-        Authorization: 'Bearer ' + token,
-        'Content-Type': 'application/json',
-      },
-      body: body ? JSON.stringify(body) : undefined,
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error);
-    return data;
-  }
+  const api = useCallback(
+    async (path: string, body?: unknown, signal?: AbortSignal) => {
+      const response = await fetch(path, {
+        method: body ? "POST" : "GET",
+        headers: {
+          Authorization: "Bearer " + token,
+          "Content-Type": "application/json",
+        },
+        body: body ? JSON.stringify(body) : undefined,
+        signal,
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      return data;
+    },
+    [token],
+  );
 
-  async function cargar() {
-    try {
-      const data = await api('/api/dashboard');
-      setAlumnos(data.alumnos);
-      setConsultas(data.consultas);
-      setIndicadores(data.indicadores);
-    } catch (cause) {
-      setError((cause as Error).message);
-    }
-  }
+  const cargar = useCallback(
+    async (releer = false) => {
+      const signal = ciclo.current?.signal;
+      if (!signal || signal.aborted) return;
+      if (pendiente.current) {
+        await pendiente.current;
+        if (!releer) return;
+      }
+      if (signal.aborted) return;
+      // Polling y refrescos comparten la petición. Tras una acción se relee al terminar.
+      const consulta = api("/api/dashboard", undefined, signal)
+        .then((data) => {
+          if (signal.aborted) return;
+          setAlumnos(data.alumnos);
+          setConsultas(data.consultas);
+          setIndicadores(data.indicadores);
+        })
+        .catch((cause) => {
+          if (!signal.aborted) setError((cause as Error).message);
+        })
+        .finally(() => {
+          if (pendiente.current === consulta) pendiente.current = null;
+        });
+      pendiente.current = consulta;
+      await consulta;
+    },
+    [api],
+  );
 
   useEffect(() => {
-    let activo = true;
+    const controller = new AbortController();
+    ciclo.current = controller;
+    pendiente.current = null;
     setCargandoChat(true);
-    api('/api/dashboard/chat')
+    api("/api/dashboard/chat", undefined, controller.signal)
       .then((data) => {
-        if (activo) setChat(data.mensajes);
+        if (!controller.signal.aborted) setChat(data.mensajes);
       })
       .catch((cause) => {
-        if (activo) setError(cause.message);
+        if (!controller.signal.aborted) setError(cause.message);
       })
       .finally(() => {
-        if (activo) setCargandoChat(false);
+        if (!controller.signal.aborted) setCargandoChat(false);
       });
     void cargar();
-    const timer = setInterval(cargar, 12000);
-    return () => {
-      activo = false;
-      clearInterval(timer);
+    const refrescarVisible = () => {
+      if (!document.hidden) void cargar();
     };
-  }, [token]);
+    const timer = setInterval(refrescarVisible, 12000);
+    document.addEventListener("visibilitychange", refrescarVisible);
+    return () => {
+      controller.abort();
+      if (ciclo.current === controller) ciclo.current = null;
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", refrescarVisible);
+    };
+  }, [api, cargar]);
 
   async function enviar(event: FormEvent) {
     event.preventDefault();
     if (!texto.trim() || busy || cargandoChat) return;
     const mensaje = texto;
-    setTexto('');
+    setTexto("");
     setBusy(true);
-    setError('');
+    setError("");
     setChat((actual) => [
       ...actual,
-      { rol: 'user', texto: mensaje },
-      { rol: 'agent', texto: '' },
+      { rol: "user", texto: mensaje },
+      { rol: "agent", texto: "" },
     ]);
     try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
+      const response = await fetch("/api/chat", {
+        method: "POST",
         headers: {
-          Authorization: 'Bearer ' + token,
-          'Content-Type': 'application/json',
-          Accept: 'application/x-ndjson',
+          Authorization: "Bearer " + token,
+          "Content-Type": "application/json",
+          Accept: "application/x-ndjson",
         },
         body: JSON.stringify({ global: true, mensaje }),
       });
@@ -133,7 +171,7 @@ export function Dashboard({
           );
         }
       });
-      await cargar();
+      await cargar(true);
     } catch (cause) {
       setError((cause as Error).message);
     } finally {
@@ -147,7 +185,7 @@ export function Dashboard({
       await api(`/api/consultas/${consulta.ConsultaId}/responder`, {
         texto: respuestas[consulta.ConsultaId],
       });
-      await cargar();
+      await cargar(true);
     } catch (cause) {
       setError((cause as Error).message);
     } finally {
@@ -156,7 +194,7 @@ export function Dashboard({
   }
 
   const pendientes = consultas.filter(
-    (consulta) => consulta.Estado === 'PENDIENTE',
+    (consulta) => consulta.Estado === "PENDIENTE",
   );
 
   return (
@@ -207,7 +245,7 @@ export function Dashboard({
             <span className="metric-icon">↗</span> Requieren atención
           </p>
           <strong>
-            {alumnos.filter((alumno) => alumno.riesgo === 'ALTO').length}
+            {alumnos.filter((alumno) => alumno.riesgo === "ALTO").length}
           </strong>
         </section>
         <section className="metric">
@@ -222,7 +260,7 @@ export function Dashboard({
         <section className="card">
           <div className="card-heading">
             <h3>Panorama de estudiantes</h3>
-            <button className="secondary" onClick={cargar} disabled={busy}>
+            <button className="secondary" onClick={() => void cargar(true)} disabled={busy}>
               Actualizar
             </button>
           </div>
@@ -246,7 +284,7 @@ export function Dashboard({
                         className="student-link"
                         onClick={() => onAlumno(alumno.id)}
                       >
-                        {alumno.nombre.replace(' Demo', '')}
+                        {alumno.nombre.replace(" Demo", "")}
                       </button>
                       <small>
                         {alumno.codigo} · {alumno.etapa}
@@ -299,7 +337,7 @@ export function Dashboard({
               </p>
             </div>
             <span className="pill neutral">
-              {pendientes.length} pendiente{pendientes.length === 1 ? '' : 's'}
+              {pendientes.length} pendiente{pendientes.length === 1 ? "" : "s"}
             </span>
           </div>
           <div className="dashboard-query-list">
@@ -315,7 +353,7 @@ export function Dashboard({
                 <div className="dashboard-query-answer">
                   <textarea
                     aria-label={`Respuesta consulta ${consulta.ConsultaId}`}
-                    value={respuestas[consulta.ConsultaId] ?? ''}
+                    value={respuestas[consulta.ConsultaId] ?? ""}
                     onChange={(event) =>
                       setRespuestas((actual) => ({
                         ...actual,
@@ -365,14 +403,39 @@ export function Dashboard({
           )}
           {chat.map((line, index) => (
             <div key={index} className={`chat-message ${line.rol}`}>
-              <small>{line.rol === 'user' ? 'TÚ' : 'AGENTE'}</small>
+              <small>{line.rol === "user" ? "TÚ" : "AGENTE"}</small>
               <ChatMarkdown
                 texto={line.texto}
                 generando={busy && index === chat.length - 1}
               />
             </div>
           ))}
-        {pendientes.map(q=><div className="notice" key={'chat-consulta-'+q.ConsultaId}><strong>El agente necesita tu decisión · #{q.ConsultaId}</strong><small>Estudiante #{q.EstudianteId} · {q.Rol}</small><p>{q.Pregunta}</p><textarea aria-label={'Decisión en chat para consulta '+q.ConsultaId} value={respuestas[q.ConsultaId]??''} onChange={e=>setRespuestas(prev=>({...prev,[q.ConsultaId]:e.target.value}))}/><button className="primary" disabled={busy||!respuestas[q.ConsultaId]?.trim()} onClick={()=>void responder(q)}>Responder al agente y comunicar</button></div>)}
+          {pendientes.map((q) => (
+            <div className="notice" key={"chat-consulta-" + q.ConsultaId}>
+              <strong>El agente necesita tu decisión · #{q.ConsultaId}</strong>
+              <small>
+                Estudiante #{q.EstudianteId} · {q.Rol}
+              </small>
+              <p>{q.Pregunta}</p>
+              <textarea
+                aria-label={"Decisión en chat para consulta " + q.ConsultaId}
+                value={respuestas[q.ConsultaId] ?? ""}
+                onChange={(e) =>
+                  setRespuestas((prev) => ({
+                    ...prev,
+                    [q.ConsultaId]: e.target.value,
+                  }))
+                }
+              />
+              <button
+                className="primary"
+                disabled={busy || !respuestas[q.ConsultaId]?.trim()}
+                onClick={() => void responder(q)}
+              >
+                Responder al agente y comunicar
+              </button>
+            </div>
+          ))}
           <div ref={finalChat} />
         </div>
         {busy && <p className="thinking">El agente está trabajando…</p>}

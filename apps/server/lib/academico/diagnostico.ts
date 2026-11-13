@@ -3,21 +3,17 @@ import {
   CONSULTAR_DIAGNOSTICO,
   CONSULTAR_TEMARIO_DIAGNOSTICO,
 } from '../database/consultas/diagnostico.ts';
+import { leerContextoNarrativo, calcularRiesgo, directorioContextos } from './riesgo.ts';
 import sql from 'mssql';
-import { createHash, randomUUID } from 'node:crypto';
-import { mkdir, readFile, writeFile, rename } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
+import { mkdir, writeFile, rename } from 'node:fs/promises';
 import { getPool } from '../database/pool.ts';
 import { obtenerFichaEstudiante } from '../database/estudiantes.ts';
 import {
-  clasificar,
-  inactividad,
-  incidencia,
   vigente,
   cumplimiento,
   mejoras,
-  contextoVacio,
   type Contexto,
-  type Senal,
   type Intento,
 } from './reglas.ts';
 
@@ -89,7 +85,7 @@ type Evaluacion = {
   nivel: string | null;
   versionReglas: string;
 };
-const directorio = `.eve/contextos/${process.env.SQLSERVER_DATABASE}`;
+const directorio = directorioContextos;
 
 // Construye la ficha operativa del alumno a partir de fuentes actuales, sin escribir en SQL.
 export async function diagnostico(
@@ -140,90 +136,8 @@ export async function diagnostico(
   ];
   const corte = tiempo[0]!.corte,
     inicio = new Date(+corte - 30 * 86400000);
-  // La huella invalida interpretaciones si cambiaron mensajes o valoraciones.
-  const huella = createHash('sha256')
-    .update(JSON.stringify({ mensajes, valoraciones }))
-    .digest('hex');
-  let contexto = contextoVacio();
-  try {
-    const saved = JSON.parse(
-      await readFile(`${directorio}/${estudianteId}.json`, 'utf8'),
-    );
-    if (saved.huella === huella) {
-      contexto = saved.contexto;
-      const anteriorMax = saved.maxEstrellas ?? 2;
-      if (politica.MaxEstrellasInsatisfaccion > anteriorMax) {
-        // Reinterpretar solo estrellas recién incluidas; conservar peticiones de no contacto.
-        contexto.valoracionesRevisadas = contexto.valoracionesRevisadas.filter(id =>
-          !valoraciones.some(v => v.id === id && v.estrellas > anteriorMax && v.estrellas <= politica.MaxEstrellasInsatisfaccion));
-      }
-    }
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
-  }
-  // Reglas puras: clasificar con evidencias; no convertir falta de datos en riesgo bajo.
-  const senales: Senal[] = [];
-  if (uso[0])
-    senales.push({
-      codigo:
-        inactividad((+corte - +uso[0].fecha) / 1000, politica) === 'BAJO'
-          ? 'ACTIVIDAD_RECIENTE'
-          : 'INACTIVIDAD',
-      nivel: inactividad((+corte - +uso[0].fecha) / 1000, politica),
-      fuente: 'EventoUso',
-      id: uso[0].id,
-      fecha: uso[0].fecha,
-    });
-  for (const c of casos)
-    if (
-      c.tipo === 'INCIDENCIA' &&
-      c.ambito !== 'PAGO' &&
-      c.estado !== 'RESUELTA' &&
-      incidencia((+corte - +c.apertura) / 1000, politica) !== 'BAJO'
-    )
-      senales.push({
-        codigo: 'INCIDENCIA_ABIERTA',
-        nivel: incidencia((+corte - +c.apertura) / 1000, politica),
-        fuente: 'CasoAtencion',
-        id: c.id,
-        fecha: c.apertura,
-      });
-  for (const d of dificultades)
-    if (d.estado !== 'SUPERADA')
-      senales.push({
-        codigo: 'DIFICULTAD_ACADEMICA',
-        nivel: 'MEDIO',
-        fuente: 'DificultadAcademica',
-        id: d.id,
-        fecha: d.fecha,
-      });
-  for (const m of mensajes)
-    if (
-      ['CANCELAR', 'NO_RENOVAR'].includes(m.intencion ?? '') ||
-      contexto.cancelacion.includes(m.id)
-    )
-      senales.push({
-        codigo: 'INTENCION_CANCELAR',
-        nivel: 'ALTO',
-        fuente: 'Mensaje',
-        id: m.id,
-        fecha: m.fecha,
-      });
-  for (const v of valoraciones)
-    if (v.estrellas <= politica.MaxEstrellasInsatisfaccion && contexto.insatisfaccion.includes(v.id))
-      senales.push({
-        codigo: 'INSATISFACCION',
-        nivel: 'ALTO',
-        fuente: 'Valoracion',
-        id: v.id,
-        fecha: v.fecha,
-      });
-  const narrativaPendiente =
-    mensajes.some((m) => !contexto.revisados.includes(m.id)) ||
-    valoraciones.some(
-      (v) => v.estrellas <= politica.MaxEstrellasInsatisfaccion && !contexto.valoracionesRevisadas.includes(v.id),
-    );
-  const riesgo = clasificar(senales, !!uso[0] && !narrativaPendiente);
+  const { huella, contexto } = await leerContextoNarrativo(estudianteId, mensajes, valoraciones, politica);
+  const { riesgo, narrativaPendiente } = calcularRiesgo({ corte, politica, uso: uso[0] ?? null, casos, dificultades, mensajes, valoraciones, contexto });
   const ruta = rutas.find((r) => r.vigente) ?? null;
   // Explicar por qué el seguimiento está permitido o bloqueado.
   const causas: string[] = [];

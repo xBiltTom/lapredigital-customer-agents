@@ -26,6 +26,8 @@ agent/instructions.md fija identidad, permisos y comportamiento. agent/instructi
 
 M30 separa el informe académico (`consultar_rendimiento`) del riesgo privado (`consultar_riesgo`). Las catorce herramientas se resuelven dinámicamente por modo, con validación compartida al ejecutarse; el análisis de caso no recibe herramientas. `30-participante.ts` adjunta identidad y doce mensajes públicos recientes del canal, sin datos privados ni confirmación de entrega. La matriz y los contratos están en [HERRAMIENTAS.md](HERRAMIENTAS.md).
 
+M31 introduce `servicios/dashboard.ts` y su consulta SQL por lotes: una solicitud obtiene resúmenes, política/evidencias del riesgo y los cuatro KPI con un corte común. `academico/riesgo.ts` comparte clasificación y validación de la interpretación narrativa con la ficha individual. No usa diagnósticos completos por alumno ni caché de negocio. El navegador carga los datos individuales solo en Acompañamiento y coordina/cancela los refrescos del Dashboard.
+
 El Dashboard consulta tablas de negocio e historiales con `consultar_datos_negocio`, mediante catálogo cerrado, relaciones por claves foráneas, filtros parametrizados y agregaciones tipadas; no hay SQL libre. Usa pool separado con la cuenta SELECT `lapredigital_reader`, sin credenciales de escritura como alternativa. El esquema y los datos canónicos se conservan. Las acciones de envío/consulta/no contacto tienen herramientas específicas; el dueño sigue aprobando y aplicando cambios por los flujos existentes.
 
 ## Lógica y evidencia

@@ -32,12 +32,12 @@ export default function App(){
  useEffect(()=>{if(!token)return;const controller=new AbortController();setError('');
   Promise.all([api('/api/status',undefined,controller.signal),api('/api/estudiantes',undefined,controller.signal)]).then(([status,list])=>{setAutorizado(true);setEstadoModelo(status.modelo);setAlumnos(list.items);setSeleccion(prev=>prev??list.items.find((a:Alumno)=>a.codigo==='C003')?.estudianteId??list.items[0]?.estudianteId??null);}).catch(e=>{if(e.name!=='AbortError'){setError(e.message);setAutorizado(false);}});return()=>controller.abort();
  },[token,api]);
- useEffect(()=>{alumnoActual.current=seleccion;setDatos(null);setChat([]);setMensaje('');setRecomendacion('');setError('');if(!seleccion)return;const controller=new AbortController();setCargando(true);setCargandoChat(true);
+ useEffect(()=>{alumnoActual.current=seleccion;setDatos(null);setChat([]);setMensaje('');setRecomendacion('');setError('');if(!token||vista!=='alumno'||!seleccion)return;const controller=new AbortController();setCargando(true);setCargandoChat(true);
   api(`/api/estudiantes/${seleccion}/chat`,undefined,controller.signal).then(r=>setChat(r.mensajes)).catch(e=>{if(e.name!=='AbortError')setError(`No se pudo recuperar el historial: ${e.message}`);}).finally(()=>{if(!controller.signal.aborted)setCargandoChat(false);});
   api(`/api/estudiantes/${seleccion}`,undefined,controller.signal).then(setDatos).catch(e=>{if(e.name!=='AbortError')setError(e.message);}).finally(()=>{if(!controller.signal.aborted)setCargando(false);});return()=>controller.abort();
- },[seleccion,api]);
+ },[seleccion,api,vista,token]);
  useEffect(()=>{chatEnd.current?.scrollIntoView({block:'nearest',behavior:'smooth'});},[chat,pensando]);
- async function refrescar(id=seleccion){if(!id)return;const data=await api(`/api/estudiantes/${id}`);if(alumnoActual.current===id)setDatos(data);}
+ async function refrescar(id=seleccion){if(vista!=='alumno'||!id)return;const data=await api(`/api/estudiantes/${id}`);if(alumnoActual.current===id)setDatos(data);}
  async function enviar(event?:FormEvent,texto=mensaje){event?.preventDefault();if(!seleccion||!texto.trim()||pensando||cargandoChat)return;const id=seleccion;setMensaje('');setPensando(true);setChat(prev=>[...prev,{rol:'user',texto},{rol:'agent',texto:''}]);setError('');
   const actualizar=(patch:Partial<Linea>)=>{if(alumnoActual.current===id)setChat(prev=>prev.map((linea,i)=>i===prev.length-1?{...linea,...patch}:linea));};
   try{

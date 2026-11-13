@@ -13,6 +13,11 @@ export async function indicadoresCustomers(owner: number) {
     string,
     number | Date
   >[][];
+  return presentarIndicadores(sets);
+}
+
+// El dashboard reutiliza presentación/fórmulas con los resultados del mismo lote SQL.
+export function presentarIndicadores(sets: Record<string, number | Date>[][]) {
   const definiciones = [
     {
       codigo: 'C-2.1',

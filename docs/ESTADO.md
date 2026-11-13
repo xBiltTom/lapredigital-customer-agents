@@ -1,5 +1,15 @@
 # Estado y continuidad
 
+## M31 — consultas del Dashboard por lotes (2026-11-13)
+
+El Dashboard reemplaza los diagnósticos secuenciales por alumno por una sola solicitud SQL: resumen de estudiantes, servicio vigente, avance agregado, cumplimiento, evidencias necesarias del riesgo, consultas al dueño y los cuatro KPI. El lote valida al dueño y usa un corte peruano común. No carga fichas, intentos, prestaciones o el temario completo para cada estudiante. El riesgo y la lectura de interpretaciones narrativas se extrajeron a academico/riesgo.ts y se comparten con el diagnóstico individual; los KPI reutilizan consulta y presentación existentes. Valoraciones tienen orden determinista por ID. Se mantienen las reglas, la autorización y las definiciones; no se modificaron esquema, índices, permisos ni datos.
+
+En frontend, la ficha y el historial individuales se consultan al abrir Acompañamiento, no al entrar al Dashboard. Las actualizaciones del Dashboard comparten la petición en curso, se cancelan al salir, omiten el polling con la pestaña oculta y refrescan al volver. Tras una acción se relee para evitar conservar una consulta iniciada antes del cambio. No hay caché de resultados de negocio.
+
+Comprobaciones ya ejecutadas antes de que el usuario pidiera cerrar: comparación de los 30 alumnos y cuatro KPI contra la salida previa, coincidentes; reducción de 238 solicitudes mssql a 1, con 19–20 ms en dos lecturas con conexión abierta frente a 465 ms anteriores (mediciones locales puntuales). Tipos, build web y 23 unitarias correctos; continúa el aviso de bundle web mayor a 500 kB. No se ejecutó Playwright ni se llamó al modelo. El backend empaquetado no se regeneró en esta tarea; desarrollo cargó el cambio. El usuario confirmó que percibía la mejora y pidió commit/cierre sin más pruebas o mediciones. DOCX personal conservado.
+
+Tarea cerrada por instrucción del usuario. No continuar optimizaciones ni verificaciones adicionales automáticamente.
+
 ## M30 — herramientas por contexto, rendimiento y consultas generales (2026-11-13)
 
 Se implementó la propuesta autorizada: catorce herramientas dinámicas con reglas compartidas de visibilidad/ejecución. El participante de Mensajería recibe seis y Academia cinco; el análisis de caso ninguna. consultar_rendimiento separa notas, evolución comparable, cumplimiento/ventana, pendientes, dificultades y actividad; no devuelve riesgo ni mensajes privados. consultar_riesgo reemplaza el diagnóstico conversacional privado; consultar_registros reemplaza consultar_base para detalle del alumno. Se retiraron operar_plataforma y la comprobación técnica. Envío, temario, Dashboard, consultas al dueño y no contacto tienen entradas específicas. El dueño solo recibe CONSULTAR en gestionar_caso. Propuestas e interpretación aceptan alumno explícito en global, conservando la identidad fijada en individual/participante.

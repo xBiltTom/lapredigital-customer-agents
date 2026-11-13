@@ -87,3 +87,5 @@ Reutilizar node:test y trazas de Eve. Tipos y pruebas dirigidas por funcionalida
 - [x] M29 — Ampliar población a 30 estudiantes con historia y escenarios de acompañamiento; conservar datos activos y verificar la carga SQL.
 
 - [x] M30 — Reordenar herramientas por modo, informe de rendimiento del participante, consultas generales del dueño con cuenta SQL lectora, contexto acotado y tono natural. Conservar separación de identidad, aprobaciones y esquema; verificar contratos, SQL aislado y primeros mensajes con modelo.
+
+- [x] M31 — Optimizar Dashboard mediante lectura SQL por lotes, riesgo/KPI compartidos y eliminación de cargas individuales y refrescos redundantes. Commit y cierre solicitados por el usuario; sin verificaciones adicionales.

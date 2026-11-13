@@ -134,7 +134,8 @@ FROM
 WHERE
   s.EstudianteId = @id
   AND v.Valida = 1
-  AND v.FechaRespuesta <= @c;
+  AND v.FechaRespuesta <= @c
+ORDER BY v.ValoracionId;
 
 SELECT
   a.Canal canal,

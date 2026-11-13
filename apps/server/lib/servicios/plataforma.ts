@@ -1,7 +1,5 @@
 import {
   CONSULTAR_TEMARIO,
-  LISTAR_ESTUDIANTES,
-  LISTAR_CONSULTAS_DUENO,
   BUSCAR_DESTINATARIO,
   BUSCAR_BLOQUEO_CONTACTO,
   BUSCAR_AUTORIZACION,
@@ -11,7 +9,7 @@ import {
 } from '../database/consultas/plataforma.ts';
 import sql from 'mssql';
 import { getPool } from '../database/pool.ts';
-import { indicadoresCustomers } from './indicadores.ts';
+import { resumenDashboard } from './dashboard.ts';
 import { diagnostico } from '../academico/diagnostico.ts';
 // Lee el catálogo y el avance del alumno; no modifica la ruta académica.
 export async function curriculum(e: number) {
@@ -19,38 +17,8 @@ export async function curriculum(e: number) {
   return (await p.request().input('e', sql.Int, e).query(CONSULTAR_TEMARIO))
     .recordset;
 }
-// Arma el dashboard: diagnóstico de cada alumno, KPI y consultas pendientes del dueño.
-export async function general(owner: number) {
-  const p = await getPool();
-  const rows = (await p.request().query(LISTAR_ESTUDIANTES)).recordset;
-  const alumnos = [];
-  for (const r of rows) {
-    const d = await diagnostico(owner, r.id);
-    const avance = await curriculum(r.id);
-    alumnos.push({
-      ...r,
-      servicioActivo: r.etapa === 'CUSTOMER' && !!d.ficha.servicioActual,
-      riesgo: d.riesgo.nivel ?? 'PENDIENTE',
-      completados: avance.filter((x) => x.estado === 'COMPLETADA').length,
-      total: avance.length,
-      cumplimiento: d.cumplimiento.porcentaje,
-      incidencias: d.casos.filter((c) => c.estado !== 'RESUELTA').length,
-    });
-  }
-  return {
-    indicadores: await indicadoresCustomers(owner),
-    definiciones: {
-      completados:
-        'Temas completados del temario UNT 2027, no actividades de ruta ni dominio demostrado',
-      cumplimiento:
-        'Porcentaje de actividades completadas de la ruta vigente en ventana de 30 días; tiene otro alcance que el temario',
-      incidencias:
-        'Casos de atención no resueltos; incluye consultas, no solo incidencias',
-    },
-    alumnos,
-    consultas: (await p.request().query(LISTAR_CONSULTAS_DUENO)).recordset,
-  };
-}
+// API y herramienta global comparten la lectura optimizada por lotes.
+export const general = resumenDashboard;
 // Resuelve el contacto real del alumno o su apoderado antes de leer/enviar mensajes.
 export async function destinatario(e: number, rol: string) {
   const p = await getPool();
