@@ -1,0 +1,207 @@
+/* Administración: tablas legibles, formularios acotados y catálogo de consulta. */
+.workspace-nav {
+  max-height: 54vh;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+.workspace-nav button {
+  padding: 9px 12px;
+}
+.admin-page {
+  padding: 32px;
+  overflow: auto;
+  flex: 1;
+  background: #f5f7fb;
+}
+.admin-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.admin-heading h1 {
+  margin: 8px 0;
+  font-size: 29px;
+}
+.admin-heading p {
+  max-width: 680px;
+  color: #66738a;
+  line-height: 1.6;
+}
+.admin-primary {
+  background: #176b62 !important;
+  color: white !important;
+  border-color: #176b62 !important;
+}
+.admin-page button {
+  cursor: pointer;
+  border: 1px solid #dae2e9;
+  border-radius: 9px;
+  padding: 9px 14px;
+  background: white;
+  color: #28434c;
+  font: inherit;
+}
+.admin-page button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.admin-search {
+  width: min(100%, 480px);
+  padding: 12px 16px;
+  border: 1px solid #dae2e9;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  background: white;
+}
+.admin-table-wrap {
+  overflow: auto;
+  background: white;
+  border: 1px solid #e1e7ee;
+  border-radius: 14px;
+}
+.admin-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  min-width: 680px;
+}
+.admin-table-wrap th {
+  background: #edf3f5;
+  color: #516575;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.admin-table-wrap th,
+.admin-table-wrap td {
+  padding: 17px;
+  border-bottom: 1px solid #edf0f5;
+  vertical-align: top;
+}
+.admin-page small {
+  display: block;
+  margin-top: 6px;
+  color: #758396;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 18px;
+}
+.admin-card {
+  background: white;
+  border: 1px solid #e1e7ee;
+  border-radius: 14px;
+  padding: 22px;
+  text-align: left;
+  margin-bottom: 14px;
+  overflow-wrap: anywhere;
+}
+.admin-card h2,
+.admin-card h3 {
+  margin: 14px 0 10px;
+}
+.admin-card p {
+  line-height: 1.6;
+  color: #536374;
+}
+.admin-card summary {
+  padding: 12px 0;
+  cursor: pointer;
+}
+.admin-tag {
+  display: inline-block;
+  border-radius: 7px;
+  padding: 6px 9px;
+  background: #e8f3f0;
+  color: #27695e;
+  font-size: 11px;
+  font-weight: 700;
+}
+.admin-metrics,
+.admin-actions,
+.admin-pagination {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 18px 0;
+}
+.admin-metrics strong {
+  background: white;
+  border: 1px solid #e1e7ee;
+  padding: 16px 22px;
+  border-radius: 12px;
+}
+.admin-pagination {
+  justify-content: flex-end;
+}
+.admin-error {
+  background: #fff0ed;
+  color: #9d382a;
+  border-radius: 8px;
+  padding: 13px;
+  margin-bottom: 14px;
+}
+.admin-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: #14273888;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.admin-dialog {
+  background: white;
+  border-radius: 18px;
+  max-width: 620px;
+  width: 100%;
+  padding: 28px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 70px #10283844;
+}
+.admin-dialog label {
+  display: block;
+  margin: 14px 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.admin-dialog input:not([type='checkbox']),
+.admin-dialog select,
+.admin-dialog textarea {
+  display: block;
+  width: 100%;
+  margin-top: 7px;
+  border: 1px solid #d6e1e6;
+  border-radius: 8px;
+  padding: 10px;
+  font: inherit;
+  background: white;
+}
+.admin-dialog textarea {
+  min-height: 100px;
+}
+.admin-dialog input[type='checkbox'] {
+  margin-left: 12px;
+}
+.admin-dialog .admin-actions {
+  justify-content: flex-end;
+}
+@media (max-width: 760px) {
+  .admin-page {
+    padding: 18px;
+  }
+  .admin-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .workspace-nav {
+    max-height: 40vh;
+  }
+}

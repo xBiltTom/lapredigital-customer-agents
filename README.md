@@ -144,3 +144,19 @@ Introduce la contraseña del llavero y mantén esa terminal abierta. **Ese desbl
 | [AGENTS.md](AGENTS.md) | Instrucciones para continuar |
 
 SQL guarda fechas peruanas con GETDATE; la API las serializa con offset -05:00. No hay cierres mensuales congelados, DataMart, agenda, referidos, cambios de plan, portal familiar ni otros agentes del embudo en este MVP. MiniMax no se consumió.
+
+## Administración de CUSTOMERS
+
+El sidebar incorpora **Estudiantes**, **Apoderados**, **Cursos y temario**, **Recursos**, **Rutas de estudio**, **Consultas e incidencias** y **Planes y servicios**. Dashboard conserva su asistente global; Agente IA abre el acompañamiento individual existente.
+
+Se pueden registrar/editar perfiles, vincular apoderados, gestionar materiales, publicar versiones de rutas, añadir actividades y atender/resolver/reabrir casos de servicio o acceso. Cursos/temario, planes, suscripciones, periodos y movimientos de pago son de consulta. No hay borrado de estudiantes ni edición de resultados académicos históricos. Las altas administrativas crean perfiles LEAD; habilitar CUSTOMER sigue dependiendo de una contratación/beca, fuera de estos formularios.
+
+Administración usa **Prisma 7.10.1** con SQL Server. Las consultas complejas de KPI y herramientas actuales conservan SQL parametrizado. El esquema Prisma es un mapa parcial para consultar/operar; no ejecutar `prisma migrate` ni `db push`. La fuente de verdad sigue siendo `database/01_crear_customers.sql`, junto con su población 02. No se necesita reconstruir la base para estas vistas.
+
+Después de instalar estas dependencias en otro equipo, conceder una vez los permisos administrativos con una cuenta SQL administradora:
+
+~~~bash
+./scripts/grant-admin
+~~~
+
+En Windows ejecutar `infra/sql/admin-permissions.sql` con la cuenta administradora de SQL Server. Arranque y build generan el cliente Prisma dentro de Docker. La comprobación focalizada `apps/server/scripts/check-admin.mjs` solo admite `LaPreDigital_Customers_MvpTest`; no ejecutarla contra la base académica. `scripts/admin-browser-smoke.mjs` verifica la navegación sin escribir datos ni llamar al modelo.

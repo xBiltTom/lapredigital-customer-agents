@@ -53,3 +53,11 @@ SQL DATETIME2 y GETDATE peruanos; mssql useUTC:false y Node America/Lima. La API
 Pruebas de escritura solo en LaPreDigital_Customers_MvpTest. Navegador con UI real y esa API; chats reales verificados aparte para evitar consumo automático.
 
 Un proceso local; POST /api/chat transmite texto y nombres de herramientas por NDJSON sin razonamiento interno. GET /api/estudiantes/:id/chat recupera el historial de la dirección principal desde Eve, validando al dueño y al alumno. El cliente usa Streamdown para Markdown y bloquea imágenes/HTML incrustado. Sin DataMarts/cierres congelados, agenda, KPI oficiales completos, proveedores de comunicación ni extensiones del embudo. La modalidad ChatGPT local no garantiza API/VPS; MiniMax no se consumió.
+
+## Administración con Prisma
+
+Sidebar con Dashboard/chat global y Agente IA/acompañamiento individual separados, más siete vistas administrativas. `agent/channels/admin.ts` autentica al dueño; `lib/administracion/` valida entradas con Zod y aplica operaciones específicas mediante el cliente único `lib/database/prisma.ts`.
+
+Prisma 7.10.1 y adapter-mssql simplifican las operaciones ordinarias. El mapa parcial de `prisma/schema.prisma` se genera en arranque/build, sin aplicar DDL ni migraciones. GETDATE sigue originando los tiempos operativos peruanos. El adapter Prisma usa useUTC:true para representar los valores SQL sin desplazar fechas en las copias; mssql mantiene su configuración y serialización anteriores.
+
+Se conservan transacciones, triggers de historial y consultas SQL complejas existentes. `updateMany` evita el OUTPUT directo incompatible con triggers de SQL Server. La API administrativa no concede nuevas herramientas al agente. Los nuevos permisos se encuentran en `infra/sql/admin-permissions.sql`, sin DELETE ni DDL.
