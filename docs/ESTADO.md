@@ -1,5 +1,13 @@
 # Estado y continuidad
 
+## M22 — chat flotante en Dashboard y Agente IA (2026-11-13)
+
+El chat global y el chat individual ahora se abren desde un botón circular abajo a la derecha y se muestran en un panel flotante compartido. La vista individual y el Dashboard recuperan el espacio que ocupaba el chat fijo. Las consultas pendientes del agente siguen visibles como datos del Dashboard, con su respuesta y envío al mismo hilo. Sin cambios de API, backend o datos.
+
+Verificación: `./scripts/dev npm run build:web` correcto (TypeScript y Vite; continúa el aviso conocido de chunk mayor a 500 kB). No se ejecutó prueba de navegador.
+
+Siguiente paso concreto: revisar apertura/cierre del chat, mensajes y área de datos en escritorio y móvil.
+
 ## M21 — selector de estudiante en Acompañamiento (2026-11-13)
 
 Se movió la selección de estudiante desde la parte inferior del sidebar a la cabecera de Agente IA/Acompañamiento. El selector muestra el estudiante activo y permite cambiarlo desde la misma pantalla; al cambiar se recargan su ficha y conversación con el comportamiento existente. Se retiraron la lista y búsqueda largas del sidebar de esa vista. Solo frontend, sin cambios de API o datos.
