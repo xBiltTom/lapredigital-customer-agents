@@ -12,7 +12,15 @@ Actualizado: 12/11/2026. Instrucción vigente: terminar un MVP local en una sola
 
 En el portal, el agente respondió una vez «no tengo acceso a esa consulta» y en el turno siguiente sí dio el diagnóstico. Causa: las instrucciones globales pedían usar consultar_diagnostico sin aclarar que es exclusiva del dueño; la herramienta rechaza el modo participante en identidadHerramienta. Se acotó la instrucción a dashboard/acompañamiento, se indicó operar_plataforma ESTUDIANTE para el portal y se hizo explícito el error. Sin cambios de esquema, permisos ni datos. Verificación: check de workspace, tipos y 14 pruebas unitarias correctos; build compilado regenerado. Pendiente: reiniciar la terminal de `eve start` para cargar las instrucciones nuevas y repetir una consulta en el portal.
 
-## Último cambio: M14 — KPI calculables de CUSTOMERS
+## Último cambio: M15 — legibilidad del backend
+
+Reorganización de lib en academico, seguridad, servicios, conversaciones y database. Se mantuvo config.ts en la raíz. Las 18 consultas principales del diagnóstico, KPI, recursos consultables y plataforma se extrajeron a database/consultas con nombres descriptivos y formato T-SQL. Las transacciones de intervenciones conservan sus consultas junto a las validaciones. Canales, herramientas y lib se formatearon con indentación y comentarios de propósito; el constructor de filtros SQL se muestra por pasos. No se incorporaron dependencias al proyecto, ORM, reglas nuevas ni cambios de esquema/datos.
+
+Imports, scripts de comprobación y pruebas existentes actualizados a las nuevas rutas. Guía apps/server/lib/README.md explica el recorrido HTTP → herramienta → servicio → consulta parametrizada con ejemplos de pagos, riesgo y KPI. Se preservó el archivo personal LaPreDigital_MANUAL_DE_USUARIO.docx sin incorporarlo al commit.
+
+Verificación: tipos y compilación de Eve correctos; workspace/enlaces y pruebas existentes correctos. Comparación léxica de las 18 consultas extraídas confirmó los mismos tokens, literales y parámetros. Lecturas reales de pagos, KPI y diagnóstico/temario verificadas después del movimiento. No se reconstruyó la base ni se hicieron escrituras de prueba. Siguiente paso: el usuario lee la guía y pide aclaraciones sobre bloques concretos.
+
+## M14 — KPI calculables de CUSTOMERS
 
 Dashboard incorpora C-2.1 satisfacción, C-2.2 respuesta a valoraciones, C-2.3 resolución de incidencias de servicio/acceso y C-6.1 aceptación de cambios de plan. Tarjetas con valor, semáforo del informe, numerador/denominador, periodo/corte peruano y detalle de fórmula/fuentes. Es avance provisional del mes actual; no hay selector de meses cerrados ni snapshots históricos. Denominador cero devuelve null y No aplicable, sin convertirlo en favorable o cero.
 

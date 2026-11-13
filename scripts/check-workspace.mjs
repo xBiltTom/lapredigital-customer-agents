@@ -21,7 +21,7 @@ const required = [
   'package-lock.json', 'apps/server/package.json', 'apps/server/tsconfig.json',
   'apps/server/README.md', 'apps/server/agent/agent.ts',
   'apps/server/agent/instructions.md', 'apps/server/agent/channels/eve.ts',
-  'apps/server/lib/auth.ts', 'infra/sql/app-read-permissions.sql',
+  'apps/server/lib/seguridad/auth.ts', 'infra/sql/app-read-permissions.sql',
   'scripts/provision-sql-app', 'scripts/chat-local',
   'apps/web/package.json', 'apps/web/src/App.tsx', 'apps/web/README.md',
   'compose.packaged.yaml', 'scripts/start', 'scripts/open-panel',

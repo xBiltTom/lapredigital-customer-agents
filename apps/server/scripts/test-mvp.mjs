@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
-import {diagnostico,guardarContexto} from '../lib/diagnostico.ts';
-import {proponer,decidir} from '../lib/propuestas.ts';
+import {diagnostico,guardarContexto} from '../lib/academico/diagnostico.ts';
+import {proponer,decidir} from '../lib/academico/intervenciones.ts';
 import {getPool,closePool} from '../lib/database/pool.ts';
-import {contextoVacio} from '../lib/domain.ts';
+import {contextoVacio} from '../lib/academico/reglas.ts';
 assert.equal(process.env.SQLSERVER_DATABASE,'LaPreDigital_Customers_MvpTest','Prueba destructiva solo en base aislada.');
 try {
  const pool=await getPool(),owner=Number(process.env.OWNER_PERSONAL_ID);

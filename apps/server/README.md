@@ -16,7 +16,7 @@ Node 24, Eve 1.0.0-rc.10, AI SDK 7.0.137, Zod 4.6.7 y mssql 12.7.14. Todo se eje
 
 Datos y acciones exigen Bearer local del dueño activo, con origen local. Las tools toman alumno/dueño de la identidad validada del canal; no aceptan estudianteId del modelo. Cambiar alumno cambia la dirección de conversación. El modelo no tiene herramienta de aprobación.
 
-lib/domain.ts contiene cálculos puros; lib/diagnostico.ts las fuentes y huella narrativa; lib/propuestas.ts transacciones y revalidación. Sin SQL libre ni herramientas generales de archivos/bash. El archivo de contexto es privado y lo administra la app, no el modelo.
+lib/academico/reglas.ts contiene cálculos puros; lib/academico/diagnostico.ts las fuentes y huella narrativa; lib/academico/intervenciones.ts transacciones y revalidación. Sin SQL libre ni herramientas generales de archivos/bash. El archivo de contexto es privado y lo administra la app, no el modelo.
 
 El pool abre solo cuando hace falta. SELECT de fuentes, INSERT de evaluación/señales/eventos e INSERT/UPDATE de intervención; sin sa ni DDL. Los permisos están en infra/sql y scripts/grant-mvp. Las operaciones respetan plan, autorizaciones y revisión previa; la app conserva los hechos existentes.
 
@@ -35,3 +35,5 @@ Desde la raíz: scripts/test-mvp usa SQL aislado; scripts/test-browser usa naveg
 Modelos reales verificados aparte: Carla con consulta/interpretación, Gabriela pendiente en navegador e Inés sin contacto. No repetir llamadas de modelo en cada prueba.
 
 Antes de cambiar Eve, leer node_modules/eve/docs/README.md y la guía de la versión instalada. Se usaron canales custom, tools, cliente, autenticación y self-hosting. No asumir APIs de otra versión.
+
+Para recorrer el flujo paso a paso y ubicar cada responsabilidad, leer [la guía de lib](lib/README.md).

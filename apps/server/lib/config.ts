@@ -5,11 +5,17 @@ const schema = z.object({
   AI_PROVIDER: z.literal('chatgpt'),
 });
 
-export function loadConfig(env: Record<string, string | undefined> = process.env) {
+export function loadConfig(
+  env: Record<string, string | undefined> = process.env,
+) {
   const result = schema.safeParse(env);
   if (!result.success) {
-    const names = result.error.issues.map((issue) => issue.path.join('.')).join(', ');
-    throw new Error(`Configuración inválida o ausente: ${names}. Consulta .env.example.`);
+    const names = result.error.issues
+      .map((issue) => issue.path.join('.'))
+      .join(', ');
+    throw new Error(
+      `Configuración inválida o ausente: ${names}. Consulta .env.example.`,
+    );
   }
   return result.data;
 }
@@ -17,27 +23,47 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
 const sqlSchema = z.object({
   SQLSERVER_HOST: z.string().trim().min(1),
   SQLSERVER_PORT: z.coerce.number().int().min(1).max(65535),
-  SQLSERVER_DATABASE: z.enum(['LaPreDigital_Customers','LaPreDigital_Customers_MvpTest']),
+  SQLSERVER_DATABASE: z.enum([
+    'LaPreDigital_Customers',
+    'LaPreDigital_Customers_MvpTest',
+  ]),
   SQLSERVER_USER: z.literal('lapredigital_app'),
   SQLSERVER_PASSWORD: z.string().min(1),
-  SQLSERVER_ENCRYPT: z.enum(['true', 'false']).transform((value) => value === 'true'),
-  SQLSERVER_TRUST_SERVER_CERTIFICATE: z.enum(['true', 'false']).transform((value) => value === 'true'),
+  SQLSERVER_ENCRYPT: z
+    .enum(['true', 'false'])
+    .transform((value) => value === 'true'),
+  SQLSERVER_TRUST_SERVER_CERTIFICATE: z
+    .enum(['true', 'false'])
+    .transform((value) => value === 'true'),
 });
 
-export function loadSqlConfig(env: Record<string, string | undefined> = process.env) {
+export function loadSqlConfig(
+  env: Record<string, string | undefined> = process.env,
+) {
   const result = sqlSchema.safeParse(env);
   if (!result.success) {
-    const names = result.error.issues.map((issue) => issue.path.join('.')).join(', ');
-    throw new Error(`Configuración SQL inválida o ausente: ${names}. Consulta .env.example.`);
+    const names = result.error.issues
+      .map((issue) => issue.path.join('.'))
+      .join(', ');
+    throw new Error(
+      `Configuración SQL inválida o ausente: ${names}. Consulta .env.example.`,
+    );
   }
   return result.data;
 }
 
-export function loadOwnerConfig(env: Record<string, string | undefined> = process.env) {
-  const result = z.object({
-    OWNER_PERSONAL_ID: z.coerce.number().int().positive(),
-    OWNER_ACCESS_TOKEN: z.string().min(32),
-  }).safeParse(env);
-  if (!result.success) throw new Error('Falta configurar el acceso local del dueño. Consulta .env.example.');
+export function loadOwnerConfig(
+  env: Record<string, string | undefined> = process.env,
+) {
+  const result = z
+    .object({
+      OWNER_PERSONAL_ID: z.coerce.number().int().positive(),
+      OWNER_ACCESS_TOKEN: z.string().min(32),
+    })
+    .safeParse(env);
+  if (!result.success)
+    throw new Error(
+      'Falta configurar el acceso local del dueño. Consulta .env.example.',
+    );
   return result.data;
 }

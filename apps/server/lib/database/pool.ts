@@ -23,7 +23,10 @@ export function getPool(): Promise<sql.ConnectionPool> {
     });
     poolPromise = pool.connect().catch((cause: unknown) => {
       poolPromise = undefined;
-      throw new Error('No se pudo conectar a SQL Server. Revisa la instancia y el usuario de aplicación.', { cause });
+      throw new Error(
+        'No se pudo conectar a SQL Server. Revisa la instancia y el usuario de aplicación.',
+        { cause },
+      );
     });
   }
   return poolPromise;

@@ -85,15 +85,22 @@ export function normalizarPagina(opciones: OpcionesListado = {}) {
     throw new Error('La página debe ser un entero mayor o igual a 1.');
   }
   if (!Number.isInteger(tamano) || tamano < 1 || tamano > TAMANO_PAGINA_MAX) {
-    throw new Error(`El tamaño de página debe ser un entero entre 1 y ${TAMANO_PAGINA_MAX}.`);
+    throw new Error(
+      `El tamaño de página debe ser un entero entre 1 y ${TAMANO_PAGINA_MAX}.`,
+    );
   }
   return { pagina, tamano, offset: (pagina - 1) * tamano };
 }
 
 function validarIdentidad(identidad: IdentidadActiva) {
   const id = identidad.personalInternoId ?? identidad.contactoId;
-  if (typeof id !== 'number' || !Number.isSafeInteger(id) || id < 1 ||
-      (identidad.contactoId !== undefined && identidad.personalInternoId !== undefined)) {
+  if (
+    typeof id !== 'number' ||
+    !Number.isSafeInteger(id) ||
+    id < 1 ||
+    (identidad.contactoId !== undefined &&
+      identidad.personalInternoId !== undefined)
+  ) {
     throw new Error('La identidad activa no es válida.');
   }
 }
@@ -127,13 +134,17 @@ export async function listarEstudiantes(
   const { pagina, tamano, offset } = normalizarPagina(opciones);
   const pool = await getPool();
 
-  const totalResult = await pool.request()
+  const totalResult = await pool
+    .request()
     .input('contactoId', sql.Int, identidad.contactoId ?? null)
     .input('personalInternoId', sql.Int, identidad.personalInternoId ?? null)
-    .query(`SELECT COUNT(*) AS Total FROM dbo.Estudiante e WHERE ${accesoIdentidad}`);
+    .query(
+      `SELECT COUNT(*) AS Total FROM dbo.Estudiante e WHERE ${accesoIdentidad}`,
+    );
   const total = Number(totalResult.recordset[0].Total);
 
-  const { recordset } = await pool.request()
+  const { recordset } = await pool
+    .request()
     .input('contactoId', sql.Int, identidad.contactoId ?? null)
     .input('personalInternoId', sql.Int, identidad.personalInternoId ?? null)
     .input('offset', sql.Int, offset)
@@ -170,7 +181,8 @@ export async function obtenerFichaEstudiante(
   validarEstudianteId(estudianteId);
   const pool = await getPool();
 
-  const perfilResult = await pool.request()
+  const perfilResult = await pool
+    .request()
     .input('contactoId', sql.Int, identidad.contactoId ?? null)
     .input('personalInternoId', sql.Int, identidad.personalInternoId ?? null)
     .input('estudianteId', sql.Int, estudianteId)
@@ -189,7 +201,8 @@ export async function obtenerFichaEstudiante(
   if (perfilResult.recordset.length === 0) return null;
   const perfil = perfilResult.recordset[0];
 
-  const periodosResult = await pool.request()
+  const periodosResult = await pool
+    .request()
     .input('estudianteId', sql.Int, estudianteId)
     .query(`SELECT s.SuscripcionId, s.Estado AS EstadoSuscripcion, s.RenovacionAutomatica,
                    s.FechaContratacion, p.PeriodoServicioId, p.Tipo, p.Inicio, p.Fin,
@@ -238,27 +251,34 @@ export async function obtenerFichaEstudiante(
     fechaBaja: row.FechaBaja,
     tipoBaja: row.TipoBaja,
     motivoComunicado: row.MotivoComunicado,
-    elegibleReactivacion: row.ElegibleReactivacion === null ? null : Boolean(row.ElegibleReactivacion),
+    elegibleReactivacion:
+      row.ElegibleReactivacion === null
+        ? null
+        : Boolean(row.ElegibleReactivacion),
     esActual: false,
     vigenteAhora: Boolean(row.VigenteAhora),
     planServicioId: row.PlanServicioId,
   }));
 
   const filaActual = filas.find((fila) => fila.vigenteAhora) ?? null;
-  const periodos: Periodo[] = filas.map(({ vigenteAhora, planServicioId, ...periodo }) => ({
-    ...periodo,
-    esActual: periodo.periodoServicioId === filaActual?.periodoServicioId,
-  }));
-  const servicioActual = periodos.find(
-    (periodo) => periodo.periodoServicioId === filaActual?.periodoServicioId,
-  ) ?? null;
+  const periodos: Periodo[] = filas.map(
+    ({ vigenteAhora, planServicioId, ...periodo }) => ({
+      ...periodo,
+      esActual: periodo.periodoServicioId === filaActual?.periodoServicioId,
+    }),
+  );
+  const servicioActual =
+    periodos.find(
+      (periodo) => periodo.periodoServicioId === filaActual?.periodoServicioId,
+    ) ?? null;
   const historial = periodos.filter(
     (periodo) => periodo.periodoServicioId !== filaActual?.periodoServicioId,
   );
 
   let prestaciones: { codigo: string; descripcion: string }[] = [];
   if (filaActual) {
-    const prestacionesResult = await pool.request()
+    const prestacionesResult = await pool
+      .request()
       .input('planServicioId', sql.Int, filaActual.planServicioId)
       .query(`SELECT pr.Codigo, pr.Descripcion
               FROM dbo.PlanPrestacion pp
@@ -286,12 +306,15 @@ export async function obtenerFichaEstudiante(
       parentesco: perfil.Parentesco,
       fechaRegistro: perfil.FechaRegistro,
     },
-    apoderado: perfil.ApoderadoContactoId === null ? null : {
-      contactoId: perfil.ApoderadoContactoId,
-      nombreCompleto: perfil.ApoderadoNombre,
-      correo: perfil.ApoderadoCorreo,
-      telefono: perfil.ApoderadoTelefono,
-    },
+    apoderado:
+      perfil.ApoderadoContactoId === null
+        ? null
+        : {
+            contactoId: perfil.ApoderadoContactoId,
+            nombreCompleto: perfil.ApoderadoNombre,
+            correo: perfil.ApoderadoCorreo,
+            telefono: perfil.ApoderadoTelefono,
+          },
     servicioActual,
     historial,
     prestaciones,

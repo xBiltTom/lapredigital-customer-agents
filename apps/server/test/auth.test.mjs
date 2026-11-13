@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { crearAutenticadorDueno } from '../lib/auth.ts';
+import { crearAutenticadorDueno } from '../lib/seguridad/auth.ts';
 
 const token = 'token-de-prueba-sin-valor-real-000000';
 const config = { OWNER_PERSONAL_ID: 7, OWNER_ACCESS_TOKEN: token };

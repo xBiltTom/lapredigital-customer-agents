@@ -1,15 +1,267 @@
-import {defineChannel,GET,POST} from 'eve/channels';import {z} from 'zod';import {createHmac,timingSafeEqual} from 'node:crypto';import sql from 'mssql';
-import {dueno} from '../../lib/panel-auth.ts';import {autenticarDueno} from '../../lib/auth.ts';import {getPool} from '../../lib/database/pool.ts';import {curriculum,general,destinatario,bandeja,mensajeLocal} from '../../lib/operaciones.ts';import {diagnostico,jsonSeguro} from '../../lib/diagnostico.ts';import {historialChat} from '../../lib/chat.ts';
-const id=z.coerce.number().int().positive();const role=z.enum(['ESTUDIANTE','APODERADO']);const channel=z.enum(['ACADEMIA','MENSAJERIA']);
-const json=(v:unknown,s=200)=>Response.json(jsonSeguro(v),{status:s,headers:{'cache-control':'no-store'}});const fail=(e:unknown)=>json({error:e instanceof Error?e.message:'Operación fallida'},409);
-const firma=(s:string)=>createHmac('sha256',process.env.OWNER_ACCESS_TOKEN!).update(s).digest('base64url');
-async function actor(r:Request){const t=r.headers.get('authorization')?.replace(/^Bearer /,'')??'';const [b,s]=t.split('.');if(!b||!s)throw new Error('Acceso del participante requerido');const a=Buffer.from(s),v=Buffer.from(firma(b));if(a.length!==v.length||!timingSafeEqual(a,v))throw new Error('Acceso inválido');const p=z.object({e:id,c:id,rol:role,exp:z.number()}).parse(JSON.parse(Buffer.from(b,'base64url').toString()));if(p.exp<Date.now())throw new Error('Acceso vencido');if(await destinatario(p.e,p.rol)!==p.c)throw new Error('Cambió la identidad vinculada');if(p.rol==='APODERADO'){const d=await diagnostico(Number(process.env.OWNER_PERSONAL_ID),p.e);if(!d.ficha.prestaciones.some(x=>x.codigo==='REPORTES_APODERADO'))throw new Error('El plan vigente no concede acceso al apoderado');}return p;}
-export default defineChannel({routes:[
- GET('/api/dashboard',async r=>{const o=await dueno(r);if(!o)return json({error:'Acceso requerido'},401);try{return json(await general(o.id));}catch(e){return fail(e);}}),
- POST('/api/portal/acceso',async r=>{const o=await dueno(r);if(!o)return json({error:'Acceso requerido'},401);try{const p=z.object({e:id,rol:role}).parse(await r.json());await destinatario(p.e,p.rol);if(p.rol==='APODERADO'){const d=await diagnostico(o.id,p.e);if(!d.ficha.prestaciones.some(x=>x.codigo==='REPORTES_APODERADO'))throw new Error('Requiere Meta UNT Plus vigente');}const c=await destinatario(p.e,p.rol);const b=Buffer.from(JSON.stringify({...p,c,exp:Date.now()+8*3600000})).toString('base64url');return json({token:b+'.'+firma(b)});}catch(e){return fail(e);}}),
- GET('/api/portal/ficha',async r=>{try{const a=await actor(r);const d=await diagnostico(Number(process.env.OWNER_PERSONAL_ID),a.e);return json({nombre:d.ficha.estudiante.nombreCompleto,nombreContacto:a.rol==='APODERADO'?d.ficha.apoderado?.nombreCompleto:d.ficha.estudiante.nombreCompleto,telefonoContacto:a.rol==='APODERADO'?d.ficha.apoderado?.telefono:d.ficha.estudiante.telefono,parentesco:d.ficha.estudiante.parentesco,rol:a.rol,plan:d.ficha.servicioActual?.plan,temario:await curriculum(a.e)});}catch(e){return fail(e);}}),
- GET('/api/portal/mensajes/:canal',async(r,{params})=>{try{const a=await actor(r);return json(await bandeja(a.e,a.rol,channel.parse(params.canal),true));}catch(e){return fail(e);}}),
- POST('/api/portal/progreso',async r=>{try{const a=await actor(r);if(a.rol!=='ESTUDIANTE')throw new Error('Solo el estudiante registra avance');const d=await diagnostico(Number(process.env.OWNER_PERSONAL_ID),a.e);if(!d.ficha.servicioActual)throw new Error('Se requiere servicio vigente');const b=z.object({contenidoId:id,estado:z.enum(['PENDIENTE','EN_CURSO','COMPLETADA'])}).parse(await r.json());const p=await getPool();await p.request().input('e',sql.Int,a.e).input('c',sql.Int,b.contenidoId).input('s',sql.VarChar(12),b.estado).query(`SET XACT_ABORT ON; BEGIN TRANSACTION; IF NOT EXISTS(SELECT 1 FROM dbo.ContenidoUNT WHERE ContenidoId=@c) THROW 51950,'Tema inexistente',1; UPDATE dbo.ProgresoTemaUNT WITH(UPDLOCK,SERIALIZABLE) SET Estado=@s,FechaCambio=GETDATE(),Origen='PORTAL_LOCAL' WHERE EstudianteId=@e AND ContenidoId=@c; IF @@ROWCOUNT=0 INSERT dbo.ProgresoTemaUNT(EstudianteId,ContenidoId,Estado) VALUES(@e,@c,@s); INSERT dbo.EventoUso(EstudianteId,Tipo,FechaEvento) VALUES(@e,'ESTUDIO',GETDATE()); COMMIT;`);return json({ok:true});}catch(e){return fail(e);}}),
- POST('/api/portal/mensajes/:canal',async(r,{params,from})=>{try{const a=await actor(r),canal=channel.parse(params.canal);const b=z.object({texto:z.string().trim().min(1).max(2000)}).parse(await r.json());await mensajeLocal(a.e,a.rol,canal,b.texto,'ENTRANTE');const auth=await autenticarDueno(new Request('http://localhost',{headers:{authorization:'Bearer '+process.env.OWNER_ACCESS_TOKEN}}));if(!auth)throw new Error('Dueño inactivo');const delivery=await from(`participante:${a.e}:${a.rol}:${canal}`).send(b.texto,{auth:{...auth,attributes:{...auth.attributes,modo:'participante',estudianteId:String(a.e),rol:a.rol,canal}},turnPolicy:'queue'});const result=await delivery.result({signal:AbortSignal.timeout(150000)});if(result.status!=='completed')throw new Error('El agente requiere atención del dueño en Eve');await mensajeLocal(a.e,a.rol,canal,result.reply??'No se recibió respuesta.','SALIENTE');return json({ok:true});}catch(e){return fail(e);}}),
- POST('/api/consultas/:id/responder',async(r,{params,from})=>{const o=await dueno(r);if(!o)return json({error:'Acceso requerido'},401);try{const b=z.object({texto:z.string().trim().min(1).max(2000)}).parse(await r.json());const p=await getPool();const q=(await p.request().input('id',sql.Int,id.parse(params.id)).query("SELECT * FROM dbo.ConsultaDueno WHERE ConsultaId=@id AND Estado='PENDIENTE'")).recordset[0];if(!q)throw new Error('Consulta inexistente o atendida');if(await destinatario(q.EstudianteId,q.Rol)!==q.ContactoId)throw new Error('Cambió el contacto de la consulta');if(q.Rol==='APODERADO'){const d=await diagnostico(o.id,q.EstudianteId);if(!d.ficha.prestaciones.some(x=>x.codigo==='REPORTES_APODERADO'))throw new Error('El apoderado ya no tiene acceso vigente');}const delivery=await from(`participante:${q.EstudianteId}:${q.Rol}:${q.Canal}`).send(`Respuesta autorizada del dueño a tu consulta #${q.ConsultaId}: ${b.texto}. Comunícala al interesado de forma clara, sin agregar compromisos.`,{auth:{...o.auth,attributes:{...o.auth.attributes,modo:'participante',estudianteId:String(q.EstudianteId),rol:q.Rol,canal:q.Canal,respuestaDueno:b.texto}},turnPolicy:'queue'});const result=await delivery.result({signal:AbortSignal.timeout(150000)});if(result.status!=='completed')throw new Error('No se completó la comunicación; consulta sigue pendiente');await mensajeLocal(q.EstudianteId,q.Rol,q.Canal,result.reply??'No se recibió respuesta.','SALIENTE',q.ConsultaId);await p.request().input('id',sql.Int,q.ConsultaId).input('r',sql.NVarChar(2000),b.texto).query("UPDATE dbo.ConsultaDueno SET Respuesta=@r,Estado='RESPONDIDA' WHERE ConsultaId=@id");return json({ok:true});}catch(e){return fail(e);}}),
-]});
+import { defineChannel, GET, POST } from 'eve/channels';
+import { z } from 'zod';
+import { createHmac, timingSafeEqual } from 'node:crypto';
+import sql from 'mssql';
+import { dueno } from '../../lib/seguridad/identidad.ts';
+import { autenticarDueno } from '../../lib/seguridad/auth.ts';
+import { getPool } from '../../lib/database/pool.ts';
+import {
+  curriculum,
+  general,
+  destinatario,
+  bandeja,
+  mensajeLocal,
+} from '../../lib/servicios/plataforma.ts';
+import { diagnostico, jsonSeguro } from '../../lib/academico/diagnostico.ts';
+import { historialChat } from '../../lib/conversaciones/historial.ts';
+const id = z.coerce.number().int().positive();
+const role = z.enum(['ESTUDIANTE', 'APODERADO']);
+const channel = z.enum(['ACADEMIA', 'MENSAJERIA']);
+const json = (v: unknown, s = 200) =>
+  Response.json(jsonSeguro(v), {
+    status: s,
+    headers: { 'cache-control': 'no-store' },
+  });
+const fail = (e: unknown) =>
+  json({ error: e instanceof Error ? e.message : 'Operación fallida' }, 409);
+const firma = (s: string) =>
+  createHmac('sha256', process.env.OWNER_ACCESS_TOKEN!)
+    .update(s)
+    .digest('base64url');
+async function actor(r: Request) {
+  const t = r.headers.get('authorization')?.replace(/^Bearer /, '') ?? '';
+  const [b, s] = t.split('.');
+  if (!b || !s) throw new Error('Acceso del participante requerido');
+  const a = Buffer.from(s),
+    v = Buffer.from(firma(b));
+  if (a.length !== v.length || !timingSafeEqual(a, v))
+    throw new Error('Acceso inválido');
+  const p = z
+    .object({ e: id, c: id, rol: role, exp: z.number() })
+    .parse(JSON.parse(Buffer.from(b, 'base64url').toString()));
+  if (p.exp < Date.now()) throw new Error('Acceso vencido');
+  if ((await destinatario(p.e, p.rol)) !== p.c)
+    throw new Error('Cambió la identidad vinculada');
+  if (p.rol === 'APODERADO') {
+    const d = await diagnostico(Number(process.env.OWNER_PERSONAL_ID), p.e);
+    if (!d.ficha.prestaciones.some((x) => x.codigo === 'REPORTES_APODERADO'))
+      throw new Error('El plan vigente no concede acceso al apoderado');
+  }
+  return p;
+}
+export default defineChannel({
+  routes: [
+    GET('/api/dashboard', async (r) => {
+      const o = await dueno(r);
+      if (!o) return json({ error: 'Acceso requerido' }, 401);
+      try {
+        return json(await general(o.id));
+      } catch (e) {
+        return fail(e);
+      }
+    }),
+    POST('/api/portal/acceso', async (r) => {
+      const o = await dueno(r);
+      if (!o) return json({ error: 'Acceso requerido' }, 401);
+      try {
+        const p = z.object({ e: id, rol: role }).parse(await r.json());
+        await destinatario(p.e, p.rol);
+        if (p.rol === 'APODERADO') {
+          const d = await diagnostico(o.id, p.e);
+          if (
+            !d.ficha.prestaciones.some((x) => x.codigo === 'REPORTES_APODERADO')
+          )
+            throw new Error('Requiere Meta UNT Plus vigente');
+        }
+        const c = await destinatario(p.e, p.rol);
+        const b = Buffer.from(
+          JSON.stringify({ ...p, c, exp: Date.now() + 8 * 3600000 }),
+        ).toString('base64url');
+        return json({ token: b + '.' + firma(b) });
+      } catch (e) {
+        return fail(e);
+      }
+    }),
+    GET('/api/portal/ficha', async (r) => {
+      try {
+        const a = await actor(r);
+        const d = await diagnostico(Number(process.env.OWNER_PERSONAL_ID), a.e);
+        return json({
+          nombre: d.ficha.estudiante.nombreCompleto,
+          nombreContacto:
+            a.rol === 'APODERADO'
+              ? d.ficha.apoderado?.nombreCompleto
+              : d.ficha.estudiante.nombreCompleto,
+          telefonoContacto:
+            a.rol === 'APODERADO'
+              ? d.ficha.apoderado?.telefono
+              : d.ficha.estudiante.telefono,
+          parentesco: d.ficha.estudiante.parentesco,
+          rol: a.rol,
+          plan: d.ficha.servicioActual?.plan,
+          temario: await curriculum(a.e),
+        });
+      } catch (e) {
+        return fail(e);
+      }
+    }),
+    GET('/api/portal/mensajes/:canal', async (r, { params }) => {
+      try {
+        const a = await actor(r);
+        return json(
+          await bandeja(a.e, a.rol, channel.parse(params.canal), true),
+        );
+      } catch (e) {
+        return fail(e);
+      }
+    }),
+    POST('/api/portal/progreso', async (r) => {
+      try {
+        const a = await actor(r);
+        if (a.rol !== 'ESTUDIANTE')
+          throw new Error('Solo el estudiante registra avance');
+        const d = await diagnostico(Number(process.env.OWNER_PERSONAL_ID), a.e);
+        if (!d.ficha.servicioActual)
+          throw new Error('Se requiere servicio vigente');
+        const b = z
+          .object({
+            contenidoId: id,
+            estado: z.enum(['PENDIENTE', 'EN_CURSO', 'COMPLETADA']),
+          })
+          .parse(await r.json());
+        const p = await getPool();
+        await p
+          .request()
+          .input('e', sql.Int, a.e)
+          .input('c', sql.Int, b.contenidoId)
+          .input('s', sql.VarChar(12), b.estado)
+          .query(
+            `SET XACT_ABORT ON; BEGIN TRANSACTION; IF NOT EXISTS(SELECT 1 FROM dbo.ContenidoUNT WHERE ContenidoId=@c) THROW 51950,'Tema inexistente',1; UPDATE dbo.ProgresoTemaUNT WITH(UPDLOCK,SERIALIZABLE) SET Estado=@s,FechaCambio=GETDATE(),Origen='PORTAL_LOCAL' WHERE EstudianteId=@e AND ContenidoId=@c; IF @@ROWCOUNT=0 INSERT dbo.ProgresoTemaUNT(EstudianteId,ContenidoId,Estado) VALUES(@e,@c,@s); INSERT dbo.EventoUso(EstudianteId,Tipo,FechaEvento) VALUES(@e,'ESTUDIO',GETDATE()); COMMIT;`,
+          );
+        return json({ ok: true });
+      } catch (e) {
+        return fail(e);
+      }
+    }),
+    POST('/api/portal/mensajes/:canal', async (r, { params, from }) => {
+      try {
+        const a = await actor(r),
+          canal = channel.parse(params.canal);
+        const b = z
+          .object({ texto: z.string().trim().min(1).max(2000) })
+          .parse(await r.json());
+        await mensajeLocal(a.e, a.rol, canal, b.texto, 'ENTRANTE');
+        const auth = await autenticarDueno(
+          new Request('http://localhost', {
+            headers: {
+              authorization: 'Bearer ' + process.env.OWNER_ACCESS_TOKEN,
+            },
+          }),
+        );
+        if (!auth) throw new Error('Dueño inactivo');
+        const delivery = await from(
+          `participante:${a.e}:${a.rol}:${canal}`,
+        ).send(b.texto, {
+          auth: {
+            ...auth,
+            attributes: {
+              ...auth.attributes,
+              modo: 'participante',
+              estudianteId: String(a.e),
+              rol: a.rol,
+              canal,
+            },
+          },
+          turnPolicy: 'queue',
+        });
+        const result = await delivery.result({
+          signal: AbortSignal.timeout(150000),
+        });
+        if (result.status !== 'completed')
+          throw new Error('El agente requiere atención del dueño en Eve');
+        await mensajeLocal(
+          a.e,
+          a.rol,
+          canal,
+          result.reply ?? 'No se recibió respuesta.',
+          'SALIENTE',
+        );
+        return json({ ok: true });
+      } catch (e) {
+        return fail(e);
+      }
+    }),
+    POST('/api/consultas/:id/responder', async (r, { params, from }) => {
+      const o = await dueno(r);
+      if (!o) return json({ error: 'Acceso requerido' }, 401);
+      try {
+        const b = z
+          .object({ texto: z.string().trim().min(1).max(2000) })
+          .parse(await r.json());
+        const p = await getPool();
+        const q = (
+          await p
+            .request()
+            .input('id', sql.Int, id.parse(params.id))
+            .query(
+              "SELECT * FROM dbo.ConsultaDueno WHERE ConsultaId=@id AND Estado='PENDIENTE'",
+            )
+        ).recordset[0];
+        if (!q) throw new Error('Consulta inexistente o atendida');
+        if ((await destinatario(q.EstudianteId, q.Rol)) !== q.ContactoId)
+          throw new Error('Cambió el contacto de la consulta');
+        if (q.Rol === 'APODERADO') {
+          const d = await diagnostico(o.id, q.EstudianteId);
+          if (
+            !d.ficha.prestaciones.some((x) => x.codigo === 'REPORTES_APODERADO')
+          )
+            throw new Error('El apoderado ya no tiene acceso vigente');
+        }
+        const delivery = await from(
+          `participante:${q.EstudianteId}:${q.Rol}:${q.Canal}`,
+        ).send(
+          `Respuesta autorizada del dueño a tu consulta #${q.ConsultaId}: ${b.texto}. Comunícala al interesado de forma clara, sin agregar compromisos.`,
+          {
+            auth: {
+              ...o.auth,
+              attributes: {
+                ...o.auth.attributes,
+                modo: 'participante',
+                estudianteId: String(q.EstudianteId),
+                rol: q.Rol,
+                canal: q.Canal,
+                respuestaDueno: b.texto,
+              },
+            },
+            turnPolicy: 'queue',
+          },
+        );
+        const result = await delivery.result({
+          signal: AbortSignal.timeout(150000),
+        });
+        if (result.status !== 'completed')
+          throw new Error(
+            'No se completó la comunicación; consulta sigue pendiente',
+          );
+        await mensajeLocal(
+          q.EstudianteId,
+          q.Rol,
+          q.Canal,
+          result.reply ?? 'No se recibió respuesta.',
+          'SALIENTE',
+          q.ConsultaId,
+        );
+        await p
+          .request()
+          .input('id', sql.Int, q.ConsultaId)
+          .input('r', sql.NVarChar(2000), b.texto)
+          .query(
+            "UPDATE dbo.ConsultaDueno SET Respuesta=@r,Estado='RESPONDIDA' WHERE ConsultaId=@id",
+          );
+        return json({ ok: true });
+      } catch (e) {
+        return fail(e);
+      }
+    }),
+  ],
+});

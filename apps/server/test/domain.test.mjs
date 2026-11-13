@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {inactividad,incidencia,vigente,clasificar,cumplimiento,mejoras} from '../lib/domain.ts';
+import {inactividad,incidencia,vigente,clasificar,cumplimiento,mejoras} from '../lib/academico/reglas.ts';
 const corte=new Date('2026-11-12T12:00:00-05:00');
 test('umbrales horarios exactos y vigencia de siete días',()=>{
   for(const [s,n] of [[259199,'BAJO'],[259200,'MEDIO'],[604799,'MEDIO'],[604800,'ALTO']]) assert.equal(inactividad(s),n);

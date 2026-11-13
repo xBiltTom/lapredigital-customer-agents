@@ -26,7 +26,7 @@ agent/instructions.md fija identidad, permisos y comportamiento. agent/instructi
 
 ## Lógica y evidencia
 
-lib/domain.ts calcula umbrales, vigencia, cumplimiento y mejora. lib/diagnostico.ts consulta fuentes parametrizadas con corte GETDATE. Sin tareas/pruebas comparables hay no aplicable/sin datos; pendiente no se fuerza a bajo.
+lib/academico/reglas.ts calcula umbrales, vigencia, cumplimiento y mejora. lib/academico/diagnostico.ts consulta fuentes parametrizadas con corte GETDATE. Sin tareas/pruebas comparables hay no aplicable/sin datos; pendiente no se fuerza a bajo.
 
 El modelo trata mensajes/comentarios como datos no confiables y propone interpretación con IDs y huella. El backend valida pertenencia y descarta el contexto si cambian las narrativas. Cache privada por base de datos. No se inventan caducidad de intención ni frecuencia de contacto.
 
@@ -34,7 +34,7 @@ Datos operativos actuales; no se reconstruye un cierre mensual histórico a part
 
 ## Propuestas
 
-lib/propuestas.ts guarda evaluación/señales/intervención/evento dentro de transacción con bloqueo por alumno. Revalida las fuentes, su nivel y pertenencia, el dueño, servicio, plan y permisos. La clave de negocio persistente evita duplicados. Antes de aprobar/simular se comprueba de nuevo la evaluación y sus fuentes.
+lib/academico/intervenciones.ts guarda evaluación/señales/intervención/evento dentro de transacción con bloqueo por alumno. Revalida las fuentes, su nivel y pertenencia, el dueño, servicio, plan y permisos. La clave de negocio persistente evita duplicados. Antes de aprobar/simular se comprueba de nuevo la evaluación y sus fuentes.
 
 El modelo solo propone. El dueño aprueba/rechaza/simula por API. Simulación deja MensajeSeguimientoId NULL, resultado explícito y ningún mensaje enviado: no acredita C-4. No hay cobros ni cambios de ruta/plan/etapa.
 
