@@ -498,3 +498,183 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Escala tipográfica legible para el panel y el portal. */
+.eyebrow,
+.side-label,
+.local-badge,
+.risk-badge small,
+.pill,
+.kpi-period > span,
+.kpi-card-top small,
+.recipient-badge {
+  font-size: 10px;
+}
+.brand small,
+.student-name small,
+.side-footer small,
+.metric small,
+.tabs span,
+.evaluation small,
+.task small,
+.service-grid small,
+.record small,
+.evidence small,
+.card blockquote small,
+.agent-header span:not(.pill),
+.agent-header .ai,
+.agent-context,
+.chat-message > small,
+.chat-message .tool-note,
+.chat-message details,
+.chat-message code,
+.contact-notice strong,
+.contact-notice p,
+.data-footer,
+.simulation-note,
+.login-card > small,
+.login-visual > small,
+.dashboard .academic-table small,
+.direction-heading small,
+.portal .record small,
+.portal-chat > header small,
+.portal .chat-message > small,
+.conversation-note,
+.contact-selected small,
+.conversation-purpose small,
+.kpi-period small,
+.kpi-evidence > span,
+.kpi-card details,
+.kpi-card details p,
+.kpi-disclaimer,
+.chatbot-heading small,
+.chatbot-empty small,
+.dashboard-query-meta small {
+  font-size: 11px;
+}
+.search,
+.topbar,
+.profile-info p,
+.profile-info small,
+.risk-badge > span,
+.metric p,
+.card-heading .muted,
+.evaluation p,
+.service-grid strong,
+.notice,
+.card label,
+.actions button,
+.chat-welcome button,
+.thinking,
+.chat-form textarea,
+.student-data dt,
+.academic-table th,
+.workspace-nav button small,
+.sidebar-insight p,
+.sidebar-portal,
+.student-switcher-field small,
+.student-switcher-field select,
+.chatbot-intro,
+.chatbot-panel .chat-form textarea,
+.dashboard-query-answer textarea,
+.dashboard-query-answer button,
+.portal-control summary,
+.portal .record select,
+.portal-header .actions button,
+.portal-header small,
+.portal-welcome .eyebrow,
+.study-heading .eyebrow,
+.kpi-section-heading .eyebrow,
+.kpi-card-top > span,
+.kpi-card h3 {
+  font-size: 12px;
+}
+.page-heading p:last-child,
+.profile-info p,
+.student-data dd,
+.academic-table,
+.academic-table small,
+.record,
+.record p,
+.evidence,
+.empty,
+.card blockquote,
+.card select,
+.card textarea,
+.intervention > p,
+.chatbot-empty small,
+.dashboard-query > p,
+.dashboard-query-meta strong,
+.dashboard-query-answer textarea,
+.portal .record p,
+.conversation-purpose p,
+.portal .chat-form textarea,
+.kpi-evidence {
+  font-size: 13px;
+}
+.tabs button,
+.evaluation strong,
+.evaluation-scores strong,
+.task strong,
+.chat-welcome p,
+.chat-message,
+.chatbot-panel .chat-message,
+.dashboard .academic-table th,
+.dashboard .academic-table td,
+.dashboard-query-answer button,
+.portal .chat-message,
+.portal .chat-identity,
+.kpi-card h3 {
+  font-size: 14px;
+}
+.chatbot-heading h2 {
+  font-size: 16px;
+}
+.chatbot-panel .chat-message,
+.portal .chat-message {
+  line-height: 1.65;
+}
+.dashboard .metric p {
+  font-size: 12px;
+}
+.dashboard .card > p.muted:last-child,
+.chatbot-panel .simulation-note {
+  font-size: 11px;
+}
+.chatbot-launcher {
+  width: 64px;
+  height: 64px;
+}
+@media (max-width: 650px) {
+  .topbar > span:first-child,
+  .local-badge,
+  .page-heading .eyebrow,
+  .risk-badge small,
+  .risk-badge > span,
+  .profile-info p,
+  .metric p,
+  .workspace-nav button small,
+  .dashboard .metric p,
+  .portal-header small,
+  .portal-header .actions button,
+  .portal-welcome .eyebrow,
+  .recipient-badge,
+  .chat-identity,
+  .kpi-section-heading .eyebrow,
+  .kpi-period small,
+  .kpi-card-top small,
+  .kpi-card-top > span {
+    font-size: 11px;
+  }
+  .student-switcher-field select,
+  .dashboard .academic-table,
+  .dashboard .academic-table th,
+  .dashboard .academic-table td,
+  .portal .chat-message {
+    font-size: 12px;
+  }
+  .chatbot-launcher {
+    width: 60px;
+    height: 60px;
+  }
+}

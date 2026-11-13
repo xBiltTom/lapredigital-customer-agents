@@ -1,5 +1,13 @@
 # Estado y continuidad
 
+## M24 — escala tipográfica del frontend (2026-11-13)
+
+Se corrigieron tamaños de 6–11 px que dificultaban leer etiquetas, metadatos, tablas y mensajes del chat. El texto funcional ahora usa 12–14 px según su jerarquía; los rótulos auxiliares quedan entre 10–11 px. Se aplicaron los ajustes al panel, Dashboard, chat flotante, KPIs, portal, catálogo/temarios y bandeja de casos. Solo frontend, sin cambios de API o backend.
+
+Verificación: `./scripts/dev npm run build:web` correcto (TypeScript y Vite; continúa el aviso conocido de chunk mayor a 500 kB). No se ejecutó prueba de navegador.
+
+Siguiente paso concreto: revisar visualmente la escala en las vistas principales, escritorio y móvil.
+
 ## M23 — recuperación y continuidad del historial (2026-11-13)
 
 Se encontró que las sesiones anteriores estaban canceladas en Eve, pero sus eventos seguían guardados. Los GET de historial solo consultaban resolveSession, que devuelve la sesión activa por dirección: esto devolvía vacío para alumnos y solo la sesión nueva para Dashboard. No era pérdida de mensajes en el chat flotante.

@@ -802,3 +802,59 @@
     grid-column: 1;
   }
 }
+
+/* Ajuste de lectura en catálogo, temarios, formularios y tablas. */
+.admin-page {
+  font-size: 14px;
+}
+.admin-page small,
+.workspace-nav button small,
+.course-summary strong small,
+.course-count small,
+.course-topic-details summary small,
+.course-dialog-eyebrow,
+.case-type,
+.case-state,
+.case-scope,
+.case-readonly {
+  font-size: 11px;
+  line-height: 1.5;
+}
+.admin-page button,
+.admin-page input,
+.admin-page select,
+.admin-page textarea,
+.case-filters label {
+  font-size: 14px;
+}
+.admin-tag,
+.course-count,
+.course-card-foot,
+.course-card-foot > span:last-child,
+.course-topic-number,
+.admin-page button.case-clear,
+.case-results-heading,
+.admin-page .case-row-actions button {
+  font-size: 12px;
+}
+.course-dialog-header p,
+.course-topic-details li,
+.course-topic-details > p,
+.case-results-heading strong {
+  font-size: 14px;
+}
+.course-topic-details summary,
+.case-table td {
+  font-size: 14px;
+}
+.admin-table-wrap th,
+.case-table th {
+  font-size: 12px;
+}
+@media (max-width: 700px) {
+  .admin-table-wrap th,
+  .case-table th,
+  .case-table td {
+    font-size: 12px;
+  }
+}
