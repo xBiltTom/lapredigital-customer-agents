@@ -10,4 +10,4 @@ if [ ! -f .env ]; then printf '%s\n' 'Configura primero el entorno local según 
 docker compose stop server
 exec docker compose run --rm --no-deps --use-aliases --service-ports --env SSH_TTY=1 \
   --workdir /workspace/apps/server server sh /workspace/scripts/eve-local \
-  /workspace/node_modules/.bin/eve dev --host 0.0.0.0 --port 3000 --no-default-extensions
+  sh /workspace/scripts/eve-dev --host 0.0.0.0 --port 3000 --no-default-extensions

@@ -18,7 +18,7 @@
     "typescript": "7.0.2"
   },
   "scripts": {
-    "dev": "eve dev --host 0.0.0.0 --port 3000 --no-ui --no-default-extensions",
+    "dev": "sh ../../scripts/eve-dev --host 0.0.0.0 --port 3000 --no-ui --no-default-extensions",
     "build": "node scripts/build.mjs",
     "db:check": "node scripts/check-db.mjs",
     "db:t08": "node scripts/check-t08.mjs",

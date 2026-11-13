@@ -29,6 +29,8 @@ services:
     extends:
       service: tools
     environment:
+      # Eve reanuda con su cabecera de confianza; evitar recuperación paralela del SDK.
+      WORKFLOW_LOCAL_RECOVER_ACTIVE_RUNS: "false"
       OWNER_PERSONAL_ID: ${OWNER_PERSONAL_ID:-}
       OWNER_ACCESS_TOKEN: ${OWNER_ACCESS_TOKEN:-}
       SQLSERVER_HOST: ${SQLSERVER_HOST:-host.docker.internal}

@@ -43,6 +43,8 @@ docker start sql-server-local
 
 Desbloquea el llavero y completa /login → ChatGPT Subscription si Eve lo solicita. **Deja esa terminal abierta**. En otra terminal ejecuta start y open-panel. Si cambiaste el proceso de Eve, repite start para actualizar el proxy.
 
+El arranque de desarrollo usa `--resume` para recuperar conversaciones conservadas en el volumen `eve_state`. Compose desactiva la recuperación paralela del SDK (`WORKFLOW_LOCAL_RECOVER_ACTIVE_RUNS=false`): Eve se encarga de reencolar. `scripts/eve-dev` aplica un ajuste acotado a Eve rc.10 para que las reentregas internas incluyan la credencial de confianza del proceso actual; no desactiva autenticación y exige revisar compatibilidad si cambia la versión. No borrar ese volumen para resolver un error de recuperación. Reanudar puede repetir un paso interrumpido; no garantiza recuperar snapshots dañados o ausentes.
+
 El chat necesita el llavero abierto; sin él las consultas SQL y la bandeja siguen disponibles y el chat muestra un error explícito. No hay respuestas prefabricadas que sustituyan al modelo.
 
 ## Qué puedes demostrar

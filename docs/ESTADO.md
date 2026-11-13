@@ -1,5 +1,11 @@
 # Estado y continuidad
 
+## Corrección 13/11/2026 — recuperación de conversaciones tras reinicio
+
+`chat-local` y el arranque sin TUI omitían `--resume`; Eve rc.10 dejaba las conversaciones retenidas dormidas. Ambos usan ahora `scripts/eve-dev` con recuperación habilitada. Compose desactiva la recuperación paralela del SDK. Además, el World local genera reentregas internas sin la cabecera de confianza de Eve: provocaban `Workflow delivery is not trusted` y reintentos HTTP 401. `prepare-eve-dev.mjs` aplica al paquete instalado un ajuste idempotente y exclusivo de rc.10: añade la credencial del proceso actual al transporte de desarrollo, sin relajar el receptor. Si cambia versión o código esperado, el arranque exige revisar compatibilidad. No se actualizó ninguna dependencia.
+
+Respaldo del volumen con el servidor detenido: `tmp/eve-recovery/before-recovery-20261113.tar.gz` (privado, ignorado por Git). Sin cambios de SQL, datos académicos ni eliminación de sesiones. Verificación puntual: sintaxis shell, Compose válido y diff sin errores; API dashboard recupera HTTP 200 y 20 mensajes de la sesión original tras reiniciar. Sin nuevos 401 de cola en el arranque corregido; POST Workflow sin credencial sigue devolviendo 401. No se ejecutaron suites ni mensajes nuevos al modelo. La continuidad con respuesta del modelo queda pendiente de desbloquear el llavero mediante `./scripts/chat-local`; después ejecutar `./scripts/start` para actualizar los proxies. Recuperación de snapshots dañados/ausentes no garantizada; un paso interrumpido puede repetirse.
+
 Actualizado: 12/11/2026. Instrucción vigente: terminar un MVP local en una sola pasada de máximo una hora; reemplaza el plan individual B02–B08.
 
 ## Corrección local — alcance de consultar_diagnostico
