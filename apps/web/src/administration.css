@@ -1,7 +1,7 @@
 /* Administración: tablas legibles, formularios acotados y catálogo de consulta. */
 .workspace-nav {
-  max-height: 54vh;
-  overflow-y: auto;
+  max-height: none;
+  overflow: visible;
   flex-shrink: 0;
 }
 .workspace-nav button {
@@ -202,6 +202,7 @@
     flex-direction: column;
   }
   .workspace-nav {
-    max-height: 40vh;
+    max-height: none;
+    overflow: visible;
   }
 }

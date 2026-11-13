@@ -1,5 +1,13 @@
 # Estado y continuidad
 
+## M18 — scroll y espacio del sidebar (2026-11-13)
+
+El sidebar de escritorio ahora desplaza su contenido completo, incluida la navegación, la lista de estudiantes y el pie. Se quitaron las áreas de scroll internas de la navegación y la lista, que antes tenían alturas independientes y dejaban contenido inferior fuera del alcance. Se ajustó el indicador de scroll y se compactaron el mensaje de acompañamiento, el acceso al portal y el pie. En móvil se mantiene la navegación horizontal existente. Sin cambios de backend ni datos.
+
+Verificación: `./scripts/dev npm run build:web` correcto (TypeScript y Vite; continúa el aviso conocido de chunk mayor a 500 kB). No se ejecutó prueba de navegador en este ajuste. El DOCX personal sin seguimiento se conservó.
+
+Siguiente paso concreto: revisar el sidebar en el panel, especialmente a baja altura y con la lista de estudiantes abierta.
+
 ## Corrección 13/11/2026 — recuperación de conversaciones tras reinicio
 
 `chat-local` y el arranque sin TUI omitían `--resume`; Eve rc.10 dejaba las conversaciones retenidas dormidas. Ambos usan ahora `scripts/eve-dev` con recuperación habilitada. Compose desactiva la recuperación paralela del SDK. Además, el World local genera reentregas internas sin la cabecera de confianza de Eve: provocaban `Workflow delivery is not trusted` y reintentos HTTP 401. `prepare-eve-dev.mjs` aplica al paquete instalado un ajuste idempotente y exclusivo de rc.10: añade la credencial del proceso actual al transporte de desarrollo, sin relajar el receptor. Si cambia versión o código esperado, el arranque exige revisar compatibilidad. No se actualizó ninguna dependencia.
