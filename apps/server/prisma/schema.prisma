@@ -15,6 +15,7 @@ model Contacto {
   CanalOrigen String @db.VarChar(25)
   FechaRegistro DateTime @default(dbgenerated("getdate()")) @db.DateTime2
   estudiantes Estudiante[]
+  mensajesLocales MensajeCanalLocal[]
   apoderado Apoderado?
 }
 model Apoderado {
@@ -36,6 +37,7 @@ model Estudiante {
   EtapaActual String @db.VarChar(10)
   PrioridadComercial String? @db.VarChar(5)
   FechaRegistro DateTime @default(dbgenerated("getdate()")) @db.DateTime2
+  mensajesLocales MensajeCanalLocal[]
   contacto Contacto @relation(fields:[ContactoId],references:[ContactoId],onDelete:NoAction,onUpdate:NoAction)
   apoderado Apoderado? @relation(fields:[ApoderadoId],references:[ApoderadoId],onDelete:NoAction,onUpdate:NoAction)
 }
@@ -180,4 +182,20 @@ model Pago {
  ImportePEN Decimal @db.Decimal(10,2)
  FechaOperacion DateTime @db.DateTime2
  periodo PeriodoServicio @relation(fields:[PeriodoServicioId],references:[PeriodoServicioId],onDelete:NoAction,onUpdate:NoAction)
+}
+
+// Transporte ya existente del portal: administración solo utiliza MENSAJERIA.
+model MensajeCanalLocal {
+ MensajeLocalId Int @id @default(autoincrement())
+ EstudianteId Int
+ ContactoId Int
+ Rol String @db.VarChar(10)
+ Canal String @db.VarChar(12)
+ Direccion String @db.VarChar(10)
+ Contenido String @db.NVarChar(2000)
+ Fecha DateTime @default(dbgenerated("getdate()")) @db.DateTime2
+ FechaEntrega DateTime? @db.DateTime2
+ ConsultaId Int?
+ estudiante Estudiante @relation(fields:[EstudianteId],references:[EstudianteId],onDelete:NoAction,onUpdate:NoAction)
+ contacto Contacto @relation(fields:[ContactoId],references:[ContactoId],onDelete:NoAction,onUpdate:NoAction)
 }

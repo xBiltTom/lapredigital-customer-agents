@@ -1,5 +1,6 @@
 export const secciones = [
   ['dashboard', '◫', 'Dashboard', 'Vista general y chat global'],
+  ['mensajeria', '✉', 'Mensajería', 'Estudiantes y apoderados'],
   ['alumno', '◎', 'Agente IA', 'Acompañamiento por estudiante'],
   ['estudiantes', '♙', 'Estudiantes', 'Datos personales y objetivos'],
   ['apoderados', '♧', 'Apoderados', 'Contactos y estudiantes vinculados'],

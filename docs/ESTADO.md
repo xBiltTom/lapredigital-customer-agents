@@ -1,5 +1,15 @@
 # Estado y continuidad
 
+## M26 — bandeja de mensajería del dueño (2026-11-13)
+
+Nueva opción Mensajería en el sidebar: lista de hilos por estudiante/contacto/rol, nombre del interlocutor, teléfono, alumno vinculado para apoderados, búsqueda, filtro de rol, conversación con Markdown y respuesta manual. Lee únicamente MENSAJERIA; excluye el chatbot ACADEMIA. Muestra hasta 200 hilos recientes y bloques de 100 mensajes, con carga de anteriores y sincronización periódica. La respuesta manual no llama al modelo y se publica en el mismo transporte SQL que lee el portal. Abrir esta vista no confirma entrega: solo la lectura del participante lo hace. No se incorporó pausa automática del bot ni se cierran consultas del Dashboard al enviar texto libre.
+
+Servicio `lib/servicios/mensajeria.ts` con Prisma para agrupación, lectura e inserción; reutiliza verificaciones existentes de vínculo, autorizaciones y no contacto. El apoderado requiere acceso vigente por REPORTES_APODERADO. La atención humana no exige SEGUIMIENTO_IA. Los hilos de contactos desvinculados se conservan en lectura. Nuevos endpoints `/api/mensajeria` exclusivos del dueño. El mapa Prisma incorpora la tabla existente MensajeCanalLocal; no se añadió ni modificó ninguna tabla, por lo que 01/02 no requieren cambios ni se reconstruye la base. El agente participante debe consultar su hilo actual antes de responder para considerar también respuestas manuales. Dashboard/global y Agente IA/estudiante conservan sus herramientas y alcance.
+
+Verificación: tipos backend, generación Prisma y builds web/backend correctos. API real lista cinco hilos actuales del canal; lectura devuelve mensajes del destinatario y acceso anónimo se rechaza. `scripts/check-mensajeria.mjs` verificado en MvpTest: respuesta manual visible para participante, separación de roles y FechaEntrega nula hasta leer la bandeja del portal. Sin escrituras de prueba en la base académica ni envío a proveedores. Chromium verificó bandeja, selección, mensajes y formulario sin errores React ni escrituras; captura tmp/mensajeria.png revisada visualmente. Cambios del usuario en Portal.tsx y estilos se conservaron.
+
+Siguiente paso: usar Mensajería para contestar desde el panel y observar el mismo mensaje en la zona MENSAJERIA del portal. Para delegar al agente se mantienen Dashboard y Agente IA. Añadir más datos preparados solo cuando el usuario lo solicite.
+
 ## M25 — transición del portal y selector de persona (2026-11-13)
 
 Academia y Mensajería ahora tienen un selector de zonas con estado activo visible y transiciones breves, respetando la preferencia de movimiento reducido. Se pulió el espacio de simulación local y se reemplazó el selector de rol por tarjetas de Estudiante/Apoderado. La tarjeta de Apoderado solo aparece si la ficha autenticada del estudiante confirma un apoderado vinculado y la prestación REPORTES_APODERADO vigente; la API de acceso conserva su validación. Se mejoraron también el progreso por tema, carga de conversación y presentación responsive. No se modificó el backend ni la API.

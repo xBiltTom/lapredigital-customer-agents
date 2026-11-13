@@ -160,3 +160,10 @@ Después de instalar estas dependencias en otro equipo, conceder una vez los per
 ~~~
 
 En Windows ejecutar `infra/sql/admin-permissions.sql` con la cuenta administradora de SQL Server. Arranque y build generan el cliente Prisma dentro de Docker. La comprobación focalizada `apps/server/scripts/check-admin.mjs` solo admite `LaPreDigital_Customers_MvpTest`; no ejecutarla contra la base académica. `scripts/admin-browser-smoke.mjs` verifica la navegación sin escribir datos ni llamar al modelo.
+
+
+## Bandeja de mensajería
+
+**Mensajería** en el sidebar permite leer los hilos del portal y responder directamente como equipo LaPreDigital. Los hilos se distinguen por estudiante, contacto y rol; un mismo apoderado conserva un hilo por estudiante. Incluye búsqueda, filtro de rol, mensajes anteriores y sincronización periódica. El historial académico ACADEMIA permanece separado.
+
+Las respuestas manuales aparecen en la zona MENSAJERIA del portal, sin llamar al agente ni a proveedores externos. La recepción se confirma cuando el participante lee su bandeja. El asistente automático sigue activo; esta vista no representa una toma de control exclusiva ni cierra automáticamente consultas pendientes del Dashboard. Para delegar respuestas se conservan el chat global del Dashboard y el acompañamiento individual de Agente IA.

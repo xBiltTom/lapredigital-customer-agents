@@ -40,7 +40,7 @@ export function Administration({
   onBusy,
   onChanged,
 }: {
-  vista: Exclude<Vista, 'dashboard' | 'alumno'>;
+  vista: Exclude<Vista, 'dashboard' | 'alumno' | 'mensajeria'>;
   token: string;
   onBusy: (busy: boolean) => void;
   onChanged: () => void;
