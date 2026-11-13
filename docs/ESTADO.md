@@ -1,5 +1,13 @@
 # Estado y continuidad
 
+## M25 — transición del portal y selector de persona (2026-11-13)
+
+Academia y Mensajería ahora tienen un selector de zonas con estado activo visible y transiciones breves, respetando la preferencia de movimiento reducido. Se pulió el espacio de simulación local y se reemplazó el selector de rol por tarjetas de Estudiante/Apoderado. La tarjeta de Apoderado solo aparece si la ficha autenticada del estudiante confirma un apoderado vinculado y la prestación REPORTES_APODERADO vigente; la API de acceso conserva su validación. Se mejoraron también el progreso por tema, carga de conversación y presentación responsive. No se modificó el backend ni la API.
+
+Verificación: `./scripts/dev npm run build:web` correcto (TypeScript y Vite; continúa el aviso conocido de chunk mayor a 500 kB). No se ejecutó prueba de navegador.
+
+Siguiente paso concreto: revisar las transiciones y el simulador en escritorio y móvil.
+
 ## M24 — escala tipográfica del frontend (2026-11-13)
 
 Se corrigieron tamaños de 6–11 px que dificultaban leer etiquetas, metadatos, tablas y mensajes del chat. El texto funcional ahora usa 12–14 px según su jerarquía; los rótulos auxiliares quedan entre 10–11 px. Se aplicaron los ajustes al panel, Dashboard, chat flotante, KPIs, portal, catálogo/temarios y bandeja de casos. Solo frontend, sin cambios de API o backend.
