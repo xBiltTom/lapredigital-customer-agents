@@ -1,5 +1,13 @@
 # Estado y continuidad
 
+## M21 — selector de estudiante en Acompañamiento (2026-11-13)
+
+Se movió la selección de estudiante desde la parte inferior del sidebar a la cabecera de Agente IA/Acompañamiento. El selector muestra el estudiante activo y permite cambiarlo desde la misma pantalla; al cambiar se recargan su ficha y conversación con el comportamiento existente. Se retiraron la lista y búsqueda largas del sidebar de esa vista. Solo frontend, sin cambios de API o datos.
+
+Verificación: build frontend correcto (TypeScript y Vite; persiste el aviso conocido de chunk mayor a 500 kB). No se ejecutó prueba de navegador en este ajuste. DOCX personal sin seguimiento conservado.
+
+Siguiente paso concreto: revisar el selector en escritorio y móvil dentro de Acompañamiento.
+
 ## M20 — bandeja de casos con filtros (2026-11-13)
 
 Consultas e incidencias ahora se muestran en una tabla con tipo/ámbito, estudiante, descripción/resolución, fecha, estado y acciones disponibles por fila. Se añadieron búsqueda en descripción o resolución y filtros de tipo, ámbito y estado; la API aplica esos filtros antes del conteo y la paginación. Los casos económicos se pueden consultar como solo lectura. No hubo cambios de esquema o datos.
