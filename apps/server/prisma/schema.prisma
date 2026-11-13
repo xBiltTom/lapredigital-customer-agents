@@ -1,0 +1,183 @@
+// Mapa de las tablas usadas por administración. El DDL canónico está en database/01.
+// Solo generar el cliente; no usar db push ni migrate sobre la base académica.
+generator client {
+  provider = "prisma-client-js"
+  engineType = "client"
+}
+datasource db {
+  provider = "sqlserver"
+}
+model Contacto {
+  ContactoId Int @id @default(autoincrement())
+  NombreCompleto String @db.VarChar(160)
+  Correo String? @db.VarChar(254)
+  Telefono String? @db.VarChar(25)
+  CanalOrigen String @db.VarChar(25)
+  FechaRegistro DateTime @default(dbgenerated("getdate()")) @db.DateTime2
+  estudiantes Estudiante[]
+  apoderado Apoderado?
+}
+model Apoderado {
+  ApoderadoId Int @id @default(autoincrement())
+  ContactoId Int @unique
+  contacto Contacto @relation(fields:[ContactoId], references:[ContactoId], onDelete:NoAction,onUpdate:NoAction)
+  estudiantes Estudiante[]
+}
+model Estudiante {
+  EstudianteId Int @id @default(autoincrement())
+  Codigo String @unique @db.VarChar(20)
+  ContactoId Int @unique
+  ApoderadoId Int?
+  Parentesco String? @db.VarChar(30)
+  UniversidadObjetivo String @default("Universidad Nacional de Trujillo") @db.VarChar(150)
+  CarreraObjetivo String? @db.VarChar(120)
+  FechaExamen DateTime? @db.Date
+  DisponibilidadSemanalHoras Decimal? @db.Decimal(5,2)
+  EtapaActual String @db.VarChar(10)
+  PrioridadComercial String? @db.VarChar(5)
+  FechaRegistro DateTime @default(dbgenerated("getdate()")) @db.DateTime2
+  contacto Contacto @relation(fields:[ContactoId],references:[ContactoId],onDelete:NoAction,onUpdate:NoAction)
+  apoderado Apoderado? @relation(fields:[ApoderadoId],references:[ApoderadoId],onDelete:NoAction,onUpdate:NoAction)
+}
+model Curso {
+ CursoId Int @id @default(autoincrement())
+ Nombre String @unique @db.VarChar(100)
+ temas Tema[]
+}
+model Tema {
+ TemaId Int @id @default(autoincrement())
+ CursoId Int
+ Nombre String @db.VarChar(120)
+ curso Curso @relation(fields:[CursoId],references:[CursoId],onDelete:NoAction,onUpdate:NoAction)
+ recursos RecursoAcademico[]
+ @@unique([CursoId,Nombre])
+}
+model RecursoAcademico {
+ RecursoAcademicoId Int @id @default(autoincrement())
+ TemaId Int
+ Titulo String @db.VarChar(180)
+ Tipo String @db.VarChar(20)
+ Ubicacion String? @db.VarChar(500)
+ DuracionEstimadaMin Int? @db.SmallInt
+ Activo Boolean @default(true)
+ tema Tema @relation(fields:[TemaId],references:[TemaId],onDelete:NoAction,onUpdate:NoAction)
+}
+model ContenidoUNT {
+ ContenidoId Int @id @default(autoincrement())
+ TemarioId Int
+ Codigo String @unique @db.VarChar(100)
+ Curso String @db.VarChar(100)
+ Tema String @db.VarChar(250)
+ Subtemas String @db.NVarChar(Max)
+}
+model RutaEstudio {
+ RutaEstudioId Int @id @default(autoincrement())
+ EstudianteId Int
+ VersionNumero Int @db.SmallInt
+ Objetivo String @db.VarChar(350)
+ FechaExamenObjetivo DateTime? @db.Date
+ Inicio DateTime @db.DateTime2
+ FinPrevisto DateTime? @db.DateTime2
+ Vigente Boolean
+ ActualizadaPorId Int
+ FechaActualizacion DateTime @db.DateTime2
+ FechaRegistro DateTime @default(dbgenerated("getdate()")) @db.DateTime2
+ actividades ActividadRuta[]
+ @@unique([EstudianteId,VersionNumero])
+ @@unique([RutaEstudioId,EstudianteId])
+}
+model ActividadRuta {
+ ActividadRutaId Int @id @default(autoincrement())
+ RutaEstudioId Int
+ RecursoAcademicoId Int
+ Orden Int @db.SmallInt
+ FechaPlanificada DateTime @db.DateTime2
+ FechaLimite DateTime @db.DateTime2
+ Estado String @db.VarChar(12)
+ FechaCompletada DateTime? @db.DateTime2
+ FechaRegistro DateTime @default(dbgenerated("getdate()")) @db.DateTime2
+ ruta RutaEstudio @relation(fields:[RutaEstudioId],references:[RutaEstudioId],onDelete:NoAction,onUpdate:NoAction)
+ @@unique([RutaEstudioId,Orden])
+}
+model RevisionRuta {
+ RevisionRutaId Int @id @default(autoincrement())
+ RutaEstudioId Int
+ Motivo String @db.VarChar(20)
+ FechaIdentificacion DateTime @db.DateTime2
+ Recomendacion String? @db.NVarChar(1000)
+ Estado String @db.VarChar(10)
+ RevisadaPorId Int?
+ FechaRevision DateTime? @db.DateTime2
+ Resultado String? @db.NVarChar(1000)
+ RutaResultanteId Int?
+ FechaRegistro DateTime @default(dbgenerated("getdate()")) @db.DateTime2
+}
+model CasoAtencion {
+ CasoAtencionId Int @id @default(autoincrement())
+ EstudianteId Int
+ Tipo String @db.VarChar(10)
+ Ambito String @db.VarChar(10)
+ Descripcion String @db.NVarChar(1500)
+ FechaAperturaOriginal DateTime @db.DateTime2
+ FechaLimite DateTime? @db.DateTime2
+ Estado String @db.VarChar(12)
+ ResponsableId Int?
+ FechaResolucionDefinitiva DateTime? @db.DateTime2
+ Resolucion String? @db.NVarChar(1500)
+ FechaRegistro DateTime @default(dbgenerated("getdate()")) @db.DateTime2
+}
+model EventoCaso {
+ EventoCasoId Int @id @default(autoincrement())
+ CasoAtencionId Int
+ FechaEvento DateTime @db.DateTime2
+ Estado String @db.VarChar(12)
+ Detalle String @db.NVarChar(1000)
+ ResponsableId Int?
+ FechaRegistro DateTime @default(dbgenerated("getdate()")) @db.DateTime2
+}
+model PlanServicio {
+ PlanServicioId Int @id @default(autoincrement())
+ Codigo String @unique @db.VarChar(20)
+ Nombre String @db.VarChar(80)
+ Activo Boolean @default(true)
+ Nivel Int @unique @db.TinyInt
+ modalidades ModalidadPlan[]
+}
+model ModalidadPlan {
+ ModalidadPlanId Int @id @default(autoincrement())
+ PlanServicioId Int
+ Meses Int @db.TinyInt
+ PrecioPEN Decimal @db.Decimal(10,2)
+ Activo Boolean @default(true)
+ plan PlanServicio @relation(fields:[PlanServicioId],references:[PlanServicioId],onDelete:NoAction,onUpdate:NoAction)
+ @@unique([PlanServicioId,Meses])
+}
+// Lectura administrativa: no se ofrecen escrituras de contratación ni de pagos.
+model Suscripcion {
+ SuscripcionId Int @id @default(autoincrement())
+ EstudianteId Int
+ Estado String @db.VarChar(12)
+ RenovacionAutomatica Boolean
+ periodos PeriodoServicio[]
+}
+model PeriodoServicio {
+ PeriodoServicioId Int @id @default(autoincrement())
+ SuscripcionId Int
+ ModalidadPlanId Int
+ Tipo String @db.VarChar(12)
+ Inicio DateTime @db.DateTime2
+ Fin DateTime @db.DateTime2
+ ImporteExigiblePEN Decimal @db.Decimal(10,2)
+ EstadoAcceso String @db.VarChar(15)
+ suscripcion Suscripcion @relation(fields:[SuscripcionId],references:[SuscripcionId],onDelete:NoAction,onUpdate:NoAction)
+ pagos Pago[]
+}
+model Pago {
+ PagoId Int @id @default(autoincrement())
+ PeriodoServicioId Int
+ Tipo String @db.VarChar(12)
+ Estado String @db.VarChar(12)
+ ImportePEN Decimal @db.Decimal(10,2)
+ FechaOperacion DateTime @db.DateTime2
+ periodo PeriodoServicio @relation(fields:[PeriodoServicioId],references:[PeriodoServicioId],onDelete:NoAction,onUpdate:NoAction)
+}

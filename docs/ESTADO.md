@@ -192,3 +192,13 @@ B01 (795aad2) verificó login y herramienta fija, cuenta SQL, dueño y build. T0
 Un proceso local, chat progresivo con historial por estudiante, datos operativos actuales y aprobación humana. Sin cierres congelados/DataMarts/KPI oficiales completos, agenda automática, proveedores de comunicación, portal familiar, referidos, cambios de plan o agentes de otras fases.
 
 No se prometen cuotas del modelo, despliegue con suscripción o persistencia del login real tras recreación. La fuente de verdad de negocio es informe 7.1 con decisiones posteriores del usuario. La demo completa con modelo y escrituras de navegador se ejecutó en CachyOS; en Windows se verificó la UI real en modo de solo lectura, sin login del modelo.
+
+## M16 — Prisma para la administración (2026-11-13)
+
+Prisma 7.10.1 + adapter-mssql incorporados al stack existente. Mapa parcial del esquema para administración, sin migrate/db push. API `/api/admin/` solo para el dueño: altas/edición de estudiantes y apoderados, vínculo familiar, recursos, publicación de rutas versionadas, actividades y atención/reapertura de casos de servicio/acceso. Cambiar objetivo/fecha del estudiante genera revisión pendiente de la ruta vigente. Publicar versión conserva la anterior y permite copiar sus actividades/resultados. Casos económicos, contrataciones, pagos, catálogo de planes y temario permanecen en consulta.
+
+No se modificaron tablas ni datos de la base académica; no fue necesario cambiar 01/02. Se aplicó `scripts/grant-admin`: permisos de lectura/escritura por tabla y actualización por columnas del estudiante, sin DELETE ni DDL. Los permisos SQL no equivalen a los permisos HTTP; las reglas de acción y el ámbito del caso se verifican en los servicios. Las herramientas del agente permanecen separadas de administración. Preparación de MvpTest incluye estos permisos. Arranque local y build generan el cliente Prisma.
+
+Ejecución: generación de Prisma, tipos backend y builds frontend/backend correctos. Lectura Prisma de 14 estudiantes, 2 apoderados y 162 temas; nueve endpoints autenticados responden correctamente; sin token devuelve 401. `check-admin.mjs` pasó en MvpTest: perfiles/vínculos, recursos, revisión/versiones de ruta, fechas exactas al copiar actividades, resolución/reapertura y cuatro eventos por caso. Consulta de administrador confirmó una fila histórica de estudiante. Se corrigió un desfase al copiar DATETIME2 usando useUTC:true en el adapter de Prisma; GETDATE y almacenamiento peruano se mantienen. La base de prueba fue recreada; la base académica se conservó.
+
+Siguiente tarea: M17, cerrar vistas y revisión de navegador. No se volvió a probar una conversación con el modelo porque su integración no cambia.

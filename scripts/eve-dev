@@ -1,5 +1,6 @@
 #!/bin/sh
 set -eu
 project_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+(cd "$project_dir/apps/server" && "$project_dir/node_modules/.bin/prisma" generate)
 node "$project_dir/apps/server/scripts/prepare-eve-dev.mjs"
 exec "$project_dir/node_modules/.bin/eve" dev --resume "$@"

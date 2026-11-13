@@ -19,10 +19,10 @@ try {
     HAS_PERMS_BY_NAME(N'dbo.Estudiante', N'OBJECT', N'UPDATE') AS Actualizar,
     HAS_PERMS_BY_NAME(N'dbo.Estudiante', N'OBJECT', N'DELETE') AS Borrar`);
   const allowed = permissions[0];
-  if (allowed.Leer !== 1 || allowed.Insertar !== 0 || allowed.Actualizar !== 0 || allowed.Borrar !== 0) {
-    throw new Error('El usuario SQL no tiene los permisos de lectura esperados.');
+  if (allowed.Leer !== 1 || allowed.Insertar !== 1 || allowed.Actualizar !== 0 || allowed.Borrar !== 0) {
+    throw new Error('Se esperaban lectura, alta de perfiles y actualización limitada por columnas; nunca borrado.');
   }
-  console.log(`Conexión de lectura correcta: ${row.Codigo}, hora SQL ${row.HoraPeru} (-05:00).`);
+  console.log(`Conexión y permisos administrativos limitados correctos: ${row.Codigo}, hora SQL ${row.HoraPeru} (-05:00).`);
 } catch (error) {
   console.error(error instanceof Error ? error.message : 'Error inesperado al verificar SQL Server.');
   process.exitCode = 1;

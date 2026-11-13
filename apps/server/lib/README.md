@@ -35,3 +35,19 @@ Para entender **los KPI**, abre `servicios/indicadores.ts` y `database/consultas
 Para entender **el riesgo**, lee primero las funciones pequeñas de `academico/reglas.ts`, después el armado de señales en `academico/diagnostico.ts`. El orden de los SELECT del diagnóstico corresponde al orden de sus `recordsets`.
 
 Las escrituras de intervenciones conservan su transacción y revalidaciones en `academico/intervenciones.ts`. Sus consultas permanecen cerca de esas validaciones para leer cada operación completa. No se añadieron ORM, migraciones ni reglas nuevas en esta reorganización.
+
+## Administración con Prisma
+
+`agent/channels/admin.ts` valida el acceso del dueño y llama a `administracion/`:
+
+- `personas.ts`: perfiles y vínculo estudiante/apoderado; al cambiar objetivo o fecha solicita revisión de la ruta vigente.
+- `catalogo.ts`: cursos/temario, recursos y lectura de planes, suscripciones, periodos y pagos.
+- `academico.ts`: publicación de versiones, actividades y ciclo de atención de casos.
+
+`database/prisma.ts` reutiliza un cliente por proceso. `prisma/schema.prisma` mapea únicamente los campos que usa administración; **no sustituye** `database/01_crear_customers.sql`. No ejecutar `db push` ni `migrate` con este mapa parcial. Generar el cliente con `npm run prisma:generate --workspace=@lapredigital/server` dentro de Docker; arranque y build lo hacen automáticamente.
+
+Usamos `findMany`, `count`, `create` y `updateMany` para las operaciones sencillas. `updateMany` conserva los triggers de SQL Server evitando `OUTPUT` directo; los INSERT con triggers usan `createMany` o SQL parametrizado. Los pocos bloques `$executeRaw` conservan `GETDATE()` y las operaciones relacionadas dentro de una transacción. La creación de casos captura el ID con `OUTPUT INTO` en la misma sentencia, sin consultar el último ID global.
+
+Prisma representa la hora SQL sin zona en los campos Date del cliente con `useUTC: true`, para que leer y volver a escribir no desplace la hora. **La base sigue guardando hora peruana**, obtenida con GETDATE. Las pantallas administrativas muestran fechas de calendario directamente. El driver mssql existente conserva `useUTC: false` y su conversión anterior.
+
+Los KPI y herramientas actuales mantienen sus consultas SQL parametrizadas; no se reescribieron consultas complejas solo por cambiar de tecnología. Los nuevos endpoints administrativos no se exponen como herramientas al agente ni al participante.

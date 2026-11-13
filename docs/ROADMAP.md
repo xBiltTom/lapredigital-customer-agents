@@ -70,3 +70,8 @@ Reutilizar node:test y trazas de Eve. Tipos y pruebas dirigidas por funcionalida
 | M13 | Hecha | Herramienta de lectura flexible de registros de negocio, filtros/paginación y consultas de pagos con alcance por sesión. |
 | M14 | Hecha | Cuatro KPI CUSTOMERS del mes en curso, semáforos/fuentes y herramienta compartida con el agente global. |
 | M15 | Hecha | Backend legible: carpetas por responsabilidad, SQL principal separado y formateado, comentarios y guía de lectura. |
+
+## Administración solicitada por el usuario
+
+- [x] M16 — Prisma y API administrativa: perfiles/vínculos, recursos, versiones de ruta, actividades e incidencias; lectura de temario, planes, contrataciones y pagos. Conservar SQL canónico, triggers y fechas peruanas. Permisos acotados, generación reproducible y comprobación en MvpTest.
+- [ ] M17 — Sidebar y vistas administrativas; conservar Dashboard/chat global y Agente IA/acompañamiento separados. Verificar navegación, documentar y compilar.
