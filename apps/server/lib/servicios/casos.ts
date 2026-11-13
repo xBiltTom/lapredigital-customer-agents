@@ -167,7 +167,7 @@ export async function tramitarReporte(d: Reporte) {
     return { casoId: id, estado: caso.Estado, registrado: true };
   });
 }
-export async function reportesParticipante(e: number, c: number) {
+export async function reportesParticipante(e: number, c: number, incluirResueltos = false) {
   return getPrisma()
-    .$queryRaw`SELECT DISTINCT ca.CasoAtencionId,ca.Ambito,ca.Estado,ca.Descripcion FROM dbo.AtencionMensaje a JOIN dbo.MensajeCanalLocal m ON m.MensajeLocalId=a.MensajeLocalId JOIN dbo.CasoAtencion ca ON ca.CasoAtencionId=a.CasoAtencionId WHERE m.EstudianteId=${e} AND m.ContactoId=${c} AND ca.Estado<>'RESUELTA'`;
+    .$queryRaw<{ CasoAtencionId: number; Ambito: string; Estado: string; Reporte: string }[]>`SELECT TOP(50) ca.CasoAtencionId,ca.Ambito,ca.Estado,m.Contenido Reporte FROM dbo.AtencionMensaje a JOIN dbo.MensajeCanalLocal m ON m.MensajeLocalId=a.MensajeLocalId JOIN dbo.CasoAtencion ca ON ca.CasoAtencionId=a.CasoAtencionId WHERE m.EstudianteId=${e} AND m.ContactoId=${c} AND (${incluirResueltos}=1 OR ca.Estado<>'RESUELTA') ORDER BY m.MensajeLocalId DESC`;
 }

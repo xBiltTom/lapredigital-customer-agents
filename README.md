@@ -169,11 +169,31 @@ En Windows ejecutar `infra/sql/admin-permissions.sql` con la cuenta administrado
 Las respuestas manuales aparecen en la zona MENSAJERIA del portal, sin llamar al agente ni a proveedores externos. La recepción se confirma cuando el participante lee su bandeja. El asistente automático sigue activo; esta vista no representa una toma de control exclusiva ni cierra automáticamente consultas pendientes del Dashboard. Para delegar respuestas se conservan el chat global del Dashboard y el acompañamiento individual de Agente IA.
 
 
+## Herramientas y consultas desde el chat
+
+El catálogo se adapta al interlocutor desde el primer mensaje. Estudiante y apoderado pueden pedir «pásame mi rendimiento»: el agente consulta resultados, mejora comparable, cumplimiento de la ruta y actividad sin exponer riesgo o notas internas. Academia y Mensajería conservan identidades e historiales separados. Los resultados faltantes se distinguen de un problema de acceso; actividades y periodos futuros pueden consultarse.
+
+El dueño dispone en Dashboard de consultas SQL de negocio en vivo: tablas, relaciones verificadas, filtros, agrupaciones, conteos, sumas e historiales. Por ejemplo: «Agrupa mis estudiantes por etapa», «Muéstrame los periodos que vencen esta semana» o «Consulta los mensajes recientes de Carla». El agente descubre campos con `consultar_datos_negocio` y no recibe SQL libre. Los KPI publicados y el diagnóstico de riesgo conservan sus herramientas especializadas.
+
+Esta lectura usa la cuenta independiente `lapredigital_reader`, con SELECT y escrituras denegadas. En SQL Server Docker local se habilita una sola vez con:
+
+~~~bash
+./scripts/provision-sql-reader
+~~~
+
+La instalación de este equipo ya está preparada. El script no crea/reconstruye tablas ni carga datos; conserva la contraseña y solo guarda las credenciales nuevas en .env. El proceso de desarrollo puede leer esas dos variables adicionales sin reiniciar el llavero. El runtime compilado las recibe por Compose. En Windows, crear ese login con contraseña propia y usuario en la base, conceder SELECT sobre `SCHEMA::dbo` y denegar INSERT/UPDATE/DELETE/EXECUTE/ALTER sobre el esquema; configurar `SQLSERVER_READONLY_USER` y `SQLSERVER_READONLY_PASSWORD` en .env. No usar la cuenta de escritura como reemplazo si falta la lectora.
+
+El agente responde de forma directa y cercana, sin aclaraciones automáticas de recepción o simulación en cada mensaje. Conserva el estado real de cada acción cuando se pregunta por él. El historial del chat del dueño vive en Eve; las tablas SQL de conversaciones corresponden a los registros del negocio y al canal local.
+
+Guía técnica y matriz por contexto: [herramientas del agente](docs/HERRAMIENTAS.md). La comprobación dirigida `apps/server/scripts/check-herramientas.mjs` solo acepta la base MvpTest existente; no la reconstruye ni llama al modelo.
+
+
 ## Reglas del negocio
 
 La nueva opción del sidebar permite ajustar seis parámetros de riesgo de abandono. Basta editar valores y pulsar **Guardar cambios**. Incluye historial automático por fecha/responsable; no solicita motivo ni selección de política.
 
 Los nuevos diagnósticos usan los valores guardados. Las evaluaciones anteriores conservan los suyos, y las propuestas basadas en reglas anteriores requieren reevaluación. Las reglas de pagos, acceso, autorizaciones y KPI no se modifican desde este formulario. El agente puede consultar la configuración vigente o histórica, pero solo el dueño la cambia desde la aplicación.
+
 
 En una base nueva, ejecutar 01 y 02 actualizados como siempre. Para incorporar esta extensión a una instalación existente sin borrar datos, ejecutar una vez `./scripts/instalar-reglas` (SQL Server Docker local). El instalador lee el DDL y la semilla de esos mismos scripts; no es una segunda fuente del esquema. La instalación actual ya lo tiene aplicado. Las pruebas de publicación solo escriben en LaPreDigital_Customers_MvpTest.
 

@@ -65,7 +65,7 @@ No traslades cadencias comerciales a CUSTOMERS. LEADS reduce frecuencia tras tre
 
 ## Riesgo y contacto
 
-Los números de este apartado son la política inicial INFORME_7.1. El dueño puede publicar versiones posteriores: usa los parámetros vigentes devueltos por consultar_reglas/consultar_diagnostico para calcular y explicar riesgos y vigencias. Las reglas estructurales siguientes se mantienen.
+Los números de este apartado son la política inicial INFORME_7.1. El dueño puede publicar versiones posteriores: usa los parámetros vigentes devueltos por consultar_reglas/consultar_riesgo para calcular y explicar riesgos y vigencias. Las reglas estructurales siguientes se mantienen.
 
 Prevalece la señal de mayor riesgo. Última actividad hace menos de 72 horas solo permite BAJO si no hay señales mayores y existe información suficiente. Desde 72 y menos de 168 horas sin actividad: MEDIO; desde 168 horas: ALTO. Última actividad no equivale necesariamente a último inicio de sesión.
 

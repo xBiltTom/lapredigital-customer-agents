@@ -112,8 +112,16 @@ ORDER BY
 `;
 
 export const GUARDAR_CONSULTA_DUENO = `
-INSERT
-  dbo.ConsultaDueno (EstudianteId, ContactoId, Rol, Canal, Pregunta) OUTPUT INSERTED.ConsultaId id
-VALUES
-  (@e, @c, @r, @canal, @p)
+SET XACT_ABORT ON;
+BEGIN TRANSACTION;
+DECLARE @id INT;
+SELECT TOP(1) @id=ConsultaId FROM dbo.ConsultaDueno WITH(UPDLOCK,HOLDLOCK)
+WHERE EstudianteId=@e AND ContactoId=@c AND Rol=@r AND Canal=@canal AND Pregunta=@p
+  AND (Estado='PENDIENTE' OR @p LIKE 'NO_CONTACTO:%') ORDER BY ConsultaId;
+IF @id IS NULL BEGIN
+  INSERT dbo.ConsultaDueno(EstudianteId,ContactoId,Rol,Canal,Pregunta) VALUES(@e,@c,@r,@canal,@p);
+  SET @id=CONVERT(INT,SCOPE_IDENTITY());
+END;
+COMMIT;
+SELECT @id id;
 `;

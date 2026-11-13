@@ -24,6 +24,10 @@ El acceso interno familiar exige REPORTES_APODERADO vigente; no existe un portal
 
 agent/instructions.md fija identidad, permisos y comportamiento. agent/instructions/10-plataforma.md aporta contexto institucional permanente del informe 7.1: planes, embudo, acompañamiento, indicadores y reglas. Eve carga ambos como instrucciones de sistema, también para sesiones existentes al recargar. El catálogo del informe sirve para explicar; los datos actuales de contratación y efectos de operaciones se verifican mediante herramientas. No se presenta toda la plataforma como simulada; cada resultado conserva su estado verificado.
 
+M30 separa el informe académico (`consultar_rendimiento`) del riesgo privado (`consultar_riesgo`). Las catorce herramientas se resuelven dinámicamente por modo, con validación compartida al ejecutarse; el análisis de caso no recibe herramientas. `30-participante.ts` adjunta identidad y doce mensajes públicos recientes del canal, sin datos privados ni confirmación de entrega. La matriz y los contratos están en [HERRAMIENTAS.md](HERRAMIENTAS.md).
+
+El Dashboard consulta tablas de negocio e historiales con `consultar_datos_negocio`, mediante catálogo cerrado, relaciones por claves foráneas, filtros parametrizados y agregaciones tipadas; no hay SQL libre. Usa pool separado con la cuenta SELECT `lapredigital_reader`, sin credenciales de escritura como alternativa. El esquema y los datos canónicos se conservan. Las acciones de envío/consulta/no contacto tienen herramientas específicas; el dueño sigue aprobando y aplicando cambios por los flujos existentes.
+
 ## Lógica y evidencia
 
 lib/academico/reglas.ts calcula umbrales, vigencia, cumplimiento y mejora. lib/academico/diagnostico.ts consulta fuentes parametrizadas con corte GETDATE. Sin tareas/pruebas comparables hay no aplicable/sin datos; pendiente no se fuerza a bajo.

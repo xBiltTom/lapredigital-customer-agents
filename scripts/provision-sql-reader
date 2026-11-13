@@ -1,0 +1,45 @@
+#!/bin/sh
+# Cuenta SQL independiente para las consultas del Dashboard. Conserva tablas y datos.
+set -eu
+umask 077
+project_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+env_path="$project_dir/.env"
+[ -f "$env_path" ] || { printf '%s\n' 'Configura primero .env.' >&2; exit 1; }
+
+database=$(sed -n 's/^SQLSERVER_DATABASE=//p' "$env_path" | tail -n 1)
+case "$database" in LaPreDigital_Customers|LaPreDigital_Customers_MvpTest) ;; *) printf '%s\n' 'Base no permitida.' >&2; exit 1;; esac
+reader_user=$(sed -n 's/^SQLSERVER_READONLY_USER=//p' "$env_path" | tail -n 1)
+case "$reader_user" in ''|lapredigital_reader) ;; *) printf '%s\n' 'La cuenta debe ser lapredigital_reader.' >&2; exit 1;; esac
+stored_reader_password=$(sed -n 's/^SQLSERVER_READONLY_PASSWORD=//p' "$env_path" | tail -n 1)
+reader_password=${stored_reader_password:-"LpR1!$(openssl rand -hex 24)"}
+password_literal=$(printf '%s' "$reader_password" | sed "s/'/''/g")
+sql_tmp=$(mktemp)
+env_tmp=$(mktemp "$project_dir/.env.reader.XXXXXX")
+trap 'rm -f "$sql_tmp" "$env_tmp"' EXIT HUP INT TERM
+
+# Las credenciales solo pasan por archivos privados/stdin, nunca por argumentos o logs.
+{
+  printf '%s\n' 'SET NOCOUNT ON;'
+  if [ -z "$stored_reader_password" ]; then
+    printf '%s\n' "IF SUSER_ID(N'lapredigital_reader') IS NOT NULL THROW 51925,N'El login lector ya existe; recupera su credencial antes de continuar.',1;"
+  fi
+  printf '%s\n' "IF SUSER_ID(N'lapredigital_reader') IS NULL CREATE LOGIN [lapredigital_reader] WITH PASSWORD=N'$password_literal', CHECK_POLICY=ON, DEFAULT_DATABASE=[$database];"
+  for target_db in "$database" LaPreDigital_Customers_MvpTest; do
+    cat <<SQL
+IF DB_ID(N'$target_db') IS NOT NULL EXEC(N'
+USE [$target_db];
+IF USER_ID(N''lapredigital_reader'') IS NULL CREATE USER [lapredigital_reader] FOR LOGIN [lapredigital_reader];
+GRANT SELECT ON SCHEMA::dbo TO [lapredigital_reader];
+DENY INSERT, UPDATE, DELETE, EXECUTE, ALTER ON SCHEMA::dbo TO [lapredigital_reader];
+');
+SQL
+  done
+} > "$sql_tmp"
+docker exec -i sql-server-local sh -c 'export SQLCMDPASSWORD="$MSSQL_SA_PASSWORD"; exec /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -b -i /dev/stdin' < "$sql_tmp" > /dev/null
+
+if [ -z "$stored_reader_password" ]; then
+  sed '/^SQLSERVER_READONLY_USER=/d; /^SQLSERVER_READONLY_PASSWORD=/d' "$env_path" > "$env_tmp"
+  printf '\nSQLSERVER_READONLY_USER=lapredigital_reader\nSQLSERVER_READONLY_PASSWORD=%s\n' "$reader_password" >> "$env_tmp"
+  mv "$env_tmp" "$env_path"
+fi
+printf '%s\n' 'Cuenta SELECT preparada. Credenciales conservadas en .env; tablas y datos sin cambios.'

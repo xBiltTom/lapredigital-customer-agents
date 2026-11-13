@@ -11,7 +11,7 @@ export function identidadHerramienta(
 ) {
   if (auth?.attributes?.modo === 'participante')
     throw new Error(
-      'Herramienta reservada al dueño; en el portal usa operar_plataforma con accion ESTUDIANTE.',
+      'Herramienta reservada al dueño; en el portal usa consultar_rendimiento.',
     );
   const id = Number(auth?.attributes?.personalInternoId),
     estudianteId = Number(auth?.attributes?.estudianteId);

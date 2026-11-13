@@ -134,6 +134,19 @@ export async function bandeja(
       .query(LEER_BANDEJA)
   ).recordset;
 }
+
+// Contexto del agente: una ventana acotada, sin confirmar entrega ni leer todo el hilo.
+export async function hiloReciente(e: number, rol: string, canal: string) {
+  const contacto = await destinatario(e, rol);
+  const r = await (await getPool()).request()
+    .input('e', sql.Int, e)
+    .input('c', sql.Int, contacto)
+    .input('canal', sql.VarChar(12), canal)
+    .query(`SELECT TOP(12) MensajeLocalId,Direccion,Contenido,Fecha
+      FROM dbo.MensajeCanalLocal WHERE EstudianteId=@e AND ContactoId=@c AND Canal=@canal
+      ORDER BY MensajeLocalId DESC`);
+  return r.recordset.reverse();
+}
 // Deja una pregunta pendiente para que el dueño la resuelva desde el dashboard.
 export async function consulta(
   e: number,

@@ -1,14 +1,19 @@
-import { defineTool } from 'eve/tools';
-import { z } from 'zod';
+import { defineTool } from "eve/tools";
+import { z } from "zod";
 import {
   guardarContexto,
   jsonSeguro,
-} from '../../lib/academico/diagnostico.ts';
-import { identidadHerramienta } from '../../lib/seguridad/identidad.ts';
+} from "../../lib/academico/diagnostico.ts";
+import {
+  herramientaPorModo,
+  exigirHerramienta,
+  autorizarAlumno,
+} from "../../lib/seguridad/alcance-herramientas.ts";
+import { proyectarRiesgo } from "../../lib/academico/rendimiento.ts";
 const ids = z.array(z.number().int().positive()).max(200);
-export default defineTool({
+export const herramienta = defineTool({
   description:
-    'Registra interpretación de evidencias ya consultadas, ligadas a su huella. No modifica SQL ni concede autorizaciones.',
+    "Registra interpretación de evidencias ya consultadas, ligadas a su huella. No modifica SQL ni concede autorizaciones.",
   inputSchema: z.object({
     estudianteId: z.number().int().positive().optional(),
     huella: z.string().length(64),
@@ -19,17 +24,14 @@ export default defineTool({
     insatisfaccion: ids,
   }),
   async execute({ huella, estudianteId: solicitado, ...contexto }, ctx) {
-    if(ctx.session.auth.current?.attributes?.soloLectura==='true')throw new Error('El análisis del caso es de solo lectura');
     const auth = ctx.session.auth.current;
-    const { id, estudianteId } =
-      auth?.attributes?.modo === 'global' && solicitado
-        ? {
-            id: Number(auth.attributes.personalInternoId),
-            estudianteId: solicitado,
-          }
-        : identidadHerramienta(auth);
+    exigirHerramienta(auth, "dueno");
+    const { owner, estudianteId } = await autorizarAlumno(auth, solicitado);
     return jsonSeguro(
-      await guardarContexto(id, estudianteId, huella, contexto),
+      proyectarRiesgo(
+        await guardarContexto(owner, estudianteId, huella, contexto),
+      ),
     );
   },
 });
+export default herramientaPorModo("dueno", herramienta);
