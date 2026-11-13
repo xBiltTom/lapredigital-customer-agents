@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getPrisma } from "../database/prisma.ts";
+import { construirFiltroCasos } from "./filtros-casos.ts";
 export async function listarRutas(estudianteId?: number) {
   const p = getPrisma();
   return {
@@ -101,9 +102,13 @@ export async function agregarActividad(entrada: unknown) {
     return { ok: true };
   });
 }
-export async function listarCasos(buscar: string, pagina: number) {
+export async function listarCasos(
+  buscar: string,
+  pagina: number,
+  filtros: unknown = {},
+) {
   const p = getPrisma();
-  const where = { Descripcion: { contains: buscar } };
+  const where = construirFiltroCasos(buscar, filtros);
   return {
     items: await p.casoAtencion.findMany({
       where,

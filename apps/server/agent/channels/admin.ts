@@ -58,7 +58,14 @@ export default defineChannel({
         if (r === "estudiantes" || r === "apoderados")
           return json(await listarPersonas(r, buscar, pagina));
         if (r === "rutas") return json(await listarRutas());
-        if (r === "casos") return json(await listarCasos(buscar, pagina));
+        if (r === "casos")
+          return json(
+            await listarCasos(buscar, pagina, {
+              tipo: u.searchParams.get("tipo") || undefined,
+              ambito: u.searchParams.get("ambito") || undefined,
+              estado: u.searchParams.get("estado") || undefined,
+            }),
+          );
         if (r === "opciones") {
           const p = getPrisma();
           return json({

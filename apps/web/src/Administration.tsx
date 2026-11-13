@@ -53,6 +53,9 @@ export function Administration({
       recursos: [],
     }),
     [buscar, setBuscar] = useState(''),
+    [filtroTipo, setFiltroTipo] = useState(''),
+    [filtroAmbito, setFiltroAmbito] = useState(''),
+    [filtroEstado, setFiltroEstado] = useState(''),
     [pagina, setPagina] = useState(1),
     [error, setError] = useState(''),
     [loading, setLoading] = useState(true),
@@ -122,7 +125,13 @@ export function Administration({
     let active = true;
     setLoading(true);
     setError('');
-    api(`${vista}?buscar=${encodeURIComponent(buscar)}&pagina=${pagina}`)
+    const query = new URLSearchParams({ buscar, pagina: String(pagina) });
+    if (vista === 'casos') {
+      if (filtroTipo) query.set('tipo', filtroTipo);
+      if (filtroAmbito) query.set('ambito', filtroAmbito);
+      if (filtroEstado) query.set('estado', filtroEstado);
+    }
+    api(`${vista}?${query}`)
       .then((d) => {
         if (active) setData(d);
       })
@@ -135,7 +144,16 @@ export function Administration({
     return () => {
       active = false;
     };
-  }, [vista, buscar, pagina, refresh, token]);
+  }, [
+    vista,
+    buscar,
+    filtroTipo,
+    filtroAmbito,
+    filtroEstado,
+    pagina,
+    refresh,
+    token,
+  ]);
   useEffect(() => {
     let active = true;
     api('opciones')
@@ -446,7 +464,7 @@ export function Administration({
           {error}
         </div>
       )}
-      {!['planes', 'rutas', 'cursos'].includes(vista) && (
+      {!['planes', 'rutas', 'cursos', 'casos'].includes(vista) && (
         <input
           className="admin-search"
           placeholder="Buscar por nombre, código o descripción…"
@@ -462,6 +480,94 @@ export function Administration({
         <p role="status">Cargando registros…</p>
       ) : (
         <>
+          {vista === 'casos' && (
+            <>
+              <div
+                className="case-filters"
+                role="group"
+                aria-label="Filtros de casos"
+              >
+                <label className="case-search">
+                  <span>Buscar en descripción o resolución</span>
+                  <input
+                    value={buscar}
+                    onChange={(event) => {
+                      setBuscar(event.target.value);
+                      setPagina(1);
+                    }}
+                    placeholder="Escribe una palabra clave…"
+                  />
+                </label>
+                <label>
+                  <span>Tipo</span>
+                  <select
+                    value={filtroTipo}
+                    onChange={(event) => {
+                      setFiltroTipo(event.target.value);
+                      setPagina(1);
+                    }}
+                  >
+                    <option value="">Todos</option>
+                    <option value="CONSULTA">Consulta</option>
+                    <option value="INCIDENCIA">Incidencia</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Ámbito</span>
+                  <select
+                    value={filtroAmbito}
+                    onChange={(event) => {
+                      setFiltroAmbito(event.target.value);
+                      setPagina(1);
+                    }}
+                  >
+                    <option value="">Todos</option>
+                    <option value="SERVICIO">Servicio</option>
+                    <option value="ACCESO">Acceso</option>
+                    <option value="PAGO">Pago · PAYERS</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Estado</span>
+                  <select
+                    value={filtroEstado}
+                    onChange={(event) => {
+                      setFiltroEstado(event.target.value);
+                      setPagina(1);
+                    }}
+                  >
+                    <option value="">Todos</option>
+                    <option value="ABIERTA">Abierta</option>
+                    <option value="EN_ATENCION">En atención</option>
+                    <option value="REABIERTA">Reabierta</option>
+                    <option value="RESUELTA">Resuelta</option>
+                  </select>
+                </label>
+                <button
+                  className="case-clear"
+                  type="button"
+                  disabled={
+                    !buscar && !filtroTipo && !filtroAmbito && !filtroEstado
+                  }
+                  onClick={() => {
+                    setBuscar('');
+                    setFiltroTipo('');
+                    setFiltroAmbito('');
+                    setFiltroEstado('');
+                    setPagina(1);
+                  }}
+                >
+                  Limpiar
+                </button>
+              </div>
+              <div className="case-results-heading">
+                <strong>
+                  {data.total} {data.total === 1 ? 'caso' : 'casos'}
+                </strong>
+                <span>Ordenados por fecha de apertura, más reciente primero</span>
+              </div>
+            </>
+          )}
           {['estudiantes', 'apoderados'].includes(vista) && (
             <div className="admin-table-wrap">
               <table>
@@ -737,48 +843,95 @@ export function Administration({
             </>
           )}
           {vista === 'casos' && (
-            <div className="admin-grid">
-              {data.items.map((c: Row) => (
-                <section className="admin-card" key={c.CasoAtencionId}>
-                  <span className="admin-tag">
-                    {c.Tipo} · {c.Estado}
-                  </span>
-                  <h3>{studentName(c.EstudianteId)}</h3>
-                  <p>{c.Descripcion}</p>
-                  <small>
-                    {c.Ambito} · Apertura {c.FechaAperturaOriginal.slice(0, 10)}
-                  </small>
-                  {c.Resolucion && (
-                    <p>
-                      <strong>Resolución: </strong>
-                      {c.Resolucion}
-                    </p>
+            <div className="admin-table-wrap case-table-wrap">
+              <table className="case-table">
+                <thead>
+                  <tr>
+                    <th>Caso</th>
+                    <th>Estudiante</th>
+                    <th>Tipo y ámbito</th>
+                    <th>Descripción y resolución</th>
+                    <th>Apertura</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.items.map((c: Row) => (
+                    <tr key={c.CasoAtencionId}>
+                      <td className="case-id">#{c.CasoAtencionId}</td>
+                      <td className="case-student">
+                        {studentName(c.EstudianteId)}
+                      </td>
+                      <td>
+                        <span className={`case-type case-type-${c.Tipo}`}>
+                          {c.Tipo === 'INCIDENCIA' ? 'Incidencia' : 'Consulta'}
+                        </span>
+                        <small className="case-scope">
+                          {c.Ambito === 'PAGO'
+                            ? 'Pago · PAYERS'
+                            : c.Ambito === 'ACCESO'
+                              ? 'Acceso'
+                              : 'Servicio'}
+                        </small>
+                      </td>
+                      <td className="case-description">
+                        <p>{c.Descripcion}</p>
+                        {c.Resolucion && (
+                          <small>
+                            <strong>Resolución:</strong> {c.Resolucion}
+                          </small>
+                        )}
+                      </td>
+                      <td className="case-date">
+                        {c.FechaAperturaOriginal?.slice(0, 10) ?? '—'}
+                      </td>
+                      <td>
+                        <span className={`case-state case-state-${c.Estado}`}>
+                          {c.Estado.replaceAll('_', ' ').toLowerCase()}
+                        </span>
+                      </td>
+                      <td>
+                        {c.Ambito === 'PAGO' ? (
+                          <span className="case-readonly">Solo lectura</span>
+                        ) : (
+                          <div className="case-row-actions">
+                            {c.Estado === 'RESUELTA' ? (
+                              <button onClick={() => caseState(c, 'REABIERTA')}>
+                                Reabrir
+                              </button>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() => caseState(c, 'EN_ATENCION')}
+                                >
+                                  Atender
+                                </button>
+                                <button
+                                  className="case-resolve"
+                                  onClick={() => caseState(c, 'RESUELTA')}
+                                >
+                                  Resolver
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {data.items.length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="case-empty">
+                        No hay casos que coincidan con estos filtros.
+                      </td>
+                    </tr>
                   )}
-                  {c.Ambito === 'PAGO' ? (
-                    <p>Solo lectura · Atención económica en PAYERS.</p>
-                  ) : (
-                    <div className="admin-actions">
-                      {c.Estado === 'RESUELTA' ? (
-                        <button onClick={() => caseState(c, 'REABIERTA')}>
-                          Reabrir
-                        </button>
-                      ) : (
-                        <>
-                          <button onClick={() => caseState(c, 'EN_ATENCION')}>
-                            Atender
-                          </button>
-                          <button onClick={() => caseState(c, 'RESUELTA')}>
-                            Resolver
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </section>
-              ))}
+                </tbody>
+              </table>
             </div>
           )}
-          {data.items.length === 0 && (
+          {vista !== 'casos' && data.items.length === 0 && (
             <p>No hay registros para esta búsqueda.</p>
           )}
           {data.pagina && (
@@ -790,7 +943,8 @@ export function Administration({
                 Anterior
               </button>
               <span>
-                Página {pagina} · {data.total} registros
+                Página {pagina} · {data.total}{' '}
+                {vista === 'casos' ? 'casos' : 'registros'}
               </span>
               <button
                 disabled={pagina * 20 >= data.total}

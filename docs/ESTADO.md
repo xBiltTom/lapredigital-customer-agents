@@ -1,5 +1,13 @@
 # Estado y continuidad
 
+## M20 — bandeja de casos con filtros (2026-11-13)
+
+Consultas e incidencias ahora se muestran en una tabla con tipo/ámbito, estudiante, descripción/resolución, fecha, estado y acciones disponibles por fila. Se añadieron búsqueda en descripción o resolución y filtros de tipo, ámbito y estado; la API aplica esos filtros antes del conteo y la paginación. Los casos económicos se pueden consultar como solo lectura. No hubo cambios de esquema o datos.
+
+Verificación: `./scripts/dev npm run typecheck` correcto, `./scripts/dev npm run build:web` correcto y las tres pruebas unitarias específicas pasaron (combinación de filtros, PAGO histórico y rechazo de opciones inválidas). Sin prueba de navegador. DOCX personal sin seguimiento conservado.
+
+Siguiente paso concreto: revisar la bandeja y los filtros en el panel.
+
 ## M19 — catálogo de cursos y modal de temario (2026-11-13)
 
 Se rediseñó la vista de cursos con tarjetas que muestran el nombre, cantidad de temas y acceso al contenido. Seleccionar un curso abre un modal con su temario y subtemas; el listado se desplaza dentro del modal. Incluye carga/vacío/error, cierre con Escape o clic fuera, foco inicial/restaurado y navegación de teclado contenida. Sin cambios de backend ni datos.
