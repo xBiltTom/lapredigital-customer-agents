@@ -75,3 +75,5 @@ Reutilizar node:test y trazas de Eve. Tipos y pruebas dirigidas por funcionalida
 
 - [x] M16 — Prisma y API administrativa: perfiles/vínculos, recursos, versiones de ruta, actividades e incidencias; lectura de temario, planes, contrataciones y pagos. Conservar SQL canónico, triggers y fechas peruanas. Permisos acotados, generación reproducible y comprobación en MvpTest.
 - [x] M17 — Sidebar y vistas administrativas; conservar Dashboard/chat global y Agente IA/acompañamiento separados. Verificar navegación, documentar y compilar.
+
+- [x] M23 — Recuperar conversaciones principales archivadas y mantener historial por dueño/ámbito aunque cambie la sesión activa de Eve; validar continuidad real y conservar chats flotantes.

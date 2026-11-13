@@ -39,6 +39,7 @@ export function Dashboard({
   const [alumnos, setAlumnos] = useState<Fila[]>([]);
   const [consultas, setConsultas] = useState<Consulta[]>([]);
   const [chat, setChat] = useState<Linea[]>([]);
+  const [cargandoChat, setCargandoChat] = useState(true);
   const [texto, setTexto] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -80,11 +81,17 @@ export function Dashboard({
 
   useEffect(() => {
     let activo = true;
+    setCargandoChat(true);
     api('/api/dashboard/chat')
       .then((data) => {
         if (activo) setChat(data.mensajes);
       })
-      .catch((cause) => setError(cause.message));
+      .catch((cause) => {
+        if (activo) setError(cause.message);
+      })
+      .finally(() => {
+        if (activo) setCargandoChat(false);
+      });
     void cargar();
     const timer = setInterval(cargar, 12000);
     return () => {
@@ -95,7 +102,7 @@ export function Dashboard({
 
   async function enviar(event: FormEvent) {
     event.preventDefault();
-    if (!texto.trim() || busy) return;
+    if (!texto.trim() || busy || cargandoChat) return;
     const mensaje = texto;
     setTexto('');
     setBusy(true);
@@ -148,7 +155,9 @@ export function Dashboard({
     }
   }
 
-  const pendientes = consultas.filter((consulta) => consulta.Estado === 'PENDIENTE');
+  const pendientes = consultas.filter(
+    (consulta) => consulta.Estado === 'PENDIENTE',
+  );
 
   return (
     <div className="dashboard">
@@ -189,13 +198,17 @@ export function Dashboard({
           <p>
             <span className="metric-icon">◎</span> Servicio activo
           </p>
-          <strong>{alumnos.filter((alumno) => alumno.servicioActivo).length}</strong>
+          <strong>
+            {alumnos.filter((alumno) => alumno.servicioActivo).length}
+          </strong>
         </section>
         <section className="metric">
           <p>
             <span className="metric-icon">↗</span> Requieren atención
           </p>
-          <strong>{alumnos.filter((alumno) => alumno.riesgo === 'ALTO').length}</strong>
+          <strong>
+            {alumnos.filter((alumno) => alumno.riesgo === 'ALTO').length}
+          </strong>
         </section>
         <section className="metric">
           <p>
@@ -247,8 +260,11 @@ export function Dashboard({
                     <td>
                       <strong className="progress-label">
                         {alumno.total
-                          ? Math.round((100 * alumno.completados) / alumno.total)
-                          : 0}%
+                          ? Math.round(
+                              (100 * alumno.completados) / alumno.total,
+                            )
+                          : 0}
+                        %
                       </strong>
                       <div className="mini-progress">
                         <i
@@ -334,11 +350,16 @@ export function Dashboard({
           aria-live="polite"
           data-chat-log
         >
-          {!chat.length && (
+          {cargandoChat && (
+            <p className="thinking">Recuperando conversación…</p>
+          )}
+          {!cargandoChat && !chat.length && (
             <div className="chatbot-empty">
               <span aria-hidden="true">✦</span>
               <p>¿A quién debemos acompañar hoy?</p>
-              <small>Consulta indicadores, riesgos o decisiones pendientes.</small>
+              <small>
+                Consulta indicadores, riesgos o decisiones pendientes.
+              </small>
             </div>
           )}
           {chat.map((line, index) => (
@@ -356,12 +377,17 @@ export function Dashboard({
         <form className="chat-form chatbot-chat-form" onSubmit={enviar}>
           <textarea
             aria-label="Mensaje al asistente de dirección"
+            disabled={cargandoChat || busy}
             value={texto}
             onChange={(event) => setTexto(event.target.value)}
             placeholder="¿A quién debemos acompañar hoy?"
             maxLength={2000}
           />
-          <button className="send" aria-label="Enviar mensaje" disabled={busy || !texto.trim()}>
+          <button
+            className="send"
+            aria-label="Enviar mensaje"
+            disabled={busy || cargandoChat || !texto.trim()}
+          >
             ↑
           </button>
         </form>

@@ -1,5 +1,17 @@
 # Estado y continuidad
 
+## M23 — recuperación y continuidad del historial (2026-11-13)
+
+Se encontró que las sesiones anteriores estaban canceladas en Eve, pero sus eventos seguían guardados. Los GET de historial solo consultaban resolveSession, que devuelve la sesión activa por dirección: esto devolvía vacío para alumnos y solo la sesión nueva para Dashboard. No era pérdida de mensajes en el chat flotante.
+
+Se recuperaron nueve referencias de conversaciones principales desde metadatos locales de Eve rc.10, sin modificar eventos ni leer direcciones desde el texto de mensajes. Un índice privado `.eve/historial-chats/sesiones.ndjson` conserva los IDs por dueño/ámbito/estudiante. GET combina las sesiones registradas usando attachSession y stream(follow:false), incluidas las canceladas. POST registra cada sesión y, cuando no hay una activa, aporta el diálogo público anterior mediante history al crear la siguiente. No se mezclan el Dashboard global, alumnos ni participantes. El índice comparte el volumen privado de Eve; no queda en Git y se conserva durante recargas del frontend/backend. No se verificó persistencia después de eliminar/recrear volúmenes ni traslado entre runtime dev y compilado.
+
+Se preservaron Chatbot, sidebar, selector y cambios recientes del usuario. Dashboard muestra carga de historial y bloquea envío mientras se recupera, evitando que una respuesta de carga tardía reemplace mensajes recién enviados.
+
+Verificación: API recuperó 32 mensajes globales y conversaciones de estudiantes 1, 3, 7, 8 y 9 (los demás no tenían conversación principal registrada). Prueba real con Carla: el agente identificó correctamente su pregunta anterior; historial pasó de seis a ocho mensajes y se conservó al volver a consultarlo. Regresión focalizada pasó: lectura de sesiones archivadas, deduplicación y separación por dueño/ámbito. Tipos y builds web/backend correctos. No se modificó SQL ni se reconstruyó la base. No se ejecutó navegador en esta corrección. El script de recuperación es específico de Eve rc.10 y solo se usa manualmente; el flujo habitual utiliza el índice.
+
+Siguiente paso: recargar el panel y revisar ambos chats flotantes. No reiniciar el llavero ni borrar `.eve` o sus volúmenes para solucionar historiales.
+
 ## M22 — chat flotante en Dashboard y Agente IA (2026-11-13)
 
 El chat global y el chat individual ahora se abren desde un botón circular abajo a la derecha y se muestran en un panel flotante compartido. La vista individual y el Dashboard recuperan el espacio que ocupaba el chat fijo. Las consultas pendientes del agente siguen visibles como datos del Dashboard, con su respuesta y envío al mismo hilo. Sin cambios de API, backend o datos.

@@ -10,8 +10,9 @@ import {
 } from '../../lib/academico/intervenciones.ts';
 import {
   direccionChat,
-  historialChat,
 } from '../../lib/conversaciones/historial.ts';
+
+import { historialDireccion, registrarSesionChat } from '../../lib/conversaciones/archivo.ts';
 
 const idSchema = z.coerce.number().int().positive().max(2147483647);
 const json = (data: unknown, status = 200) =>
@@ -119,7 +120,7 @@ export default defineChannel({
     ),
     GET(
       '/api/estudiantes/:id/chat',
-      async (request, { params, resolveSession }) => {
+      async (request, { params, resolveSession, attachSession }) => {
         const owner = await dueno(request);
         if (!owner) return json({ error: 'Acceso requerido.' }, 401);
         try {
@@ -127,26 +128,24 @@ export default defineChannel({
           await diagnostico(owner.id, id);
           const session = await resolveSession(direccionChat(owner.id, id));
           return json(
-            session
-              ? await historialChat(session)
-              : { mensajes: [], sesionId: null },
+            await historialDireccion(direccionChat(owner.id, id), session, attachSession),
           );
         } catch (e) {
           return error(e);
         }
       },
     ),
-    GET('/api/dashboard/chat', async (request, { resolveSession }) => {
+    GET('/api/dashboard/chat', async (request, { resolveSession, attachSession }) => {
       const owner = await dueno(request);
       if (!owner) return json({ error: 'Acceso requerido.' }, 401);
       try {
         const session = await resolveSession(`dueno:${owner.id}:global`);
-        return json(session ? await historialChat(session) : { mensajes: [] });
+        return json(await historialDireccion(`dueno:${owner.id}:global`, session, attachSession));
       } catch (e) {
         return error(e);
       }
     }),
-    POST('/api/chat', async (request, { from }) => {
+    POST('/api/chat', async (request, { from, resolveSession, attachSession }) => {
       const owner = await dueno(request);
       if (!owner) return json({ error: 'Acceso requerido.' }, 401);
       try {
@@ -171,12 +170,20 @@ export default defineChannel({
             },
             503,
           );
-        const source = from(
-          b.global
-            ? `dueno:${owner.id}:global`
-            : direccionChat(owner.id, b.estudianteId!),
-        );
+        const direccion = b.global
+          ? `dueno:${owner.id}:global`
+          : direccionChat(owner.id, b.estudianteId!);
+        const source = from(direccion);
+        const activa = await resolveSession(direccion);
+        // Si Eve abre otra sesión, conserva el diálogo público del mismo ámbito.
+        const anterior = activa ? undefined : await historialDireccion(direccion, activa, attachSession);
         const delivery = await source.send(b.mensaje, {
+          ...(anterior?.mensajes.length ? {
+            history: anterior.mensajes.map(m => ({
+              role: m.rol === 'user' ? 'user' as const : 'assistant' as const,
+              text: m.texto,
+            })),
+          } : {}),
           auth: {
             ...owner.auth,
             attributes: {
@@ -187,6 +194,7 @@ export default defineChannel({
           },
           turnPolicy: 'queue',
         });
+        await registrarSesionChat(direccion, delivery.sessionId);
         if (request.headers.get('accept')?.includes('application/x-ndjson')) {
           const encoder = new TextEncoder(),
             signal = AbortSignal.any([
